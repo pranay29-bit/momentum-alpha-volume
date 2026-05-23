@@ -1,7 +1,5 @@
 import requests
 import pandas as pd
-from datetime import datetime
-
 
 HEADERS = {
     "User-Agent": "Mozilla/5.0",
@@ -11,17 +9,13 @@ HEADERS = {
 
 
 def get_result_date(symbol: str) -> str:
-    """
-    Fetch next/latest quarterly result declaration date from NSE.
-    Returns date string or '—'
-    """
 
     symbol = symbol.replace(".NS", "").upper()
 
     try:
         session = requests.Session()
 
-        # NSE requires homepage hit first
+        # Important for NSE cookies
         session.get(
             "https://www.nseindia.com",
             headers=HEADERS,
@@ -29,54 +23,48 @@ def get_result_date(symbol: str) -> str:
         )
 
         url = (
-            f"https://www.nseindia.com/api/"
-            f"corporate-announcements"
-            f"?index=equities&symbol={symbol}"
+            "https://www.nseindia.com/api/"
+            "event-calendar?index=equities"
         )
 
-        r = session.get(url, headers=HEADERS, timeout=10)
+        r = session.get(
+            url,
+            headers=HEADERS,
+            timeout=10,
+        )
 
         data = r.json()
 
-        if not isinstance(data, list):
-            return "—"
+        events = data.get("data", [])
 
-        today = datetime.today().date()
+        for item in events:
 
-        result_dates = []
+            sym = str(item.get("symbol", "")).upper()
 
-        for item in data:
+            purpose = str(item.get("purpose", "")).lower()
 
-            subject = str(item.get("subject", "")).lower()
+            if sym != symbol:
+                continue
 
             if (
-                "financial results" in subject
-                or "quarterly results" in subject
-                or "results" in subject
+                "result" in purpose
+                or "financial" in purpose
+                or "quarterly" in purpose
             ):
 
                 dt = (
-                    item.get("broadcastDate")
+                    item.get("date")
                     or item.get("bm_date")
-                    or item.get("date")
+                    or item.get("event_date")
                 )
 
-                if not dt:
-                    continue
+                if dt:
+                    try:
+                        return pd.to_datetime(dt).strftime("%d-%b-%Y")
+                    except Exception:
+                        pass
 
-                try:
-                    parsed = pd.to_datetime(dt).date()
-
-                    if parsed >= today:
-                        result_dates.append(parsed)
-
-                except Exception:
-                    pass
-
-        if result_dates:
-            return min(result_dates).strftime("%d-%b-%Y")
-
-    except Exception:
-        pass
+    except Exception as e:
+        print(f"Result date fetch failed for {symbol}: {e}")
 
     return "—"
