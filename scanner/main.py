@@ -24,7 +24,7 @@ from .config     import DOCS_DIR
 from .data_loader import download_all, load_symbols
 from .nse_client  import enrich_with_market_caps
 from .dashboard   import build_passing_dashboard, build_passing_ema10_dashboard, build_volume_action_dashboard
-from .results_calendar import get_result_date
+from .result_calendar import get_result_date
 
 # ── Logging ───────────────────────────────────────────────────────────────────
 logging.basicConfig(
