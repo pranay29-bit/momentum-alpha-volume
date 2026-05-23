@@ -267,6 +267,7 @@ def build_passing_dashboard(passing: pd.DataFrame, out_path: Path, date_str: str
         ind_grp    = str(row.get("industry_group", "")) or "—"
         industry   = str(row.get("industry", ""))       or "—"
         result_date = row.get("result_date", "—")
+        price_band = str(row.get("price_band", "—"))
 
         close_s = f"₹{float(close):,.2f}" if _safe(close) else "N/A"
         ema10_s = f"₹{float(ema10):,.2f}" if _safe(ema10) else "N/A"
@@ -302,6 +303,7 @@ def build_passing_dashboard(passing: pd.DataFrame, out_path: Path, date_str: str
           <td>{ind_grp}</td>
           <td>{industry}</td>
           <td class="r">{result_date}</td>
+          <td class="c">{price_band}</td>
         </tr>"""
 
         chart_labels.append(f'"{sym}"')
@@ -364,6 +366,7 @@ def build_passing_dashboard(passing: pd.DataFrame, out_path: Path, date_str: str
         <th          data-col="indgrp" data-type="str">Industry Group<i class="si"></i></th>
         <th          data-col="ind"    data-type="str">Industry<i class="si"></i></th>
         <th class="r" data-col="result" data-type="str">Result Date<t class="si"></i></th>
+        <th class="c" data-col="priceband" data-type="str">Price Band<i class="si"></i></th>
       </tr></thead>
       <tbody id="tableBody">{rows_html}</tbody>
     </table>
@@ -443,6 +446,7 @@ def build_passing_ema10_dashboard(
         ind_grp  = str(row.get("industry_group", "")) or "—"
         industry = str(row.get("industry", ""))       or "—"
         result_date = row.get("result_date", "—")
+        price_band = str(row.get("price_band", "—"))
 
         close_s = f"₹{float(close):,.2f}" if _safe(close) else "N/A"
         ema10_s = f"₹{float(ema10):,.2f}" if _safe(ema10) else "N/A"
@@ -478,6 +482,7 @@ def build_passing_ema10_dashboard(
           <td>{ind_grp}</td>
           <td>{industry}</td>
           <td class="r">{result_date}</td>
+          <td class="c">{price_band}</td>
         </tr>"""
 
     # ── Build history line-chart data ─────────────────────────────────────────
@@ -578,6 +583,7 @@ def build_passing_ema10_dashboard(
         <th          data-col="indgrp" data-type="str">Industry Group<i class="si"></i></th>
         <th          data-col="ind"    data-type="str">Industry<i class="si"></i></th>
         <th class="r" data-col="result" data-type="str">Result Date<t class="si"></i></th>
+        <th class="c" data-col="priceband" data-type="str">Price Band<i class="si"></i></th>
       </tr></thead>
       <tbody id="tableBody">{rows_html}</tbody>
     </table>
@@ -689,6 +695,7 @@ def build_volume_action_dashboard(
         ind_grp    = str(row.get("industry_group", "")) or "—"
         industry   = str(row.get("industry", "")) or "—"
         result_date = row.get("result_date", "—")
+        price_band = str(row.get("price_band", "—"))
 
         rows += f"""
         <tr class='srow'
@@ -739,6 +746,7 @@ def build_volume_action_dashboard(
             <td>{ind_grp}</td>
             <td>{industry}</td>
             <td class='r'>{result_date}</td>
+            <td class="c">{price_band}</td>
         </tr>
         """
 
@@ -824,6 +832,10 @@ def build_volume_action_dashboard(
 
           <th class="r" data-col="result" data-type="str">
             Result Date<i class="si"></i>
+
+          <th class="c" data-col="priceband" data-type="str">
+            Price Band<i class="si"></i></th>
+
           </th>
 
         </tr>
