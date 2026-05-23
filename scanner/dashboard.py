@@ -822,6 +822,10 @@ def build_volume_action_dashboard(
             Industry<i class="si"></i>
           </th>
 
+          <th class="r" data-col="result" data-type="str">
+            Result Date<i class="si"></i>
+          </th>
+
         </tr>
       </thead>
 
