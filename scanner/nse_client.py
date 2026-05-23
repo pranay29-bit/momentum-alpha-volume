@@ -1,135 +1,155 @@
 """
-scanner/nse_client.py
----------------------
-Handles fetching market-cap, free-float, and traded-value data.
-Uses yfinance fast_info (primary) with info as fallback to bypass
-401/403 Akamai blocks and avoid N/A market-cap / traded-value issues.
+scanner/data_loader.py
+----------------------
+Loads symbol list from CSV and downloads OHLCV data from Yahoo Finance
+in configurable batches. Also loads Industry & Industry Group metadata
+from the same CSV and merges it into the result DataFrame.
 """
 
 from __future__ import annotations
 
-import time
 import logging
+from math import ceil
+from pathlib import Path
 
-import numpy as np
 import pandas as pd
 import yfinance as yf
 
+from .config import (
+    CSV_PATH, SYMBOL_COLUMN, EXCHANGE_SUFFIX,
+    PERIOD, INTERVAL, BATCH_SIZE,
+)
+from .indicators import add_indicators, evaluate_trend_template, compute_12m_return, compute_volume_action
+
 logger = logging.getLogger(__name__)
 
-_EMPTY = {
-    "total_market_cap_cr":  np.nan,
-    "traded_value_cr":      np.nan,
-    "traded_volume":        np.nan,
-    "traded_val_pct_mc":    np.nan,
-}
+
+# ── Symbol list & metadata ─────────────────────────────────────────────────────
+
+def load_symbols(csv_path: str = CSV_PATH, symbol_col: str = SYMBOL_COLUMN) -> list[str]:
+    df  = pd.read_csv(csv_path)
+    raw = df[symbol_col].dropna().astype(str).str.strip().unique().tolist()
+    return [s if "." in s else s + EXCHANGE_SUFFIX for s in raw]
 
 
-def fetch_market_cap(symbol_ns: str) -> dict:
+def load_symbol_metadata(csv_path: str = CSV_PATH, symbol_col: str = SYMBOL_COLUMN) -> pd.DataFrame:
     """
-    Fetch market-cap and traded-value for a single NSE symbol.
-
-    Strategy (most-reliable → least):
-      1. yf.Ticker.fast_info  — lightweight, rarely blocked
-      2. yf.Ticker.info       — full dict, occasionally rate-limited
-      3. Last-resort: derive price × shares from history
-
-    All monetary values are converted to ₹ Crores (1 Cr = 10,000,000).
+    Return a DataFrame indexed by the Yahoo-suffixed symbol with
+    'industry_group' and 'industry' columns (sourced from NSE_Stocks.csv).
     """
+    df = pd.read_csv(csv_path)
+    df[symbol_col] = df[symbol_col].dropna().astype(str).str.strip()
+    df = df[df[symbol_col].str.len() > 0].copy()
+    df["symbol_ns"] = df[symbol_col].apply(
+        lambda s: s if "." in s else s + EXCHANGE_SUFFIX
+    )
+
+    meta_cols = {"symbol_ns": "symbol_ns"}
+    if "Industry Group" in df.columns:
+        meta_cols["Industry Group"] = "industry_group"
+    if "Industry" in df.columns:
+        meta_cols["Industry"] = "industry"
+
+    meta = df[[c for c in meta_cols]].rename(columns=meta_cols)
+    return meta.drop_duplicates(subset=["symbol_ns"]).set_index("symbol_ns")
+
+
+# ── Batch downloader ──────────────────────────────────────────────────────────
+
+def _chunk(lst: list, n: int):
+    for i in range(0, len(lst), n):
+        yield lst[i : i + n]
+
+
+def _process_symbol(sym: str, data: pd.DataFrame, is_multi: bool) -> dict | None:
     try:
-        ticker = yf.Ticker(symbol_ns)
+        df_sym = data[sym].copy() if is_multi else data.copy()
+        if "Close" not in df_sym.columns:
+            if "Adj Close" in df_sym.columns:
+                df_sym = df_sym.rename(columns={"Adj Close": "Close"})
+            else:
+                return None
+        df_sym = df_sym.dropna(subset=["Close"])
+        if df_sym.empty:
+            return None
 
-        # ── 1. fast_info (preferred) ──────────────────────────────────────────
-        fi = ticker.fast_info          # always available, no network call per se
-        market_cap_raw = getattr(fi, "market_cap", None)
-        current_price  = getattr(fi, "last_price", None) or getattr(fi, "regular_market_price", None)
-        volume         = getattr(fi, "three_month_average_volume", None)  # fallback
-        # prefer today's volume
-        day_volume     = getattr(fi, "regular_market_volume", None) or getattr(fi, "volume", None)
-        if day_volume:
-            volume = day_volume
-        shares_outstanding = getattr(fi, "shares", None)
-
-        # ── 2. Fall back to info dict if fast_info is sparse ─────────────────
-        if not market_cap_raw or not current_price:
-            try:
-                info = ticker.info
-                market_cap_raw = market_cap_raw or info.get("marketCap")
-                current_price  = current_price  or info.get("currentPrice") or info.get("regularMarketPrice")
-                volume         = volume         or info.get("volume") or info.get("regularMarketVolume")
-                shares_outstanding = shares_outstanding or info.get("sharesOutstanding")
-            except Exception as info_exc:
-                logger.debug("info fallback failed for %s: %s", symbol_ns, info_exc)
-
-        # ── 3. Last resort: derive from recent history ────────────────────────
-        if not market_cap_raw or not current_price:
-            try:
-                hist = ticker.history(period="5d", auto_adjust=True)
-                if not hist.empty:
-                    current_price = current_price or float(hist["Close"].iloc[-1])
-                    volume        = volume        or int(hist["Volume"].iloc[-1])
-            except Exception:
-                pass
-
-        # ── Compute ₹ Crore figures ───────────────────────────────────────────
-        _CR = 10_000_000.0   # 1 Crore = 10,000,000
-
-        total_mc_cr = (float(market_cap_raw) / _CR) if market_cap_raw else np.nan
-
-        # Traded value = volume × last price
-        traded_value_cr = np.nan
-        if volume and current_price:
-            traded_value_cr = (float(volume) * float(current_price)) / _CR
-
-        # TV as % of total market cap (useful liquidity metric)
-        traded_val_pct_mc = np.nan
-        if not np.isnan(traded_value_cr) and not np.isnan(total_mc_cr) and total_mc_cr > 0:
-            traded_val_pct_mc = (traded_value_cr / total_mc_cr) * 100.0
-
-        def _rnd(v, n=2):
-            try:
-                return round(float(v), n) if not np.isnan(float(v)) else np.nan
-            except Exception:
-                return np.nan
+        df_sym   = add_indicators(df_sym)
+        tpl      = evaluate_trend_template(df_sym)
+        rs_ret   = compute_12m_return(df_sym)
+        vol_data = compute_volume_action(df_sym)
 
         return {
-            "total_market_cap_cr": _rnd(total_mc_cr),
-            "traded_value_cr":     _rnd(traded_value_cr),
-            "traded_volume":       int(volume) if volume else np.nan,
-            "traded_val_pct_mc":   _rnd(traded_val_pct_mc, 4),
+            "symbol":  sym,
+            "close":   tpl["close"],
+            "MA12":    tpl["MA12"],  "MA36":  tpl["MA36"],
+            "MA50":    tpl["MA50"],  "MA150": tpl["MA150"],
+            "MA200":   tpl["MA200"], "EMA10": tpl["EMA10"],
+            "52w_low":  tpl["52w_low"],
+            "52w_high": tpl["52w_high"],
+            "cond1_price_above_150_200":   tpl["cond1_price_above_150_200"],
+            "cond2_ma150_above_ma200":     tpl["cond2_ma150_above_ma200"],
+            "cond3_ma200_trending_up_1m":  tpl["cond3_ma200_trending_up_1m"],
+            "cond4_ma50_above_150_200":    tpl["cond4_ma50_above_150_200"],
+            "cond5_price_above_ma50":      tpl["cond5_price_above_ma50"],
+            "cond6_30pct_above_52w_low":   tpl["cond6_30pct_above_52w_low"],
+            "cond7_within_25pct_52w_high": tpl["cond7_within_25pct_52w_high"],
+            "cond9_price_above_ema10":     tpl["cond9_price_above_ema10"],
+            "fresh_ma12_cross_today":      tpl["fresh_ma12_cross_today"],
+            "12m_return_pct": rs_ret,
+            "volume_signal":  vol_data["volume_signal"],
+            "relative_volume": vol_data["relative_volume"],
+            "bull_snort":     vol_data["bull_snort"],
         }
-
     except Exception as exc:
-        logger.error("yfinance fetch error for %s: %s", symbol_ns, exc)
-        return _EMPTY.copy()
+        logger.error("Error processing %s: %r", sym, exc)
+        return None
 
 
-def enrich_with_market_caps(passing_df: pd.DataFrame) -> pd.DataFrame:
+def download_all(symbols: list[str]) -> pd.DataFrame:
     """
-    Add market-cap / liquidity columns to *passing_df*.
-    Iterates symbols using yfinance; returns an enriched copy.
+    Download price history for all *symbols* in batches and return a
+    consolidated DataFrame with indicators + trend-template flags,
+    enriched with Industry Group and Industry from NSE_Stocks.csv.
     """
-    if passing_df.empty:
-        return passing_df
+    # Load industry metadata once
+    try:
+        meta = load_symbol_metadata()
+    except Exception as exc:
+        logger.warning("Could not load symbol metadata: %s", exc)
+        meta = pd.DataFrame()
 
-    logger.info("Fetching Market Cap data via yfinance for %d stocks…", len(passing_df))
+    all_rows: list[dict] = []
+    total = ceil(len(symbols) / BATCH_SIZE)
 
-    cols: dict[str, list] = {
-        "total_market_cap_cr": [],
-        "traded_value_cr":     [],
-        "traded_volume":       [],
-        "traded_val_pct_mc":   [],
-    }
+    for i, batch in enumerate(_chunk(symbols, BATCH_SIZE), start=1):
+        logger.info("=== Batch %d/%d (%d symbols) ===", i, total, len(batch))
+        try:
+            data = yf.download(
+                tickers=batch,
+                period=PERIOD,
+                interval=INTERVAL,
+                group_by="ticker",
+                auto_adjust=True,
+                threads=True,
+                progress=False,
+            )
+        except Exception as exc:
+            logger.error("Batch %d download failed: %s", i, exc)
+            continue
 
-    for i, sym in enumerate(passing_df["symbol"], start=1):
-        logger.info("  [%d/%d] %s", i, len(passing_df), sym)
-        caps = fetch_market_cap(sym)
-        for key in cols:
-            cols[key].append(caps.get(key, np.nan))
-        time.sleep(0.3)   # polite delay to avoid rate-limiting
+        if data is None or data.empty:
+            continue
 
-    out = passing_df.copy()
-    for key, values in cols.items():
-        out[key] = values
+        is_multi = isinstance(data.columns, pd.MultiIndex)
+        for sym in batch:
+            row = _process_symbol(sym, data, is_multi)
+            if row:
+                all_rows.append(row)
 
-    return out
+    df = pd.DataFrame(all_rows)
+
+    # Merge industry metadata
+    if not df.empty and not meta.empty:
+        df = df.join(meta, on="symbol", how="left")
+
+    return df
