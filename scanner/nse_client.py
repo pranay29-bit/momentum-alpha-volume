@@ -22,7 +22,10 @@ _EMPTY = {
     "traded_value_cr":      np.nan,
     "traded_volume":        np.nan,
     "traded_val_pct_mc":    np.nan,
-    "price_band":           "-",
+
+    "price_band":           "—",
+    "industry":             "—",
+    "industry_group":       "—",
 }
 
 _HEADERS = {
@@ -31,60 +34,55 @@ _HEADERS = {
     "Referer": "https://www.nseindia.com/",
 }
 
-
-def fetch_price_band(symbol_ns: str) -> str:
+def fetch_nse_metadata(symbol_ns: str) -> dict:
     """
-    Fetch NSE price band.
-    Example:
-      2
-      5
-      10
-      20
-      No Band
+    Fetch:
+      - price band
+      - industry
+      - industry group
+    from NSE quote API using jugaad-data
     """
 
     symbol = symbol_ns.replace(".NS", "").upper()
 
     try:
-        session = requests.Session()
 
-        session.get(
-            "https://www.nseindia.com",
-            headers=_HEADERS,
-            timeout=10,
-        )
+        q = nse.stock_quote(symbol)
 
-        url = (
-            f"https://www.nseindia.com/api/"
-            f"quote-equity?symbol={symbol}"
-        )
+        metadata = q.get("metadata", {})
+        security = q.get("securityInfo", {})
 
-        r = session.get(
-            url,
-            headers=_HEADERS,
-            timeout=10,
-        )
+        return {
+            "price_band": (
+                security.get("priceBand")
+                or metadata.get("priceBand")
+                or "—"
+            ),
 
-        data = r.json()
+            "industry": (
+                metadata.get("industry")
+                or "—"
+            ),
 
-        security_info = data.get(
-            "securityInfo",
-            {}
-        )
-
-        pb = security_info.get("priceBand")
-
-        if pb:
-            return str(pb)
+            "industry_group": (
+                metadata.get("industry")
+                or "—"
+            ),
+        }
 
     except Exception as exc:
+
         logger.debug(
-            "Price band fetch failed for %s: %s",
+            "NSE metadata failed for %s: %s",
             symbol,
             exc,
         )
 
-    return "—"
+    return {
+        "price_band": "—",
+        "industry": "—",
+        "industry_group": "—",
+    }
 
 def fetch_market_cap(symbol_ns: str) -> dict:
     """
@@ -97,7 +95,12 @@ def fetch_market_cap(symbol_ns: str) -> dict:
 
     All monetary values are converted to ₹ Crores (1 Cr = 10,000,000).
     """
-    price_band = fetch_price_band(symbol_ns)
+    nse_meta = fetch_nse_metadata(symbol_ns)
+
+    price_band = nse_meta.get("price_band", "—")
+    industry = nse_meta.get("industry", "—")
+    industry_group = nse_meta.get("industry_group", "—")
+    
     try:
         ticker = yf.Ticker(symbol_ns)
 
@@ -159,7 +162,10 @@ def fetch_market_cap(symbol_ns: str) -> dict:
             "traded_value_cr":     _rnd(traded_value_cr),
             "traded_volume":       int(volume) if volume else np.nan,
             "traded_val_pct_mc":   _rnd(traded_val_pct_mc, 4),
+
             "price_band":          price_band,
+            "industry":            industry,
+            "industry_group":      industry_group,
         }
 
     except Exception as exc:
@@ -182,7 +188,10 @@ def enrich_with_market_caps(passing_df: pd.DataFrame) -> pd.DataFrame:
         "traded_value_cr":     [],
         "traded_volume":       [],
         "traded_val_pct_mc":   [],
+
         "price_band":          [],
+        "industry":            [],
+        "industry_group":      [],
     }
 
     for i, sym in enumerate(passing_df["symbol"], start=1):
