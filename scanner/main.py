@@ -81,19 +81,19 @@ def run() -> None:
     passing = df[df["all_conditions_met"]].copy()
 
     if not passing.empty:
-    passing = enrich_with_market_caps(passing)
+      passing = enrich_with_market_caps(passing)
 
-    logger.info("Fetching quarterly result dates for passing stocks...")
+      logger.info("Fetching quarterly result dates for passing stocks...")
 
-    passing["result_date"] = passing["symbol"].apply(
+      passing["result_date"] = passing["symbol"].apply(
         get_result_date
-    )
+      )
 
-    print(
+      print(
         passing[
             ["symbol", "result_date"]
         ].head(20)
-    )
+      )
 
     passing_path = out_dir / f"passing_stocks_{today_str}.csv"
     passing.to_csv(passing_path, index=False)
