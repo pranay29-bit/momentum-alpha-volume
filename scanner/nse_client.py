@@ -14,6 +14,7 @@ import logging
 import numpy as np
 import pandas as pd
 import yfinance as yf
+from jugaad_data.nse import NSELive
 
 logger = logging.getLogger(__name__)
 
