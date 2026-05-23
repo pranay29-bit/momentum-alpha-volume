@@ -1,0 +1,1770 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Volume Action Dashboard</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@500;600&display=swap" rel="stylesheet"/>
+<style>
+:root {
+  --bg:#f5f3ef; --surface:#ffffff; --border:#e4e0d8; --border2:#ccc8bf;
+  --text:#1c1917; --muted:#78716c; --subtle:#a8a29e;
+  --blue:#2563eb; --blue-bg:#eff6ff; --blue-mid:#bfdbfe;
+  --teal:#0d9488; --amber:#b45309; --amber-bg:#fffbeb;
+  --green:#15803d; --green-bg:#f0fdf4; --green-mid:#86efac;
+  --emerald:#059669; --red:#dc2626;
+  --purple:#7c3aed; --purple-bg:#f5f3ff;
+  --sans:'Inter',sans-serif; --serif:'Playfair Display',Georgia,serif;
+  --r:10px; --rl:14px;
+}
+*, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
+html { font-size:15px; }
+body { background:var(--bg); color:var(--text); font-family:var(--sans);
+       line-height:1.6; min-height:100vh; }
+a { color:inherit; text-decoration:none; }
+
+/* ── Header ── */
+header { background:var(--surface); border-bottom:1px solid var(--border);
+         padding:1.75rem 3rem; display:flex; align-items:flex-end;
+         justify-content:space-between; gap:1rem; flex-wrap:wrap; }
+.logo-line { display:flex; align-items:center; gap:.6rem; margin-bottom:.3rem; }
+.logo-dot  { width:8px; height:8px; border-radius:50%; }
+.logo-tag  { font-size:.68rem; letter-spacing:.14em; text-transform:uppercase;
+             font-weight:700; }
+header h1  { font-family:var(--serif); font-size:clamp(1.5rem,3vw,2.1rem);
+             font-weight:600; letter-spacing:-.02em; line-height:1.1; }
+header .sub { font-size:.8rem; color:var(--muted); margin-top:.2rem; }
+.date-chip  { border-radius:999px; padding:.35rem 1rem; font-size:.78rem;
+              font-weight:700; white-space:nowrap; border:1px solid; }
+
+/* ── KPI row ── */
+.kpi-row { display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr));
+           gap:1rem; padding:1.5rem 3rem; }
+.kpi { background:var(--surface); border:1px solid var(--border);
+       border-radius:var(--rl); padding:1rem 1.3rem; position:relative;
+       overflow:hidden; min-width:0; }
+.kpi-accent { position:absolute; top:0; left:1.3rem; height:3px; width:28px;
+              border-radius:0 0 3px 3px; }
+.kpi-label  { font-size:.65rem; text-transform:uppercase; letter-spacing:.1em;
+              color:var(--muted); font-weight:700; margin-bottom:.4rem; }
+.kpi-val    { font-family:var(--serif); font-size:clamp(.95rem,2vw,1.65rem);
+              font-weight:600; line-height:1; word-break:break-word; }
+.kpi.blue   .kpi-val { color:var(--blue); }
+.kpi.blue   .kpi-accent { background:var(--blue); }
+.kpi.teal   .kpi-val { color:var(--teal); }
+.kpi.teal   .kpi-accent { background:var(--teal); }
+.kpi.amber  .kpi-val { color:var(--amber); }
+.kpi.amber  .kpi-accent { background:var(--amber); }
+.kpi.green  .kpi-val { color:var(--emerald); }
+.kpi.green  .kpi-accent { background:var(--emerald); }
+.kpi.purple .kpi-val { color:var(--purple); }
+.kpi.purple .kpi-accent { background:var(--purple); }
+
+/* ── Charts ── */
+.charts-grid { padding:0 3rem 1.5rem; display:grid; gap:1rem;
+               grid-template-columns:3fr 2fr; }
+@media(max-width:860px) { .charts-grid { grid-template-columns:1fr; } }
+.chart-card  { background:var(--surface); border:1px solid var(--border);
+               border-radius:var(--rl); padding:1.25rem 1.4rem 1rem; }
+.chart-title { font-size:.68rem; text-transform:uppercase; letter-spacing:.1em;
+               color:var(--muted); font-weight:700; margin-bottom:1rem; }
+.chart-wrap  { position:relative; height:250px; }
+
+/* ── Table section ── */
+.table-section { padding:0 3rem 3rem; }
+.sec-head  { display:flex; align-items:center; justify-content:space-between;
+             margin-bottom:.85rem; flex-wrap:wrap; gap:.75rem; }
+.sec-title { font-size:.68rem; text-transform:uppercase; letter-spacing:.1em;
+             color:var(--muted); font-weight:700; }
+.controls  { display:flex; align-items:center; gap:1.25rem; flex-wrap:wrap; }
+.search-input { background:var(--surface); border:1px solid var(--border2);
+                border-radius:var(--r); color:var(--text); font-family:var(--sans);
+                font-size:.82rem; padding:.4rem .85rem; outline:none; width:190px;
+                transition:border-color .18s; }
+.search-input::placeholder { color:var(--subtle); }
+.legend { display:flex; gap:1.1rem; font-size:.7rem; color:var(--muted);
+          flex-wrap:wrap; align-items:center; }
+.leg-item { display:flex; align-items:center; gap:.3rem; }
+.leg-dot  { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+.tbl-wrap { background:var(--surface); border:1px solid var(--border);
+            border-radius:var(--rl); overflow:auto; }
+table { width:100%; border-collapse:collapse; font-size:.82rem; white-space:nowrap; }
+thead tr { background:#faf9f7; border-bottom:1px solid var(--border);
+           position:sticky; top:0; z-index:2; }
+th { font-size:.65rem; font-weight:700; text-transform:uppercase; letter-spacing:.09em;
+     color:var(--muted); padding:.7rem 1rem; text-align:left; cursor:pointer;
+     user-select:none; transition:background .12s; }
+th:hover { background:#f0ede8; }
+th.r { text-align:right; } th.c { text-align:center; }
+th .si { margin-left:.3rem; opacity:.35; font-style:normal; font-size:.7rem; }
+th.sort-asc  .si::after { content:'▲'; opacity:1; }
+th.sort-desc .si::after { content:'▼'; opacity:1; }
+th:not(.sort-asc):not(.sort-desc) .si::after { content:'⇅'; }
+.srow { border-bottom:1px solid var(--border); transition:background .12s; }
+.srow:last-child { border-bottom:none; }
+.srow:hover { background:#fafaf8; }
+td { padding:.7rem 1rem; vertical-align:middle; }
+td.r { text-align:right; } td.c { text-align:center; }
+a.sym-tag { display:inline-block; font-weight:700; font-size:.75rem;
+            padding:.17rem .55rem; border-radius:6px; letter-spacing:.04em;
+            text-decoration:none; border:1px solid; transition:background .15s; }
+.rs-tag  { display:inline-block; background:var(--amber-bg); border:1px solid #fde68a;
+           color:var(--amber); font-size:.73rem; font-weight:700;
+           padding:.14rem .5rem; border-radius:999px; }
+.ema-tag { display:inline-block; font-size:.73rem; font-weight:700;
+           padding:.14rem .5rem; border-radius:999px; border:1px solid transparent; }
+.bar-cell { display:flex; align-items:center; gap:.5rem; min-width:150px; }
+.bar-bg   { flex:1; height:5px; background:#ebe9e4; border-radius:99px; overflow:hidden; }
+.bar-fill { height:100%; border-radius:99px; }
+.bar-pct  { font-size:.73rem; font-weight:700; min-width:36px; text-align:right; }
+.badge    { font-size:.65rem; font-weight:700; letter-spacing:.06em;
+            text-transform:uppercase; border-radius:999px; padding:.22rem .7rem;
+            border:1px solid; }
+.badge-row { display:flex; gap:.5rem; margin-top:.5rem; flex-wrap:wrap; }
+footer { text-align:center; padding:1.1rem; font-size:.7rem; color:var(--subtle);
+         border-top:1px solid var(--border); background:var(--surface); }
+</style>
+</head>
+<body>
+
+    <header>
+      <div><div class='logo-line'><span class='logo-dot' style='background:var(--blue)'></span><span class='logo-tag'>Momentum Alpha</span></div>
+      <h1>Volume Action</h1><div class='sub'>Pocket Pivot / Blue Volume Stocks • 23 May 2026</div></div>
+      <div class='date-chip' style='border-color:var(--blue-mid);background:var(--blue-bg);color:var(--blue);'>181 Stocks</div>
+    </header>
+    <section class='table-section'>
+    <div class='tbl-wrap'>
+    <table>
+    <thead><tr><th>Symbol</th><th class='r'>Close</th><th class='r'>Rel Volume</th><th class='c'>Signal</th><th class='c'>Bull Snort</th><th class='r'>RS</th></tr></thead>
+    <tbody>
+        <tr class='srow'>
+            <td><a class='sym-tag' href='https://www.tradingview.com/chart/?symbol=NSE%3AHONASA' target='_blank'>HONASA</a></td>
+            <td class='r'>384.35</td>
+            <td class='r'>3039.6%</td>
+            <td class='c'><span class='badge' style='background:var(--blue-bg);color:var(--blue);border-color:var(--blue-mid);'>BLUE PPV</span></td>
+            <td class='c'>-</td>
+            <td class='r'><span class='rs-tag'>89.1</span></td>
+        </tr>
+        
+        <tr class='srow'>
+            <td><a class='sym-tag' href='https://www.tradingview.com/chart/?symbol=NSE%3AMANALIPETC' target='_blank'>MANALIPETC</a></td>
+            <td class='r'>62.94</td>
+            <td class='r'>2526.2%</td>
+            <td class='c'><span class='badge' style='background:var(--blue-bg);color:var(--blue);border-color:var(--blue-mid);'>BLUE PPV</span></td>
+            <td class='c'>-</td>
+            <td class='r'><span class='rs-tag'>75.0</span></td>
+        </tr>
+        
+        <tr class='srow'>
+            <td><a class='sym-tag' href='https://www.tradingview.com/chart/?symbol=NSE%3AJSWCEMENT' target='_blank'>JSWCEMENT</a></td>
+            <td class='r'>nan</td>
+            <td class='r'>2455.6%</td>
+            <td class='c'><span class='badge' style='background:var(--blue-bg);color:var(--blue);border-color:var(--blue-mid);'>BLUE PPV</span></td>
+            <td class='c'>-</td>
+            <td class='r'><span class='rs-tag'>nan</span></td>
+        </tr>
+        
+        <tr class='srow'>
+            <td><a class='sym-tag' href='https://www.tradingview.com/chart/?symbol=NSE%3AEXICOM' target='_blank'>EXICOM</a></td>
+            <td class='r'>157.84</td>
+            <td class='r'>2126.2%</td>
+            <td class='c'><span class='badge' style='background:var(--blue-bg);color:var(--blue);border-color:var(--blue-mid);'>BLUE PPV</span></td>
+            <td class='c'>🔥</td>
+            <td class='r'><span class='rs-tag'>46.1</span></td>
+        </tr>
+        
+        <tr class='srow'>
+            <td><a class='sym-tag' href='https://www.tradingview.com/chart/?symbol=NSE%3ARAMCOSYS' target='_blank'>RAMCOSYS</a></td>
+            <td class='r'>469.9</td>
+            <td class='r'>1920.8%</td>
+            <td class='c'><span class='badge' style='background:var(--blue-bg);color:var(--blue);border-color:var(--blue-mid);'>BLUE PPV</span></td>
+            <td class='c'>🔥</td>
+            <td class='r'><span class='rs-tag'>82.9</span></td>
+        </tr>
+        
+        <tr class='srow'>
+            <td><a class='sym-tag' href='https://www.tradingview.com/chart/?symbol=NSE%3ASANDHAR' target='_blank'>SANDHAR</a></td>
+            <td class='r'>622.5</td>
+            <td class='r'>1757.6%</td>
+            <td class='c'><span class='badge' style='background:var(--blue-bg);color:var(--blue);border-color:var(--blue-mid);'>BLUE PPV</span></td>
+            <td class='c'>-</td>
+            <td class='r'><span class='rs-tag'>88.8</span></td>
+        </tr>
+        
+        <tr class='srow'>
+            <td><a class='sym-tag' href='https://www.tradingview.com/chart/?symbol=NSE%3ARATEGAIN' target='_blank'>RATEGAIN</a></td>
+            <td class='r'>714.45</td>
+            <td class='r'>1730.6%</td>
+            <td class='c'><span class='badge' style='background:var(--blue-bg);color:var(--blue);border-color:var(--blue-mid);'>BLUE PPV</span></td>
+            <td class='c'>🔥</td>
+            <td class='r'><span class='rs-tag'>88.5</span></td>
+        </tr>
+        
+        <tr class='srow'>
+            <td><a class='sym-tag' href='https://www.tradingview.com/chart/?symbol=NSE%3ANOIDATOLL' target='_blank'>NOIDATOLL</a></td>
+            <td class='r'>7.17</td>
+            <td class='r'>1629.6%</td>
+            <td class='c'><span class='badge' style='background:var(--blue-bg);color:var(--blue);border-color:var(--blue-mid);'>BLUE PPV</span></td>
+            <td class='c'>-</td>
+            <td class='r'><span class='rs-tag'>91.6</span></td>
+        </tr>
+        
+        <tr class='srow'>
+            <td><a class='sym-tag' href='https://www.tradingview.com/chart/?symbol=NSE%3ASHEMAROO' target='_blank'>SHEMAROO</a></td>
+            <td class='r'>103.27</td>
+            <td class='r'>1599.3%</td>
+            <td class='c'><span class='badge' style='background:var(--blue-bg);color:var(--blue);border-color:var(--blue-mid);'>BLUE PPV</span></td>
+            <td class='c'>-</td>
+            <td class='r'><span class='rs-tag'>55.7</span></td>
+        </tr>
+        
+        <tr class='srow'>
+            <td><a class='sym-tag' href='https://www.tradingview.com/chart/?symbol=NSE%3ALAXMIDENTL' target='_blank'>LAXMIDENTL</a></td>
+            <td class='r'>249.28</td>
+            <td class='r'>1536.2%</td>
+            <td class='c'><span class='badge' style='background:var(--blue-bg);color:var(--blue);border-color:var(--blue-mid);'>BLUE PPV</span></td>
+            <td class='c'>🔥</td>
+            <td class='r'><span class='rs-tag'>12.6</span></td>
+        </tr>
+        
+        <tr class='srow'>
+            <td><a class='sym-tag' href='https://www.tradingview.com/chart/?symbol=NSE%3AGENESYS' target='_blank'>GENESYS</a></td>
+            <td class='r'>277.4</td>
+            <td class='r'>1530.1%</td>
+            <td class='c'><span class='badge' style='background:var(--blue-bg);color:var(--blue);border-color:var(--blue-mid);'>BLUE PPV</span></td>
+            <td class='c'>🔥</td>
+            <td class='r'><span class='rs-tag'>1.7</span></td>
+        </tr>
+        
+        <tr class='srow'>
+            <td><a class='sym-tag' href='https://www.tradingview.com/chart/?symbol=NSE%3AMUFTI' target='_blank'>MUFTI</a></td>
+            <td class='r'>89.26</td>
+            <td class='r'>1469.1%</td>
+            <td class='c'><span class='badge' style='background:var(--blue-bg);color:var(--blue);border-color:var(--blue-mid);'>BLUE PPV</span></td>
+            <td class='c'>-</td>
+            <td class='r'><span class='rs-tag'>12.5</span></td>
+        </tr>
+        
+        <tr class='srow'>
+            <td><a class='sym-tag' href='https://www.tradingview.com/chart/?symbol=NSE%3AIVP' target='_blank'>IVP</a></td>
+            <td class='r'>176.47</td>
+            <td class='r'>1417.5%</td>
+            <td class='c'><span class='badge' style='background:var(--blue-bg);color:var(--blue);border-color:var(--blue-mid);'>BLUE PPV</span></td>
+            <td class='c'>-</td>
+            <td class='r'><span class='rs-tag'>56.1</span></td>
+        </tr>
+        
+        <tr class='srow'>
+            <td><a class='sym-tag' href='https://www.tradingview.com/chart/?symbol=NSE%3AEXCELSOFT' target='_blank'>EXCELSOFT</a></td>
+            <td class='r'>nan</td>
+            <td class='r'>1315.2%</td>
+            <td class='c'><span class='badge' style='background:var(--blue-bg);color:var(--blue);border-color:var(--blue-mid);'>BLUE PPV</span></td>
+            <td class='c'>🔥</td>
+            <td class='r'><span class='rs-tag'>nan</span></td>
+        </tr>
+        
+        <tr class='srow'>
+            <td><a class='sym-tag' href='https://www.tradingview.com/chart/?symbol=NSE%3APRITIKAUTO' target='_blank'>PRITIKAUTO</a></td>
+            <td class='r'>14.74</td>
+            <td class='r'>1271.6%</td>
+            <td class='c'><span class='badge' style='background:var(--blue-bg);color:var(--blue);border-color:var(--blue-mid);'>BLUE PPV</span></td>
+            <td class='c'>-</td>
+            <td class='r'><span class='rs-tag'>36.9</span></td>
+        </tr>
+        
+        <tr class='srow'>
+            <td><a class='sym-tag' href='https://www.tradingview.com/chart/?symbol=NSE%3ADAMCAPITAL' target='_blank'>DAMCAPITAL</a></td>
+            <td class='r'>160.88</td>
+            <td class='r'>1252.2%</td>
+            <td class='c'><span class='badge' style='background:var(--blue-bg);color:var(--blue);border-color:var(--blue-mid);'>BLUE PPV</span></td>
+            <td class='c'>-</td>
+            <td class='r'><span class='rs-tag'>22.3</span></td>
+        </tr>
+        
+        <tr class='srow'>
+            <td><a class='sym-tag' href='https://www.tradingview.com/chart/?symbol=NSE%3ASMLT' target='_blank'>SMLT</a></td>
+            <td class='r'>77.38</td>
+            <td class='r'>1247.3%</td>
+            <td class='c'><span class='badge' style='background:var(--blue-bg);color:var(--blue);border-color:var(--blue-mid);'>BLUE PPV</span></td>
+            <td class='c'>-</td>
+            <td class='r'><span class='rs-tag'>15.2</span></td>
+        </tr>
+        
+        <tr class='srow'>
+            <td><a class='sym-tag' href='https://www.tradingview.com/chart/?symbol=NSE%3ATALBROAUTO' target='_blank'>TALBROAUTO</a></td>
+            <td class='r'>359.05</td>
+            <td class='r'>1232.4%</td>
+            <td class='c'><span class='badge' style='background:var(--blue-bg);color:var(--blue);border-color:var(--blue-mid);'>BLUE PPV</span></td>
+            <td class='c'>🔥</td>
+            <td class='r'><span class='rs-tag'>81.2</span></td>
+        </tr>
+        
+        <tr class='srow'>
+            <td><a class='sym-tag' href='https://www.tradingview.com/chart/?symbol=NSE%3ANIBE' target='_blank'>NIBE</a></td>
+            <td class='r'>1450.5</td>
+            <td class='r'>1190.4%</td>
+            <td class='c'><span class='badge' style='background:var(--blue-bg);color:var(--blue);border-color:var(--blue-mid);'>BLUE PPV</span></td>
+            <td class='c'>🔥</td>
+            <td class='r'><span class='rs-tag'>43.7</span></td>
+        </tr>
+        
+        <tr class='srow'>
+            <td><a class='sym-tag' href='https://www.tradingview.com/chart/?symbol=NSE%3AOCCLLTD' target='_blank'>OCCLLTD</a></td>
+            <td class='r'>116.14</td>
+            <td class='r'>1081.0%</td>
+            <td class='c'><span class='badge' style='background:var(--blue-bg);color:var(--blue);border-color:var(--blue-mid);'>BLUE PPV</span></td>
+            <td class='c'>🔥</td>
+            <td class='r'><span class='rs-tag'>87.0</span></td>
+        </tr>
+        
+        <tr class='srow'>
+            <td><a class='sym-tag' href='https://www.tradingview.com/chart/?symbol=NSE%3ASFL' target='_blank'>SFL</a></td>
+            <td class='r'>638.5</td>
+            <td class='r'>1055.3%</td>
+            <td class='c'><span class='badge' style='background:var(--blue-bg);color:var(--blue);border-color:var(--blue-mid);'>BLUE PPV</span></td>
+            <td class='c'>🔥</td>
+            <td class='r'><span class='rs-tag'>58.1</span></td>
+        </tr>
+        
+        <tr class='srow'>
+            <td><a class='sym-tag' href='https://www.tradingview.com/chart/?symbol=NSE%3ALICI' target='_blank'>LICI</a></td>
+            <td class='r'>812.95</td>
+            <td class='r'>988.3%</td>
+            <td class='c'><span class='badge' style='background:var(--blue-bg);color:var(--blue);border-color:var(--blue-mid);'>BLUE PPV</span></td>
+            <td class='c'>-</td>
+            <td class='r'><span class='rs-tag'>56.8</span></td>
+        </tr>
+        
+        <tr class='srow'>
+            <td><a class='sym-tag' href='https://www.tradingview.com/chart/?symbol=NSE%3ANGLFINE' target='_blank'>NGLFINE</a></td>
+            <td class='r'>2735.8</td>
+            <td class='r'>936.1%</td>
+            <td class='c'><span class='badge' style='background:var(--blue-bg);color:var(--blue);border-color:var(--blue-mid);'>BLUE PPV</span></td>
+            <td class='c'>🔥</td>
+            <td class='r'><span class='rs-tag'>96.6</span></td>
+        </tr>
+        
+        <tr class='srow'>
+            <td><a class='sym-tag' href='https://www.tradingview.com/chart/?symbol=NSE%3ASOLARWORLD' target='_blank'>SOLARWORLD</a></td>
+            <td class='r'>nan</td>
+            <td class='r'>934.1%</td>
+            <td class='c'><span class='badge' style='background:var(--blue-bg);color:var(--blue);border-color:var(--blue-mid);'>BLUE PPV</span></td>
+            <td class='c'>-</td>
+            <td class='r'><span class='rs-tag'>nan</span></td>
+        </tr>
+        
+        <tr class='srow'>
+            <td><a class='sym-tag' href='https://www.tradingview.com/chart/?symbol=NSE%3A3MINDIA' target='_blank'>3MINDIA</a></td>
+            <td class='r'>33315.0</td>
+            <td class='r'>883.9%</td>
+            <td class='c'><span class='badge' style='background:var(--blue-bg);color:var(--blue);border-color:var(--blue-mid);'>BLUE PPV</span></td>
+            <td class='c'>-</td>
+            <td class='r'><span class='rs-tag'>75.4</span></td>
+        </tr>
+        
+        <tr class='srow'>
+            <td><a class='sym-tag' href='https://www.tradingview.com/chart/?symbol=NSE%3AABSMARINE' target='_blank'>ABSMARINE</a></td>
+            <td class='r'>301.35</td>
+            <td class='r'>856.0%</td>
+            <td class='c'><span class='badge' style='background:var(--blue-bg);color:var(--blue);border-color:var(--blue-mid);'>BLUE PPV</span></td>
+            <td class='c'>-</td>
+            <td class='r'><span class='rs-tag'>97.7</span></td>
+        </tr>
+        
+        <tr class='srow'>
+            <td><a class='sym-tag' href='https://www.tradingview.com/chart/?symbol=NSE%3AMINDACORP' target='_blank'>MINDACORP</a></td>
+            <td class='r'>574.65</td>
+            <td class='r'>823.6%</td>
+            <td class='c'><span class='badge' style='background:var(--blue-bg);color:var(--blue);border-color:var(--blue-mid);'>BLUE PPV</span></td>
+            <td class='c'>🔥</td>
+            <td class='r'><span class='rs-tag'>73.0</span></td>
+        </tr>
+        
+        <tr class='srow'>
+            <td><a class='sym-tag' href='https://www.tradingview.com/chart/?symbol=NSE%3AEMIL' target='_blank'>EMIL</a></td>
+            <td class='r'>120.65</td>
+            <td class='r'>776.9%</td>
+            <td class='c'><span class='badge' style='background:var(--blue-bg);color:var(--blue);border-color:var(--blue-mid);'>BLUE PPV</span></td>
+            <td class='c'>-</td>
+            <td class='r'><span class='rs-tag'>51.8</span></td>
+        </tr>
+        
+        <tr class='srow'>
+            <td><a class='sym-tag' href='https://www.tradingview.com/chart/?symbol=NSE%3AREXPIPES' target='_blank'>REXPIPES</a></td>
+            <td class='r'>184.0</td>
+            <td class='r'>728.5%</td>
+            <td class='c'><span class='badge' style='background:var(--blue-bg);color:var(--blue);border-color:var(--blue-mid);'>BLUE PPV</span></td>
+            <td class='c'>🔥</td>
+            <td class='r'><span class='rs-tag'>95.9</span></td>
+        </tr>
+        
+        <tr class='srow'>
+            <td><a class='sym-tag' href='https://www.tradingview.com/chart/?symbol=NSE%3ASPARC' target='_blank'>SPARC</a></td>
+            <td class='r'>209.77</td>
+            <td class='r'>725.5%</td>
+            <td class='c'><span class='badge' style='background:var(--blue-bg);color:var(--blue);border-color:var(--blue-mid);'>BLUE PPV</span></td>
+            <td class='c'>🔥</td>
+            <td class='r'><span class='rs-tag'>85.1</span></td>
+        </tr>
+        
+        <tr class='srow'>
+            <td><a class='sym-tag' href='https://www.tradingview.com/chart/?symbol=NSE%3ATCL' target='_blank'>TCL</a></td>
+            <td class='r'>96.0</td>
+            <td class='r'>714.3%</td>
+            <td class='c'><span class='badge' style='background:var(--blue-bg);color:var(--blue);border-color:var(--blue-mid);'>BLUE PPV</span></td>
+            <td class='c'>-</td>
+            <td class='r'><span class='rs-tag'>59.9</span></td>
+        </tr>
+        
+        <tr class='srow'>
+            <td><a class='sym-tag' href='https://www.tradingview.com/chart/?symbol=NSE%3AIXIGO' target='_blank'>IXIGO</a></td>
+            <td class='r'>171.17</td>
+            <td class='r'>712.4%</td>
+            <td class='c'><span class='badge' style='background:var(--blue-bg);color:var(--blue);border-color:var(--blue-mid);'>BLUE PPV</span></td>
+            <td class='c'>🔥</td>
+            <td class='r'><span class='rs-tag'>59.9</span></td>
+        </tr>
+        
+        <tr class='srow'>
+            <td><a class='sym-tag' href='https://www.tradingview.com/chart/?symbol=NSE%3ANYKAA' target='_blank'>NYKAA</a></td>
+            <td class='r'>277.25</td>
+            <td class='r'>649.5%</td>
+            <td class='c'><span class='badge' style='background:var(--blue-bg);color:var(--blue);border-color:var(--blue-mid);'>BLUE PPV</span></td>
+            <td class='c'>-</td>
+            <td class='r'><span class='rs-tag'>88.0</span></td>
+        </tr>
+        
+        <tr class='srow'>
+            <td><a class='sym-tag' href='https://www.tradingview.com/chart/?symbol=NSE%3APASUPTAC' target='_blank'>PASUPTAC</a></td>
+            <td class='r'>57.97</td>
+            <td class='r'>644.2%</td>
+            <td class='c'><span class='badge' style='background:var(--blue-bg);color:var(--blue);border-color:var(--blue-mid);'>BLUE PPV</span></td>
+            <td class='c'>-</td>
+            <td class='r'><span class='rs-tag'>79.6</span></td>
+        </tr>
+        
+        <tr class='srow'>
+            <td><a class='sym-tag' href='https://www.tradingview.com/chart/?symbol=NSE%3ABCG' target='_blank'>BCG</a></td>
+            <td class='r'>10.58</td>
+            <td class='r'>634.4%</td>
+            <td class='c'><span class='badge' style='background:var(--blue-bg);color:var(--blue);border-color:var(--blue-mid);'>BLUE PPV</span></td>
+            <td class='c'>-</td>
+            <td class='r'><span class='rs-tag'>65.2</span></td>
+        </tr>
+        
+        <tr class='srow'>
+            <td><a class='sym-tag' href='https://www.tradingview.com/chart/?symbol=NSE%3AGOCOLORS' target='_blank'>GOCOLORS</a></td>
+            <td class='r'>303.4</td>
+            <td class='r'>595.2%</td>
+            <td class='c'><span class='badge' style='background:var(--blue-bg);color:var(--blue);border-color:var(--blue-mid);'>BLUE PPV</span></td>
+            <td class='c'>🔥</td>
+            <td class='r'><span class='rs-tag'>1.2</span></td>
+        </tr>
+        
+        <tr class='srow'>
+            <td><a class='sym-tag' href='https://www.tradingview.com/chart/?symbol=NSE%3AJAYBARMARU' target='_blank'>JAYBARMARU</a></td>
+            <td class='r'>119.36</td>
+            <td class='r'>595.1%</td>
+            <td class='c'><span class='badge' style='background:var(--blue-bg);color:var(--blue);border-color:var(--blue-mid);'>BLUE PPV</span></td>
+            <td class='c'>-</td>
+            <td class='r'><span class='rs-tag'>93.7</span></td>
+        </tr>
+        
+        <tr class='srow'>
+            <td><a class='sym-tag' href='https://www.tradingview.com/chart/?symbol=NSE%3AMOTOGENFIN' target='_blank'>MOTOGENFIN</a></td>
+            <td class='r'>27.02</td>
+            <td class='r'>585.1%</td>
+            <td class='c'><span class='badge' style='background:var(--blue-bg);color:var(--blue);border-color:var(--blue-mid);'>BLUE PPV</span></td>
+            <td class='c'>🔥</td>
+            <td class='r'><span class='rs-tag'>55.3</span></td>
+        </tr>
+        
+        <tr class='srow'>
+            <td><a class='sym-tag' href='https://www.tradingview.com/chart/?symbol=NSE%3ASHILPAMED' target='_blank'>SHILPAMED</a></td>
+            <td class='r'>490.25</td>
+            <td class='r'>583.1%</td>
+            <td class='c'><span class='badge' style='background:var(--blue-bg);color:var(--blue);border-color:var(--blue-mid);'>BLUE PPV</span></td>
+            <td class='c'>-</td>
+            <td class='r'><span class='rs-tag'>88.1</span></td>
+        </tr>
+        
+        <tr class='srow'>
+            <td><a class='sym-tag' href='https://www.tradingview.com/chart/?symbol=NSE%3AHONAUT' target='_blank'>HONAUT</a></td>
+            <td class='r'>35405.0</td>
+            <td class='r'>568.5%</td>
+            <td class='c'><span class='badge' style='background:var(--blue-bg);color:var(--blue);border-color:var(--blue-mid);'>BLUE PPV</span></td>
+            <td class='c'>-</td>
+            <td class='r'><span class='rs-tag'>50.7</span></td>
+        </tr>
+        
+        <tr class='srow'>
+            <td><a class='sym-tag' href='https://www.tradingview.com/chart/?symbol=NSE%3ASPIC' target='_blank'>SPIC</a></td>
+            <td class='r'>74.25</td>
+            <td class='r'>562.5%</td>
+            <td class='c'><span class='badge' style='background:var(--blue-bg);color:var(--blue);border-color:var(--blue-mid);'>BLUE PPV</span></td>
+            <td class='c'>-</td>
+            <td class='r'><span class='rs-tag'>42.8</span></td>
+        </tr>
+        
+        <tr class='srow'>
+            <td><a class='sym-tag' href='https://www.tradingview.com/chart/?symbol=NSE%3ASHANTIGOLD' target='_blank'>SHANTIGOLD</a></td>
+            <td class='r'>nan</td>
+            <td class='r'>536.0%</td>
+            <td class='c'><span class='badge' style='background:var(--blue-bg);color:var(--blue);border-color:var(--blue-mid);'>BLUE PPV</span></td>
+            <td class='c'>-</td>
+            <td class='r'><span class='rs-tag'>nan</span></td>
+        </tr>
+        
+        <tr class='srow'>
+            <td><a class='sym-tag' href='https://www.tradingview.com/chart/?symbol=NSE%3ARCF' target='_blank'>RCF</a></td>
+            <td class='r'>130.78</td>
+            <td class='r'>514.0%</td>
+            <td class='c'><span class='badge' style='background:var(--blue-bg);color:var(--blue);border-color:var(--blue-mid);'>BLUE PPV</span></td>
+            <td class='c'>-</td>
+            <td class='r'><span class='rs-tag'>45.4</span></td>
+        </tr>
+        
+        <tr class='srow'>
+            <td><a class='sym-tag' href='https://www.tradingview.com/chart/?symbol=NSE%3ASUPRIYA' target='_blank'>SUPRIYA</a></td>
+            <td class='r'>774.1</td>
+            <td class='r'>508.4%</td>
+            <td class='c'><span class='badge' style='background:var(--blue-bg);color:var(--blue);border-color:var(--blue-mid);'>BLUE PPV</span></td>
+            <td class='c'>🔥</td>
+            <td class='r'><span class='rs-tag'>72.2</span></td>
+        </tr>
+        
+        <tr class='srow'>
+            <td><a class='sym-tag' href='https://www.tradingview.com/chart/?symbol=NSE%3AGRETEX' target='_blank'>GRETEX</a></td>
+            <td class='r'>259.0</td>
+            <td class='r'>507.7%</td>
+            <td class='c'><span class='badge' style='background:var(--blue-bg);color:var(--blue);border-color:var(--blue-mid);'>BLUE PPV</span></td>
+            <td class='c'>🔥</td>
+            <td class='r'><span class='rs-tag'>77.4</span></td>
+        </tr>
+        
+        <tr class='srow'>
+            <td><a class='sym-tag' href='https://www.tradingview.com/chart/?symbol=NSE%3APAGEIND' target='_blank'>PAGEIND</a></td>
+            <td class='r'>39455.0</td>
+            <td class='r'>502.3%</td>
+            <td class='c'><span class='badge' style='background:var(--blue-bg);color:var(--blue);border-color:var(--blue-mid);'>BLUE PPV</span></td>
+            <td class='c'>-</td>
+            <td class='r'><span class='rs-tag'>38.4</span></td>
+        </tr>
+        
+        <tr class='srow'>
+            <td><a class='sym-tag' href='https://www.tradingview.com/chart/?symbol=NSE%3ABETA' target='_blank'>BETA</a></td>
+            <td class='r'>1376.7</td>
+            <td class='r'>497.0%</td>
+            <td class='c'><span class='badge' style='background:var(--blue-bg);color:var(--blue);border-color:var(--blue-mid);'>BLUE PPV</span></td>
+            <td class='c'>🔥</td>
+            <td class='r'><span class='rs-tag'>27.8</span></td>
+        </tr>
+        
+        <tr class='srow'>
+            <td><a class='sym-tag' href='https://www.tradingview.com/chart/?symbol=NSE%3AGPECO' target='_blank'>GPECO</a></td>
+            <td class='r'>419.1</td>
+            <td class='r'>485.5%</td>
+            <td class='c'><span class='badge' style='background:var(--blue-bg);color:var(--blue);border-color:var(--blue-mid);'>BLUE PPV</span></td>
+            <td class='c'>🔥</td>
+            <td class='r'><span class='rs-tag'>86.9</span></td>
+        </tr>
+        
+        <tr class='srow'>
+            <td><a class='sym-tag' href='https://www.tradingview.com/chart/?symbol=NSE%3AIMPAL' target='_blank'>IMPAL</a></td>
+            <td class='r'>1126.8</td>
+            <td class='r'>474.2%</td>
+            <td class='c'><span class='badge' style='background:var(--blue-bg);color:var(--blue);border-color:var(--blue-mid);'>BLUE PPV</span></td>
+            <td class='c'>-</td>
+            <td class='r'><span class='rs-tag'>71.5</span></td>
+        </tr>
+        
+        <tr class='srow'>
+            <td><a class='sym-tag' href='https://www.tradingview.com/chart/?symbol=NSE%3ANAUKRI' target='_blank'>NAUKRI</a></td>
+            <td class='r'>960.95</td>
+            <td class='r'>461.5%</td>
+            <td class='c'><span class='badge' style='background:var(--blue-bg);color:var(--blue);border-color:var(--blue-mid);'>BLUE PPV</span></td>
+            <td class='c'>-</td>
+            <td class='r'><span class='rs-tag'>16.8</span></td>
+        </tr>
+        
+        <tr class='srow'>
+            <td><a class='sym-tag' href='https://www.tradingview.com/chart/?symbol=NSE%3AEVERESTIND' target='_blank'>EVERESTIND</a></td>
+            <td class='r'>404.8</td>
+            <td class='r'>460.5%</td>
+            <td class='c'><span class='badge' style='background:var(--blue-bg);color:var(--blue);border-color:var(--blue-mid);'>BLUE PPV</span></td>
+            <td class='c'>-</td>
+            <td class='r'><span class='rs-tag'>37.7</span></td>
+        </tr>
+        
+        <tr class='srow'>
+            <td><a class='sym-tag' href='https://www.tradingview.com/chart/?symbol=NSE%3ATATACOMM' target='_blank'>TATACOMM</a></td>
+            <td class='r'>1964.0</td>
+            <td class='r'>450.4%</td>
+            <td class='c'><span class='badge' style='background:var(--blue-bg);color:var(--blue);border-color:var(--blue-mid);'>BLUE PPV</span></td>
+            <td class='c'>🔥</td>
+            <td class='r'><span class='rs-tag'>80.5</span></td>
+        </tr>
+        
+        <tr class='srow'>
+            <td><a class='sym-tag' href='https://www.tradingview.com/chart/?symbol=NSE%3ASUDARCOLOR' target='_blank'>SUDARCOLOR</a></td>
+            <td class='r'>nan</td>
+            <td class='r'>429.4%</td>
+            <td class='c'><span class='badge' style='background:var(--blue-bg);color:var(--blue);border-color:var(--blue-mid);'>BLUE PPV</span></td>
+            <td class='c'>-</td>
+            <td class='r'><span class='rs-tag'>nan</span></td>
+        </tr>
+        
+        <tr class='srow'>
+            <td><a class='sym-tag' href='https://www.tradingview.com/chart/?symbol=NSE%3APANAMAPET' target='_blank'>PANAMAPET</a></td>
+            <td class='r'>340.2</td>
+            <td class='r'>428.5%</td>
+            <td class='c'><span class='badge' style='background:var(--blue-bg);color:var(--blue);border-color:var(--blue-mid);'>BLUE PPV</span></td>
+            <td class='c'>🔥</td>
+            <td class='r'><span class='rs-tag'>43.0</span></td>
+        </tr>
+        
+        <tr class='srow'>
+            <td><a class='sym-tag' href='https://www.tradingview.com/chart/?symbol=NSE%3AGVPIL' target='_blank'>GVPIL</a></td>
+            <td class='r'>nan</td>
+            <td class='r'>422.9%</td>
+            <td class='c'><span class='badge' style='background:var(--blue-bg);color:var(--blue);border-color:var(--blue-mid);'>BLUE PPV</span></td>
+            <td class='c'>🔥</td>
+            <td class='r'><span class='rs-tag'>nan</span></td>
+        </tr>
+        
+        <tr class='srow'>
+            <td><a class='sym-tag' href='https://www.tradingview.com/chart/?symbol=NSE%3AMANGLMCEM' target='_blank'>MANGLMCEM</a></td>
+            <td class='r'>843.0</td>
+            <td class='r'>421.4%</td>
+            <td class='c'><span class='badge' style='background:var(--blue-bg);color:var(--blue);border-color:var(--blue-mid);'>BLUE PPV</span></td>
+            <td class='c'>🔥</td>
+            <td class='r'><span class='rs-tag'>71.7</span></td>
+        </tr>
+        
+        <tr class='srow'>
+            <td><a class='sym-tag' href='https://www.tradingview.com/chart/?symbol=NSE%3AWINDLAS' target='_blank'>WINDLAS</a></td>
+            <td class='r'>789.95</td>
+            <td class='r'>419.8%</td>
+            <td class='c'><span class='badge' style='background:var(--blue-bg);color:var(--blue);border-color:var(--blue-mid);'>BLUE PPV</span></td>
+            <td class='c'>🔥</td>
+            <td class='r'><span class='rs-tag'>39.1</span></td>
+        </tr>
+        
+        <tr class='srow'>
+            <td><a class='sym-tag' href='https://www.tradingview.com/chart/?symbol=NSE%3ATRITURBINE' target='_blank'>TRITURBINE</a></td>
+            <td class='r'>706.95</td>
+            <td class='r'>397.4%</td>
+            <td class='c'><span class='badge' style='background:var(--blue-bg);color:var(--blue);border-color:var(--blue-mid);'>BLUE PPV</span></td>
+            <td class='c'>-</td>
+            <td class='r'><span class='rs-tag'>80.3</span></td>
+        </tr>
+        
+        <tr class='srow'>
+            <td><a class='sym-tag' href='https://www.tradingview.com/chart/?symbol=NSE%3AASIANENE' target='_blank'>ASIANENE</a></td>
+            <td class='r'>370.15</td>
+            <td class='r'>396.1%</td>
+            <td class='c'><span class='badge' style='background:var(--blue-bg);color:var(--blue);border-color:var(--blue-mid);'>BLUE PPV</span></td>
+            <td class='c'>-</td>
+            <td class='r'><span class='rs-tag'>78.8</span></td>
+        </tr>
+        
+        <tr class='srow'>
+            <td><a class='sym-tag' href='https://www.tradingview.com/chart/?symbol=NSE%3ASUDEEPPHRM' target='_blank'>SUDEEPPHRM</a></td>
+            <td class='r'>nan</td>
+            <td class='r'>395.2%</td>
+            <td class='c'><span class='badge' style='background:var(--blue-bg);color:var(--blue);border-color:var(--blue-mid);'>BLUE PPV</span></td>
+            <td class='c'>-</td>
+            <td class='r'><span class='rs-tag'>nan</span></td>
+        </tr>
+        
+        <tr class='srow'>
+            <td><a class='sym-tag' href='https://www.tradingview.com/chart/?symbol=NSE%3ACHEMCON' target='_blank'>CHEMCON</a></td>
+            <td class='r'>184.15</td>
+            <td class='r'>375.0%</td>
+            <td class='c'><span class='badge' style='background:var(--blue-bg);color:var(--blue);border-color:var(--blue-mid);'>BLUE PPV</span></td>
+            <td class='c'>-</td>
+            <td class='r'><span class='rs-tag'>45.8</span></td>
+        </tr>
+        
+        <tr class='srow'>
+            <td><a class='sym-tag' href='https://www.tradingview.com/chart/?symbol=NSE%3AELECON' target='_blank'>ELECON</a></td>
+            <td class='r'>533.25</td>
+            <td class='r'>366.7%</td>
+            <td class='c'><span class='badge' style='background:var(--blue-bg);color:var(--blue);border-color:var(--blue-mid);'>BLUE PPV</span></td>
+            <td class='c'>🔥</td>
+            <td class='r'><span class='rs-tag'>35.6</span></td>
+        </tr>
+        
+        <tr class='srow'>
+            <td><a class='sym-tag' href='https://www.tradingview.com/chart/?symbol=NSE%3AMTARTECH' target='_blank'>MTARTECH</a></td>
+            <td class='r'>8075.5</td>
+            <td class='r'>362.7%</td>
+            <td class='c'><span class='badge' style='background:var(--blue-bg);color:var(--blue);border-color:var(--blue-mid);'>BLUE PPV</span></td>
+            <td class='c'>-</td>
+            <td class='r'><span class='rs-tag'>99.9</span></td>
+        </tr>
+        
+        <tr class='srow'>
+            <td><a class='sym-tag' href='https://www.tradingview.com/chart/?symbol=NSE%3AREDTAPE' target='_blank'>REDTAPE</a></td>
+            <td class='r'>134.07</td>
+            <td class='r'>358.0%</td>
+            <td class='c'><span class='badge' style='background:var(--blue-bg);color:var(--blue);border-color:var(--blue-mid);'>BLUE PPV</span></td>
+            <td class='c'>🔥</td>
+            <td class='r'><span class='rs-tag'>56.0</span></td>
+        </tr>
+        
+        <tr class='srow'>
+            <td><a class='sym-tag' href='https://www.tradingview.com/chart/?symbol=NSE%3ATRAVELFOOD' target='_blank'>TRAVELFOOD</a></td>
+            <td class='r'>nan</td>
+            <td class='r'>357.5%</td>
+            <td class='c'><span class='badge' style='background:var(--blue-bg);color:var(--blue);border-color:var(--blue-mid);'>BLUE PPV</span></td>
+            <td class='c'>🔥</td>
+            <td class='r'><span class='rs-tag'>nan</span></td>
+        </tr>
+        
+        <tr class='srow'>
+            <td><a class='sym-tag' href='https://www.tradingview.com/chart/?symbol=NSE%3ARUBFILA' target='_blank'>RUBFILA</a></td>
+            <td class='r'>79.76</td>
+            <td class='r'>357.4%</td>
+            <td class='c'><span class='badge' style='background:var(--blue-bg);color:var(--blue);border-color:var(--blue-mid);'>BLUE PPV</span></td>
+            <td class='c'>🔥</td>
+            <td class='r'><span class='rs-tag'>69.6</span></td>
+        </tr>
+        
+        <tr class='srow'>
+            <td><a class='sym-tag' href='https://www.tradingview.com/chart/?symbol=NSE%3APGHL' target='_blank'>PGHL</a></td>
+            <td class='r'>5553.0</td>
+            <td class='r'>355.7%</td>
+            <td class='c'><span class='badge' style='background:var(--blue-bg);color:var(--blue);border-color:var(--blue-mid);'>BLUE PPV</span></td>
+            <td class='c'>-</td>
+            <td class='r'><span class='rs-tag'>72.5</span></td>
+        </tr>
+        
+        <tr class='srow'>
+            <td><a class='sym-tag' href='https://www.tradingview.com/chart/?symbol=NSE%3APREMEXPLN' target='_blank'>PREMEXPLN</a></td>
+            <td class='r'>595.5</td>
+            <td class='r'>337.4%</td>
+            <td class='c'><span class='badge' style='background:var(--blue-bg);color:var(--blue);border-color:var(--blue-mid);'>BLUE PPV</span></td>
+            <td class='c'>-</td>
+            <td class='r'><span class='rs-tag'>69.0</span></td>
+        </tr>
+        
+        <tr class='srow'>
+            <td><a class='sym-tag' href='https://www.tradingview.com/chart/?symbol=NSE%3AFDC' target='_blank'>FDC</a></td>
+            <td class='r'>373.25</td>
+            <td class='r'>336.2%</td>
+            <td class='c'><span class='badge' style='background:var(--blue-bg);color:var(--blue);border-color:var(--blue-mid);'>BLUE PPV</span></td>
+            <td class='c'>🔥</td>
+            <td class='r'><span class='rs-tag'>38.8</span></td>
+        </tr>
+        
+        <tr class='srow'>
+            <td><a class='sym-tag' href='https://www.tradingview.com/chart/?symbol=NSE%3AMEGASTAR' target='_blank'>MEGASTAR</a></td>
+            <td class='r'>314.15</td>
+            <td class='r'>333.7%</td>
+            <td class='c'><span class='badge' style='background:var(--blue-bg);color:var(--blue);border-color:var(--blue-mid);'>BLUE PPV</span></td>
+            <td class='c'>🔥</td>
+            <td class='r'><span class='rs-tag'>84.0</span></td>
+        </tr>
+        
+        <tr class='srow'>
+            <td><a class='sym-tag' href='https://www.tradingview.com/chart/?symbol=NSE%3ATCC' target='_blank'>TCC</a></td>
+            <td class='r'>nan</td>
+            <td class='r'>325.5%</td>
+            <td class='c'><span class='badge' style='background:var(--blue-bg);color:var(--blue);border-color:var(--blue-mid);'>BLUE PPV</span></td>
+            <td class='c'>🔥</td>
+            <td class='r'><span class='rs-tag'>nan</span></td>
+        </tr>
+        
+        <tr class='srow'>
+            <td><a class='sym-tag' href='https://www.tradingview.com/chart/?symbol=NSE%3ADEEPAKFERT' target='_blank'>DEEPAKFERT</a></td>
+            <td class='r'>1473.9</td>
+            <td class='r'>319.7%</td>
+            <td class='c'><span class='badge' style='background:var(--blue-bg);color:var(--blue);border-color:var(--blue-mid);'>BLUE PPV</span></td>
+            <td class='c'>🔥</td>
+            <td class='r'><span class='rs-tag'>69.8</span></td>
+        </tr>
+        
+        <tr class='srow'>
+            <td><a class='sym-tag' href='https://www.tradingview.com/chart/?symbol=NSE%3AWABAG' target='_blank'>WABAG</a></td>
+            <td class='r'>1431.4</td>
+            <td class='r'>314.4%</td>
+            <td class='c'><span class='badge' style='background:var(--blue-bg);color:var(--blue);border-color:var(--blue-mid);'>BLUE PPV</span></td>
+            <td class='c'>-</td>
+            <td class='r'><span class='rs-tag'>64.8</span></td>
+        </tr>
+        
+        <tr class='srow'>
+            <td><a class='sym-tag' href='https://www.tradingview.com/chart/?symbol=NSE%3AAPCL' target='_blank'>APCL</a></td>
+            <td class='r'>120.7</td>
+            <td class='r'>308.6%</td>
+            <td class='c'><span class='badge' style='background:var(--blue-bg);color:var(--blue);border-color:var(--blue-mid);'>BLUE PPV</span></td>
+            <td class='c'>-</td>
+            <td class='r'><span class='rs-tag'>50.1</span></td>
+        </tr>
+        
+        <tr class='srow'>
+            <td><a class='sym-tag' href='https://www.tradingview.com/chart/?symbol=NSE%3AGINNIFILA' target='_blank'>GINNIFILA</a></td>
+            <td class='r'>44.94</td>
+            <td class='r'>303.8%</td>
+            <td class='c'><span class='badge' style='background:var(--blue-bg);color:var(--blue);border-color:var(--blue-mid);'>BLUE PPV</span></td>
+            <td class='c'>🔥</td>
+            <td class='r'><span class='rs-tag'>79.5</span></td>
+        </tr>
+        
+        <tr class='srow'>
+            <td><a class='sym-tag' href='https://www.tradingview.com/chart/?symbol=NSE%3ANARMADA' target='_blank'>NARMADA</a></td>
+            <td class='r'>37.61</td>
+            <td class='r'>301.3%</td>
+            <td class='c'><span class='badge' style='background:var(--blue-bg);color:var(--blue);border-color:var(--blue-mid);'>BLUE PPV</span></td>
+            <td class='c'>🔥</td>
+            <td class='r'><span class='rs-tag'>96.8</span></td>
+        </tr>
+        
+        <tr class='srow'>
+            <td><a class='sym-tag' href='https://www.tradingview.com/chart/?symbol=NSE%3ASTARCEMENT' target='_blank'>STARCEMENT</a></td>
+            <td class='r'>220.99</td>
+            <td class='r'>300.5%</td>
+            <td class='c'><span class='badge' style='background:var(--blue-bg);color:var(--blue);border-color:var(--blue-mid);'>BLUE PPV</span></td>
+            <td class='c'>-</td>
+            <td class='r'><span class='rs-tag'>58.8</span></td>
+        </tr>
+        
+        <tr class='srow'>
+            <td><a class='sym-tag' href='https://www.tradingview.com/chart/?symbol=NSE%3ASAMHI' target='_blank'>SAMHI</a></td>
+            <td class='r'>150.08</td>
+            <td class='r'>295.4%</td>
+            <td class='c'><span class='badge' style='background:var(--blue-bg);color:var(--blue);border-color:var(--blue-mid);'>BLUE PPV</span></td>
+            <td class='c'>-</td>
+            <td class='r'><span class='rs-tag'>36.1</span></td>
+        </tr>
+        
+        <tr class='srow'>
+            <td><a class='sym-tag' href='https://www.tradingview.com/chart/?symbol=NSE%3ASWARAJ' target='_blank'>SWARAJ</a></td>
+            <td class='r'>263.45</td>
+            <td class='r'>293.9%</td>
+            <td class='c'><span class='badge' style='background:var(--blue-bg);color:var(--blue);border-color:var(--blue-mid);'>BLUE PPV</span></td>
+            <td class='c'>-</td>
+            <td class='r'><span class='rs-tag'>81.5</span></td>
+        </tr>
+        
+        <tr class='srow'>
+            <td><a class='sym-tag' href='https://www.tradingview.com/chart/?symbol=NSE%3AHARIOMPIPE' target='_blank'>HARIOMPIPE</a></td>
+            <td class='r'>344.35</td>
+            <td class='r'>292.9%</td>
+            <td class='c'><span class='badge' style='background:var(--blue-bg);color:var(--blue);border-color:var(--blue-mid);'>BLUE PPV</span></td>
+            <td class='c'>-</td>
+            <td class='r'><span class='rs-tag'>49.4</span></td>
+        </tr>
+        
+        <tr class='srow'>
+            <td><a class='sym-tag' href='https://www.tradingview.com/chart/?symbol=NSE%3AENTERO' target='_blank'>ENTERO</a></td>
+            <td class='r'>1354.4</td>
+            <td class='r'>286.8%</td>
+            <td class='c'><span class='badge' style='background:var(--blue-bg);color:var(--blue);border-color:var(--blue-mid);'>BLUE PPV</span></td>
+            <td class='c'>-</td>
+            <td class='r'><span class='rs-tag'>52.0</span></td>
+        </tr>
+        
+        <tr class='srow'>
+            <td><a class='sym-tag' href='https://www.tradingview.com/chart/?symbol=NSE%3ATECHNOE' target='_blank'>TECHNOE</a></td>
+            <td class='r'>1334.5</td>
+            <td class='r'>283.8%</td>
+            <td class='c'><span class='badge' style='background:var(--blue-bg);color:var(--blue);border-color:var(--blue-mid);'>BLUE PPV</span></td>
+            <td class='c'>-</td>
+            <td class='r'><span class='rs-tag'>71.1</span></td>
+        </tr>
+        
+        <tr class='srow'>
+            <td><a class='sym-tag' href='https://www.tradingview.com/chart/?symbol=NSE%3ADSSL' target='_blank'>DSSL</a></td>
+            <td class='r'>1734.4</td>
+            <td class='r'>283.8%</td>
+            <td class='c'><span class='badge' style='background:var(--blue-bg);color:var(--blue);border-color:var(--blue-mid);'>BLUE PPV</span></td>
+            <td class='c'>-</td>
+            <td class='r'><span class='rs-tag'>89.9</span></td>
+        </tr>
+        
+        <tr class='srow'>
+            <td><a class='sym-tag' href='https://www.tradingview.com/chart/?symbol=NSE%3ASHREEJISPG' target='_blank'>SHREEJISPG</a></td>
+            <td class='r'>nan</td>
+            <td class='r'>279.2%</td>
+            <td class='c'><span class='badge' style='background:var(--blue-bg);color:var(--blue);border-color:var(--blue-mid);'>BLUE PPV</span></td>
+            <td class='c'>-</td>
+            <td class='r'><span class='rs-tag'>nan</span></td>
+        </tr>
+        
+        <tr class='srow'>
+            <td><a class='sym-tag' href='https://www.tradingview.com/chart/?symbol=NSE%3ATNPETRO' target='_blank'>TNPETRO</a></td>
+            <td class='r'>90.2</td>
+            <td class='r'>272.8%</td>
+            <td class='c'><span class='badge' style='background:var(--blue-bg);color:var(--blue);border-color:var(--blue-mid);'>BLUE PPV</span></td>
+            <td class='c'>-</td>
+            <td class='r'><span class='rs-tag'>74.2</span></td>
+        </tr>
+        
+        <tr class='srow'>
+            <td><a class='sym-tag' href='https://www.tradingview.com/chart/?symbol=NSE%3ASUPREMEINF' target='_blank'>SUPREMEINF</a></td>
+            <td class='r'>82.34</td>
+            <td class='r'>272.1%</td>
+            <td class='c'><span class='badge' style='background:var(--blue-bg);color:var(--blue);border-color:var(--blue-mid);'>BLUE PPV</span></td>
+            <td class='c'>-</td>
+            <td class='r'><span class='rs-tag'>46.6</span></td>
+        </tr>
+        
+        <tr class='srow'>
+            <td><a class='sym-tag' href='https://www.tradingview.com/chart/?symbol=NSE%3AE2E' target='_blank'>E2E</a></td>
+            <td class='r'>3578.4</td>
+            <td class='r'>267.1%</td>
+            <td class='c'><span class='badge' style='background:var(--blue-bg);color:var(--blue);border-color:var(--blue-mid);'>BLUE PPV</span></td>
+            <td class='c'>-</td>
+            <td class='r'><span class='rs-tag'>84.8</span></td>
+        </tr>
+        
+        <tr class='srow'>
+            <td><a class='sym-tag' href='https://www.tradingview.com/chart/?symbol=NSE%3ACEIGALL' target='_blank'>CEIGALL</a></td>
+            <td class='r'>343.55</td>
+            <td class='r'>264.2%</td>
+            <td class='c'><span class='badge' style='background:var(--blue-bg);color:var(--blue);border-color:var(--blue-mid);'>BLUE PPV</span></td>
+            <td class='c'>-</td>
+            <td class='r'><span class='rs-tag'>85.7</span></td>
+        </tr>
+        
+        <tr class='srow'>
+            <td><a class='sym-tag' href='https://www.tradingview.com/chart/?symbol=NSE%3AFCL' target='_blank'>FCL</a></td>
+            <td class='r'>33.24</td>
+            <td class='r'>258.8%</td>
+            <td class='c'><span class='badge' style='background:var(--blue-bg);color:var(--blue);border-color:var(--blue-mid);'>BLUE PPV</span></td>
+            <td class='c'>-</td>
+            <td class='r'><span class='rs-tag'>84.5</span></td>
+        </tr>
+        
+        <tr class='srow'>
+            <td><a class='sym-tag' href='https://www.tradingview.com/chart/?symbol=NSE%3AAVANTEL' target='_blank'>AVANTEL</a></td>
+            <td class='r'>162.27</td>
+            <td class='r'>258.1%</td>
+            <td class='c'><span class='badge' style='background:var(--blue-bg);color:var(--blue);border-color:var(--blue-mid);'>BLUE PPV</span></td>
+            <td class='c'>-</td>
+            <td class='r'><span class='rs-tag'>86.1</span></td>
+        </tr>
+        
+        <tr class='srow'>
+            <td><a class='sym-tag' href='https://www.tradingview.com/chart/?symbol=NSE%3AIGL' target='_blank'>IGL</a></td>
+            <td class='r'>155.51</td>
+            <td class='r'>255.4%</td>
+            <td class='c'><span class='badge' style='background:var(--blue-bg);color:var(--blue);border-color:var(--blue-mid);'>BLUE PPV</span></td>
+            <td class='c'>-</td>
+            <td class='r'><span class='rs-tag'>30.2</span></td>
+        </tr>
+        
+        <tr class='srow'>
+            <td><a class='sym-tag' href='https://www.tradingview.com/chart/?symbol=NSE%3ASSFL' target='_blank'>SSFL</a></td>
+            <td class='r'>124.1</td>
+            <td class='r'>252.8%</td>
+            <td class='c'><span class='badge' style='background:var(--blue-bg);color:var(--blue);border-color:var(--blue-mid);'>BLUE PPV</span></td>
+            <td class='c'>-</td>
+            <td class='r'><span class='rs-tag'>10.9</span></td>
+        </tr>
+        
+        <tr class='srow'>
+            <td><a class='sym-tag' href='https://www.tradingview.com/chart/?symbol=NSE%3AVBL' target='_blank'>VBL</a></td>
+            <td class='r'>539.45</td>
+            <td class='r'>249.1%</td>
+            <td class='c'><span class='badge' style='background:var(--blue-bg);color:var(--blue);border-color:var(--blue-mid);'>BLUE PPV</span></td>
+            <td class='c'>-</td>
+            <td class='r'><span class='rs-tag'>74.0</span></td>
+        </tr>
+        
+        <tr class='srow'>
+            <td><a class='sym-tag' href='https://www.tradingview.com/chart/?symbol=NSE%3ADAVANGERE' target='_blank'>DAVANGERE</a></td>
+            <td class='r'>4.4</td>
+            <td class='r'>243.5%</td>
+            <td class='c'><span class='badge' style='background:var(--blue-bg);color:var(--blue);border-color:var(--blue-mid);'>BLUE PPV</span></td>
+            <td class='c'>-</td>
+            <td class='r'><span class='rs-tag'>72.9</span></td>
+        </tr>
+        
+        <tr class='srow'>
+            <td><a class='sym-tag' href='https://www.tradingview.com/chart/?symbol=NSE%3AGANDHITUBE' target='_blank'>GANDHITUBE</a></td>
+            <td class='r'>936.3</td>
+            <td class='r'>241.3%</td>
+            <td class='c'><span class='badge' style='background:var(--blue-bg);color:var(--blue);border-color:var(--blue-mid);'>BLUE PPV</span></td>
+            <td class='c'>-</td>
+            <td class='r'><span class='rs-tag'>88.0</span></td>
+        </tr>
+        
+        <tr class='srow'>
+            <td><a class='sym-tag' href='https://www.tradingview.com/chart/?symbol=NSE%3AFAIRCHEMOR' target='_blank'>FAIRCHEMOR</a></td>
+            <td class='r'>613.9</td>
+            <td class='r'>240.9%</td>
+            <td class='c'><span class='badge' style='background:var(--blue-bg);color:var(--blue);border-color:var(--blue-mid);'>BLUE PPV</span></td>
+            <td class='c'>-</td>
+            <td class='r'><span class='rs-tag'>27.4</span></td>
+        </tr>
+        
+        <tr class='srow'>
+            <td><a class='sym-tag' href='https://www.tradingview.com/chart/?symbol=NSE%3AJAYAGROGN' target='_blank'>JAYAGROGN</a></td>
+            <td class='r'>231.72</td>
+            <td class='r'>240.1%</td>
+            <td class='c'><span class='badge' style='background:var(--blue-bg);color:var(--blue);border-color:var(--blue-mid);'>BLUE PPV</span></td>
+            <td class='c'>-</td>
+            <td class='r'><span class='rs-tag'>52.3</span></td>
+        </tr>
+        
+        <tr class='srow'>
+            <td><a class='sym-tag' href='https://www.tradingview.com/chart/?symbol=NSE%3ASUPRAJIT' target='_blank'>SUPRAJIT</a></td>
+            <td class='r'>437.65</td>
+            <td class='r'>240.0%</td>
+            <td class='c'><span class='badge' style='background:var(--blue-bg);color:var(--blue);border-color:var(--blue-mid);'>BLUE PPV</span></td>
+            <td class='c'>-</td>
+            <td class='r'><span class='rs-tag'>66.5</span></td>
+        </tr>
+        
+        <tr class='srow'>
+            <td><a class='sym-tag' href='https://www.tradingview.com/chart/?symbol=NSE%3APOWERMECH' target='_blank'>POWERMECH</a></td>
+            <td class='r'>2544.7</td>
+            <td class='r'>231.4%</td>
+            <td class='c'><span class='badge' style='background:var(--blue-bg);color:var(--blue);border-color:var(--blue-mid);'>BLUE PPV</span></td>
+            <td class='c'>-</td>
+            <td class='r'><span class='rs-tag'>44.3</span></td>
+        </tr>
+        
+        <tr class='srow'>
+            <td><a class='sym-tag' href='https://www.tradingview.com/chart/?symbol=NSE%3AJINDRILL' target='_blank'>JINDRILL</a></td>
+            <td class='r'>669.8</td>
+            <td class='r'>228.1%</td>
+            <td class='c'><span class='badge' style='background:var(--blue-bg);color:var(--blue);border-color:var(--blue-mid);'>BLUE PPV</span></td>
+            <td class='c'>-</td>
+            <td class='r'><span class='rs-tag'>61.8</span></td>
+        </tr>
+        
+        <tr class='srow'>
+            <td><a class='sym-tag' href='https://www.tradingview.com/chart/?symbol=NSE%3ASAMMAANCAP' target='_blank'>SAMMAANCAP</a></td>
+            <td class='r'>161.46</td>
+            <td class='r'>227.1%</td>
+            <td class='c'><span class='badge' style='background:var(--blue-bg);color:var(--blue);border-color:var(--blue-mid);'>BLUE PPV</span></td>
+            <td class='c'>-</td>
+            <td class='r'><span class='rs-tag'>85.6</span></td>
+        </tr>
+        
+        <tr class='srow'>
+            <td><a class='sym-tag' href='https://www.tradingview.com/chart/?symbol=NSE%3ATEMBO' target='_blank'>TEMBO</a></td>
+            <td class='r'>630.95</td>
+            <td class='r'>225.9%</td>
+            <td class='c'><span class='badge' style='background:var(--blue-bg);color:var(--blue);border-color:var(--blue-mid);'>BLUE PPV</span></td>
+            <td class='c'>-</td>
+            <td class='r'><span class='rs-tag'>83.1</span></td>
+        </tr>
+        
+        <tr class='srow'>
+            <td><a class='sym-tag' href='https://www.tradingview.com/chart/?symbol=NSE%3AMUKTAARTS' target='_blank'>MUKTAARTS</a></td>
+            <td class='r'>62.21</td>
+            <td class='r'>225.5%</td>
+            <td class='c'><span class='badge' style='background:var(--blue-bg);color:var(--blue);border-color:var(--blue-mid);'>BLUE PPV</span></td>
+            <td class='c'>-</td>
+            <td class='r'><span class='rs-tag'>31.1</span></td>
+        </tr>
+        
+        <tr class='srow'>
+            <td><a class='sym-tag' href='https://www.tradingview.com/chart/?symbol=NSE%3ASUDARSCHEM' target='_blank'>SUDARSCHEM</a></td>
+            <td class='r'>1013.0</td>
+            <td class='r'>224.4%</td>
+            <td class='c'><span class='badge' style='background:var(--blue-bg);color:var(--blue);border-color:var(--blue-mid);'>BLUE PPV</span></td>
+            <td class='c'>-</td>
+            <td class='r'><span class='rs-tag'>52.3</span></td>
+        </tr>
+        
+        <tr class='srow'>
+            <td><a class='sym-tag' href='https://www.tradingview.com/chart/?symbol=NSE%3AASHAPURMIN' target='_blank'>ASHAPURMIN</a></td>
+            <td class='r'>675.35</td>
+            <td class='r'>222.8%</td>
+            <td class='c'><span class='badge' style='background:var(--blue-bg);color:var(--blue);border-color:var(--blue-mid);'>BLUE PPV</span></td>
+            <td class='c'>-</td>
+            <td class='r'><span class='rs-tag'>94.4</span></td>
+        </tr>
+        
+        <tr class='srow'>
+            <td><a class='sym-tag' href='https://www.tradingview.com/chart/?symbol=NSE%3ASONAMLTD' target='_blank'>SONAMLTD</a></td>
+            <td class='r'>58.39</td>
+            <td class='r'>222.1%</td>
+            <td class='c'><span class='badge' style='background:var(--blue-bg);color:var(--blue);border-color:var(--blue-mid);'>BLUE PPV</span></td>
+            <td class='c'>-</td>
+            <td class='r'><span class='rs-tag'>89.4</span></td>
+        </tr>
+        
+        <tr class='srow'>
+            <td><a class='sym-tag' href='https://www.tradingview.com/chart/?symbol=NSE%3ASUNDRMBRAK' target='_blank'>SUNDRMBRAK</a></td>
+            <td class='r'>630.85</td>
+            <td class='r'>221.0%</td>
+            <td class='c'><span class='badge' style='background:var(--blue-bg);color:var(--blue);border-color:var(--blue-mid);'>BLUE PPV</span></td>
+            <td class='c'>-</td>
+            <td class='r'><span class='rs-tag'>39.3</span></td>
+        </tr>
+        
+        <tr class='srow'>
+            <td><a class='sym-tag' href='https://www.tradingview.com/chart/?symbol=NSE%3ARUSHIL' target='_blank'>RUSHIL</a></td>
+            <td class='r'>15.86</td>
+            <td class='r'>219.7%</td>
+            <td class='c'><span class='badge' style='background:var(--blue-bg);color:var(--blue);border-color:var(--blue-mid);'>BLUE PPV</span></td>
+            <td class='c'>-</td>
+            <td class='r'><span class='rs-tag'>10.0</span></td>
+        </tr>
+        
+        <tr class='srow'>
+            <td><a class='sym-tag' href='https://www.tradingview.com/chart/?symbol=NSE%3AMCLEODRUSS' target='_blank'>MCLEODRUSS</a></td>
+            <td class='r'>72.47</td>
+            <td class='r'>213.6%</td>
+            <td class='c'><span class='badge' style='background:var(--blue-bg);color:var(--blue);border-color:var(--blue-mid);'>BLUE PPV</span></td>
+            <td class='c'>-</td>
+            <td class='r'><span class='rs-tag'>97.2</span></td>
+        </tr>
+        
+        <tr class='srow'>
+            <td><a class='sym-tag' href='https://www.tradingview.com/chart/?symbol=NSE%3APRECAM' target='_blank'>PRECAM</a></td>
+            <td class='r'>165.2</td>
+            <td class='r'>209.1%</td>
+            <td class='c'><span class='badge' style='background:var(--blue-bg);color:var(--blue);border-color:var(--blue-mid);'>BLUE PPV</span></td>
+            <td class='c'>-</td>
+            <td class='r'><span class='rs-tag'>57.6</span></td>
+        </tr>
+        
+        <tr class='srow'>
+            <td><a class='sym-tag' href='https://www.tradingview.com/chart/?symbol=NSE%3AXPROINDIA' target='_blank'>XPROINDIA</a></td>
+            <td class='r'>1150.8</td>
+            <td class='r'>208.3%</td>
+            <td class='c'><span class='badge' style='background:var(--blue-bg);color:var(--blue);border-color:var(--blue-mid);'>BLUE PPV</span></td>
+            <td class='c'>-</td>
+            <td class='r'><span class='rs-tag'>60.6</span></td>
+        </tr>
+        
+        <tr class='srow'>
+            <td><a class='sym-tag' href='https://www.tradingview.com/chart/?symbol=NSE%3AUNITECH' target='_blank'>UNITECH</a></td>
+            <td class='r'>5.13</td>
+            <td class='r'>201.4%</td>
+            <td class='c'><span class='badge' style='background:var(--blue-bg);color:var(--blue);border-color:var(--blue-mid);'>BLUE PPV</span></td>
+            <td class='c'>-</td>
+            <td class='r'><span class='rs-tag'>36.7</span></td>
+        </tr>
+        
+        <tr class='srow'>
+            <td><a class='sym-tag' href='https://www.tradingview.com/chart/?symbol=NSE%3ATRUALT' target='_blank'>TRUALT</a></td>
+            <td class='r'>nan</td>
+            <td class='r'>192.4%</td>
+            <td class='c'><span class='badge' style='background:var(--blue-bg);color:var(--blue);border-color:var(--blue-mid);'>BLUE PPV</span></td>
+            <td class='c'>-</td>
+            <td class='r'><span class='rs-tag'>nan</span></td>
+        </tr>
+        
+        <tr class='srow'>
+            <td><a class='sym-tag' href='https://www.tradingview.com/chart/?symbol=NSE%3AVIVIANA' target='_blank'>VIVIANA</a></td>
+            <td class='r'>876.0</td>
+            <td class='r'>190.4%</td>
+            <td class='c'><span class='badge' style='background:var(--blue-bg);color:var(--blue);border-color:var(--blue-mid);'>BLUE PPV</span></td>
+            <td class='c'>-</td>
+            <td class='r'><span class='rs-tag'>61.0</span></td>
+        </tr>
+        
+        <tr class='srow'>
+            <td><a class='sym-tag' href='https://www.tradingview.com/chart/?symbol=NSE%3APACEDIGITK' target='_blank'>PACEDIGITK</a></td>
+            <td class='r'>nan</td>
+            <td class='r'>188.9%</td>
+            <td class='c'><span class='badge' style='background:var(--blue-bg);color:var(--blue);border-color:var(--blue-mid);'>BLUE PPV</span></td>
+            <td class='c'>-</td>
+            <td class='r'><span class='rs-tag'>nan</span></td>
+        </tr>
+        
+        <tr class='srow'>
+            <td><a class='sym-tag' href='https://www.tradingview.com/chart/?symbol=NSE%3AUYFINCORP' target='_blank'>UYFINCORP</a></td>
+            <td class='r'>15.02</td>
+            <td class='r'>188.2%</td>
+            <td class='c'><span class='badge' style='background:var(--blue-bg);color:var(--blue);border-color:var(--blue-mid);'>BLUE PPV</span></td>
+            <td class='c'>-</td>
+            <td class='r'><span class='rs-tag'>35.0</span></td>
+        </tr>
+        
+        <tr class='srow'>
+            <td><a class='sym-tag' href='https://www.tradingview.com/chart/?symbol=NSE%3AWIPRO' target='_blank'>WIPRO</a></td>
+            <td class='r'>203.11</td>
+            <td class='r'>183.6%</td>
+            <td class='c'><span class='badge' style='background:var(--blue-bg);color:var(--blue);border-color:var(--blue-mid);'>BLUE PPV</span></td>
+            <td class='c'>-</td>
+            <td class='r'><span class='rs-tag'>40.9</span></td>
+        </tr>
+        
+        <tr class='srow'>
+            <td><a class='sym-tag' href='https://www.tradingview.com/chart/?symbol=NSE%3AJSWINFRA' target='_blank'>JSWINFRA</a></td>
+            <td class='r'>274.6</td>
+            <td class='r'>183.4%</td>
+            <td class='c'><span class='badge' style='background:var(--blue-bg);color:var(--blue);border-color:var(--blue-mid);'>BLUE PPV</span></td>
+            <td class='c'>-</td>
+            <td class='r'><span class='rs-tag'>55.4</span></td>
+        </tr>
+        
+        <tr class='srow'>
+            <td><a class='sym-tag' href='https://www.tradingview.com/chart/?symbol=NSE%3AMAXESTATES' target='_blank'>MAXESTATES</a></td>
+            <td class='r'>428.95</td>
+            <td class='r'>181.9%</td>
+            <td class='c'><span class='badge' style='background:var(--blue-bg);color:var(--blue);border-color:var(--blue-mid);'>BLUE PPV</span></td>
+            <td class='c'>-</td>
+            <td class='r'><span class='rs-tag'>51.5</span></td>
+        </tr>
+        
+        <tr class='srow'>
+            <td><a class='sym-tag' href='https://www.tradingview.com/chart/?symbol=NSE%3ACHEMPLASTS' target='_blank'>CHEMPLASTS</a></td>
+            <td class='r'>237.42</td>
+            <td class='r'>180.8%</td>
+            <td class='c'><span class='badge' style='background:var(--blue-bg);color:var(--blue);border-color:var(--blue-mid);'>BLUE PPV</span></td>
+            <td class='c'>-</td>
+            <td class='r'><span class='rs-tag'>6.2</span></td>
+        </tr>
+        
+        <tr class='srow'>
+            <td><a class='sym-tag' href='https://www.tradingview.com/chart/?symbol=NSE%3ABIRLAMONEY' target='_blank'>BIRLAMONEY</a></td>
+            <td class='r'>138.41</td>
+            <td class='r'>180.4%</td>
+            <td class='c'><span class='badge' style='background:var(--blue-bg);color:var(--blue);border-color:var(--blue-mid);'>BLUE PPV</span></td>
+            <td class='c'>-</td>
+            <td class='r'><span class='rs-tag'>40.6</span></td>
+        </tr>
+        
+        <tr class='srow'>
+            <td><a class='sym-tag' href='https://www.tradingview.com/chart/?symbol=NSE%3ADIXON' target='_blank'>DIXON</a></td>
+            <td class='r'>11722.0</td>
+            <td class='r'>179.5%</td>
+            <td class='c'><span class='badge' style='background:var(--blue-bg);color:var(--blue);border-color:var(--blue-mid);'>BLUE PPV</span></td>
+            <td class='c'>-</td>
+            <td class='r'><span class='rs-tag'>21.6</span></td>
+        </tr>
+        
+        <tr class='srow'>
+            <td><a class='sym-tag' href='https://www.tradingview.com/chart/?symbol=NSE%3ACARYSIL' target='_blank'>CARYSIL</a></td>
+            <td class='r'>1079.0</td>
+            <td class='r'>176.4%</td>
+            <td class='c'><span class='badge' style='background:var(--blue-bg);color:var(--blue);border-color:var(--blue-mid);'>BLUE PPV</span></td>
+            <td class='c'>-</td>
+            <td class='r'><span class='rs-tag'>93.3</span></td>
+        </tr>
+        
+        <tr class='srow'>
+            <td><a class='sym-tag' href='https://www.tradingview.com/chart/?symbol=NSE%3ABANKBARODA' target='_blank'>BANKBARODA</a></td>
+            <td class='r'>265.4</td>
+            <td class='r'>174.8%</td>
+            <td class='c'><span class='badge' style='background:var(--blue-bg);color:var(--blue);border-color:var(--blue-mid);'>BLUE PPV</span></td>
+            <td class='c'>-</td>
+            <td class='r'><span class='rs-tag'>76.8</span></td>
+        </tr>
+        
+        <tr class='srow'>
+            <td><a class='sym-tag' href='https://www.tradingview.com/chart/?symbol=NSE%3AGILLETTE' target='_blank'>GILLETTE</a></td>
+            <td class='r'>7783.5</td>
+            <td class='r'>174.3%</td>
+            <td class='c'><span class='badge' style='background:var(--blue-bg);color:var(--blue);border-color:var(--blue-mid);'>BLUE PPV</span></td>
+            <td class='c'>-</td>
+            <td class='r'><span class='rs-tag'>51.0</span></td>
+        </tr>
+        
+        <tr class='srow'>
+            <td><a class='sym-tag' href='https://www.tradingview.com/chart/?symbol=NSE%3AWANBURY' target='_blank'>WANBURY</a></td>
+            <td class='r'>283.45</td>
+            <td class='r'>169.8%</td>
+            <td class='c'><span class='badge' style='background:var(--blue-bg);color:var(--blue);border-color:var(--blue-mid);'>BLUE PPV</span></td>
+            <td class='c'>-</td>
+            <td class='r'><span class='rs-tag'>53.2</span></td>
+        </tr>
+        
+        <tr class='srow'>
+            <td><a class='sym-tag' href='https://www.tradingview.com/chart/?symbol=NSE%3AVISHNUINFR' target='_blank'>VISHNUINFR</a></td>
+            <td class='r'>169.45</td>
+            <td class='r'>167.3%</td>
+            <td class='c'><span class='badge' style='background:var(--blue-bg);color:var(--blue);border-color:var(--blue-mid);'>BLUE PPV</span></td>
+            <td class='c'>-</td>
+            <td class='r'><span class='rs-tag'>44.1</span></td>
+        </tr>
+        
+        <tr class='srow'>
+            <td><a class='sym-tag' href='https://www.tradingview.com/chart/?symbol=NSE%3AIITL' target='_blank'>IITL</a></td>
+            <td class='r'>173.05</td>
+            <td class='r'>166.7%</td>
+            <td class='c'><span class='badge' style='background:var(--blue-bg);color:var(--blue);border-color:var(--blue-mid);'>BLUE PPV</span></td>
+            <td class='c'>-</td>
+            <td class='r'><span class='rs-tag'>60.9</span></td>
+        </tr>
+        
+        <tr class='srow'>
+            <td><a class='sym-tag' href='https://www.tradingview.com/chart/?symbol=NSE%3AMWL' target='_blank'>MWL</a></td>
+            <td class='r'>369.45</td>
+            <td class='r'>162.3%</td>
+            <td class='c'><span class='badge' style='background:var(--blue-bg);color:var(--blue);border-color:var(--blue-mid);'>BLUE PPV</span></td>
+            <td class='c'>-</td>
+            <td class='r'><span class='rs-tag'>97.5</span></td>
+        </tr>
+        
+        <tr class='srow'>
+            <td><a class='sym-tag' href='https://www.tradingview.com/chart/?symbol=NSE%3AMONEYBOXX' target='_blank'>MONEYBOXX</a></td>
+            <td class='r'>nan</td>
+            <td class='r'>160.6%</td>
+            <td class='c'><span class='badge' style='background:var(--blue-bg);color:var(--blue);border-color:var(--blue-mid);'>BLUE PPV</span></td>
+            <td class='c'>-</td>
+            <td class='r'><span class='rs-tag'>nan</span></td>
+        </tr>
+        
+        <tr class='srow'>
+            <td><a class='sym-tag' href='https://www.tradingview.com/chart/?symbol=NSE%3APNCINFRA' target='_blank'>PNCINFRA</a></td>
+            <td class='r'>215.32</td>
+            <td class='r'>159.0%</td>
+            <td class='c'><span class='badge' style='background:var(--blue-bg);color:var(--blue);border-color:var(--blue-mid);'>BLUE PPV</span></td>
+            <td class='c'>-</td>
+            <td class='r'><span class='rs-tag'>25.6</span></td>
+        </tr>
+        
+        <tr class='srow'>
+            <td><a class='sym-tag' href='https://www.tradingview.com/chart/?symbol=NSE%3APRESTIGE' target='_blank'>PRESTIGE</a></td>
+            <td class='r'>1388.5</td>
+            <td class='r'>154.4%</td>
+            <td class='c'><span class='badge' style='background:var(--blue-bg);color:var(--blue);border-color:var(--blue-mid);'>BLUE PPV</span></td>
+            <td class='c'>-</td>
+            <td class='r'><span class='rs-tag'>58.1</span></td>
+        </tr>
+        
+        <tr class='srow'>
+            <td><a class='sym-tag' href='https://www.tradingview.com/chart/?symbol=NSE%3AATL' target='_blank'>ATL</a></td>
+            <td class='r'>25.46</td>
+            <td class='r'>152.8%</td>
+            <td class='c'><span class='badge' style='background:var(--blue-bg);color:var(--blue);border-color:var(--blue-mid);'>BLUE PPV</span></td>
+            <td class='c'>-</td>
+            <td class='r'><span class='rs-tag'>55.9</span></td>
+        </tr>
+        
+        <tr class='srow'>
+            <td><a class='sym-tag' href='https://www.tradingview.com/chart/?symbol=NSE%3AGAIL' target='_blank'>GAIL</a></td>
+            <td class='r'>160.77</td>
+            <td class='r'>151.8%</td>
+            <td class='c'><span class='badge' style='background:var(--blue-bg);color:var(--blue);border-color:var(--blue-mid);'>BLUE PPV</span></td>
+            <td class='c'>-</td>
+            <td class='r'><span class='rs-tag'>44.4</span></td>
+        </tr>
+        
+        <tr class='srow'>
+            <td><a class='sym-tag' href='https://www.tradingview.com/chart/?symbol=NSE%3ABESTAGRO' target='_blank'>BESTAGRO</a></td>
+            <td class='r'>17.78</td>
+            <td class='r'>149.5%</td>
+            <td class='c'><span class='badge' style='background:var(--blue-bg);color:var(--blue);border-color:var(--blue-mid);'>BLUE PPV</span></td>
+            <td class='c'>-</td>
+            <td class='r'><span class='rs-tag'>48.4</span></td>
+        </tr>
+        
+        <tr class='srow'>
+            <td><a class='sym-tag' href='https://www.tradingview.com/chart/?symbol=NSE%3ASANGHVIMOV' target='_blank'>SANGHVIMOV</a></td>
+            <td class='r'>354.85</td>
+            <td class='r'>146.4%</td>
+            <td class='c'><span class='badge' style='background:var(--blue-bg);color:var(--blue);border-color:var(--blue-mid);'>BLUE PPV</span></td>
+            <td class='c'>-</td>
+            <td class='r'><span class='rs-tag'>63.7</span></td>
+        </tr>
+        
+        <tr class='srow'>
+            <td><a class='sym-tag' href='https://www.tradingview.com/chart/?symbol=NSE%3AMIDHANI' target='_blank'>MIDHANI</a></td>
+            <td class='r'>413.2</td>
+            <td class='r'>144.7%</td>
+            <td class='c'><span class='badge' style='background:var(--blue-bg);color:var(--blue);border-color:var(--blue-mid);'>BLUE PPV</span></td>
+            <td class='c'>-</td>
+            <td class='r'><span class='rs-tag'>66.1</span></td>
+        </tr>
+        
+        <tr class='srow'>
+            <td><a class='sym-tag' href='https://www.tradingview.com/chart/?symbol=NSE%3ATVSSCS' target='_blank'>TVSSCS</a></td>
+            <td class='r'>121.57</td>
+            <td class='r'>143.5%</td>
+            <td class='c'><span class='badge' style='background:var(--blue-bg);color:var(--blue);border-color:var(--blue-mid);'>BLUE PPV</span></td>
+            <td class='c'>-</td>
+            <td class='r'><span class='rs-tag'>54.1</span></td>
+        </tr>
+        
+        <tr class='srow'>
+            <td><a class='sym-tag' href='https://www.tradingview.com/chart/?symbol=NSE%3AVENUSPIPES' target='_blank'>VENUSPIPES</a></td>
+            <td class='r'>1400.7</td>
+            <td class='r'>138.9%</td>
+            <td class='c'><span class='badge' style='background:var(--blue-bg);color:var(--blue);border-color:var(--blue-mid);'>BLUE PPV</span></td>
+            <td class='c'>-</td>
+            <td class='r'><span class='rs-tag'>66.7</span></td>
+        </tr>
+        
+        <tr class='srow'>
+            <td><a class='sym-tag' href='https://www.tradingview.com/chart/?symbol=NSE%3AUNIENTER' target='_blank'>UNIENTER</a></td>
+            <td class='r'>108.25</td>
+            <td class='r'>135.3%</td>
+            <td class='c'><span class='badge' style='background:var(--blue-bg);color:var(--blue);border-color:var(--blue-mid);'>BLUE PPV</span></td>
+            <td class='c'>-</td>
+            <td class='r'><span class='rs-tag'>18.4</span></td>
+        </tr>
+        
+        <tr class='srow'>
+            <td><a class='sym-tag' href='https://www.tradingview.com/chart/?symbol=NSE%3AVGL' target='_blank'>VGL</a></td>
+            <td class='r'>67.44</td>
+            <td class='r'>132.2%</td>
+            <td class='c'><span class='badge' style='background:var(--blue-bg);color:var(--blue);border-color:var(--blue-mid);'>BLUE PPV</span></td>
+            <td class='c'>-</td>
+            <td class='r'><span class='rs-tag'>55.1</span></td>
+        </tr>
+        
+        <tr class='srow'>
+            <td><a class='sym-tag' href='https://www.tradingview.com/chart/?symbol=NSE%3ARICOAUTO' target='_blank'>RICOAUTO</a></td>
+            <td class='r'>119.96</td>
+            <td class='r'>130.2%</td>
+            <td class='c'><span class='badge' style='background:var(--blue-bg);color:var(--blue);border-color:var(--blue-mid);'>BLUE PPV</span></td>
+            <td class='c'>-</td>
+            <td class='r'><span class='rs-tag'>93.5</span></td>
+        </tr>
+        
+        <tr class='srow'>
+            <td><a class='sym-tag' href='https://www.tradingview.com/chart/?symbol=NSE%3ASETCO' target='_blank'>SETCO</a></td>
+            <td class='r'>25.95</td>
+            <td class='r'>129.6%</td>
+            <td class='c'><span class='badge' style='background:var(--blue-bg);color:var(--blue);border-color:var(--blue-mid);'>BLUE PPV</span></td>
+            <td class='c'>-</td>
+            <td class='r'><span class='rs-tag'>86.5</span></td>
+        </tr>
+        
+        <tr class='srow'>
+            <td><a class='sym-tag' href='https://www.tradingview.com/chart/?symbol=NSE%3AAPOLLOHOSP' target='_blank'>APOLLOHOSP</a></td>
+            <td class='r'>8362.5</td>
+            <td class='r'>128.4%</td>
+            <td class='c'><span class='badge' style='background:var(--blue-bg);color:var(--blue);border-color:var(--blue-mid);'>BLUE PPV</span></td>
+            <td class='c'>-</td>
+            <td class='r'><span class='rs-tag'>80.1</span></td>
+        </tr>
+        
+        <tr class='srow'>
+            <td><a class='sym-tag' href='https://www.tradingview.com/chart/?symbol=NSE%3ABCLIND' target='_blank'>BCLIND</a></td>
+            <td class='r'>34.87</td>
+            <td class='r'>127.7%</td>
+            <td class='c'><span class='badge' style='background:var(--blue-bg);color:var(--blue);border-color:var(--blue-mid);'>BLUE PPV</span></td>
+            <td class='c'>-</td>
+            <td class='r'><span class='rs-tag'>44.7</span></td>
+        </tr>
+        
+        <tr class='srow'>
+            <td><a class='sym-tag' href='https://www.tradingview.com/chart/?symbol=NSE%3AASIANPAINT' target='_blank'>ASIANPAINT</a></td>
+            <td class='r'>2639.8</td>
+            <td class='r'>126.1%</td>
+            <td class='c'><span class='badge' style='background:var(--blue-bg);color:var(--blue);border-color:var(--blue-mid);'>BLUE PPV</span></td>
+            <td class='c'>-</td>
+            <td class='r'><span class='rs-tag'>76.8</span></td>
+        </tr>
+        
+        <tr class='srow'>
+            <td><a class='sym-tag' href='https://www.tradingview.com/chart/?symbol=NSE%3A20MICRONS' target='_blank'>20MICRONS</a></td>
+            <td class='r'>177.0</td>
+            <td class='r'>125.1%</td>
+            <td class='c'><span class='badge' style='background:var(--blue-bg);color:var(--blue);border-color:var(--blue-mid);'>BLUE PPV</span></td>
+            <td class='c'>-</td>
+            <td class='r'><span class='rs-tag'>25.0</span></td>
+        </tr>
+        
+        <tr class='srow'>
+            <td><a class='sym-tag' href='https://www.tradingview.com/chart/?symbol=NSE%3ABFUTILITIE' target='_blank'>BFUTILITIE</a></td>
+            <td class='r'>551.9</td>
+            <td class='r'>123.6%</td>
+            <td class='c'><span class='badge' style='background:var(--blue-bg);color:var(--blue);border-color:var(--blue-mid);'>BLUE PPV</span></td>
+            <td class='c'>-</td>
+            <td class='r'><span class='rs-tag'>24.8</span></td>
+        </tr>
+        
+        <tr class='srow'>
+            <td><a class='sym-tag' href='https://www.tradingview.com/chart/?symbol=NSE%3ASBC' target='_blank'>SBC</a></td>
+            <td class='r'>38.56</td>
+            <td class='r'>119.5%</td>
+            <td class='c'><span class='badge' style='background:var(--blue-bg);color:var(--blue);border-color:var(--blue-mid);'>BLUE PPV</span></td>
+            <td class='c'>-</td>
+            <td class='r'><span class='rs-tag'>98.3</span></td>
+        </tr>
+        
+        <tr class='srow'>
+            <td><a class='sym-tag' href='https://www.tradingview.com/chart/?symbol=NSE%3AMEDICO' target='_blank'>MEDICO</a></td>
+            <td class='r'>47.84</td>
+            <td class='r'>117.0%</td>
+            <td class='c'><span class='badge' style='background:var(--blue-bg);color:var(--blue);border-color:var(--blue-mid);'>BLUE PPV</span></td>
+            <td class='c'>-</td>
+            <td class='r'><span class='rs-tag'>46.0</span></td>
+        </tr>
+        
+        <tr class='srow'>
+            <td><a class='sym-tag' href='https://www.tradingview.com/chart/?symbol=NSE%3ACENTURYPLY' target='_blank'>CENTURYPLY</a></td>
+            <td class='r'>766.65</td>
+            <td class='r'>111.0%</td>
+            <td class='c'><span class='badge' style='background:var(--blue-bg);color:var(--blue);border-color:var(--blue-mid);'>BLUE PPV</span></td>
+            <td class='c'>-</td>
+            <td class='r'><span class='rs-tag'>65.9</span></td>
+        </tr>
+        
+        <tr class='srow'>
+            <td><a class='sym-tag' href='https://www.tradingview.com/chart/?symbol=NSE%3AJARO' target='_blank'>JARO</a></td>
+            <td class='r'>nan</td>
+            <td class='r'>109.3%</td>
+            <td class='c'><span class='badge' style='background:var(--blue-bg);color:var(--blue);border-color:var(--blue-mid);'>BLUE PPV</span></td>
+            <td class='c'>-</td>
+            <td class='r'><span class='rs-tag'>nan</span></td>
+        </tr>
+        
+        <tr class='srow'>
+            <td><a class='sym-tag' href='https://www.tradingview.com/chart/?symbol=NSE%3AGIPCL' target='_blank'>GIPCL</a></td>
+            <td class='r'>150.2</td>
+            <td class='r'>105.3%</td>
+            <td class='c'><span class='badge' style='background:var(--blue-bg);color:var(--blue);border-color:var(--blue-mid);'>BLUE PPV</span></td>
+            <td class='c'>-</td>
+            <td class='r'><span class='rs-tag'>32.5</span></td>
+        </tr>
+        
+        <tr class='srow'>
+            <td><a class='sym-tag' href='https://www.tradingview.com/chart/?symbol=NSE%3AXTGLOBAL' target='_blank'>XTGLOBAL</a></td>
+            <td class='r'>31.37</td>
+            <td class='r'>98.6%</td>
+            <td class='c'><span class='badge' style='background:var(--blue-bg);color:var(--blue);border-color:var(--blue-mid);'>BLUE PPV</span></td>
+            <td class='c'>-</td>
+            <td class='r'><span class='rs-tag'>50.2</span></td>
+        </tr>
+        
+        <tr class='srow'>
+            <td><a class='sym-tag' href='https://www.tradingview.com/chart/?symbol=NSE%3ARVNL' target='_blank'>RVNL</a></td>
+            <td class='r'>271.1</td>
+            <td class='r'>98.0%</td>
+            <td class='c'><span class='badge' style='background:var(--blue-bg);color:var(--blue);border-color:var(--blue-mid);'>BLUE PPV</span></td>
+            <td class='c'>-</td>
+            <td class='r'><span class='rs-tag'>15.6</span></td>
+        </tr>
+        
+        <tr class='srow'>
+            <td><a class='sym-tag' href='https://www.tradingview.com/chart/?symbol=NSE%3ATRENT' target='_blank'>TRENT</a></td>
+            <td class='r'>4296.5</td>
+            <td class='r'>93.3%</td>
+            <td class='c'><span class='badge' style='background:var(--blue-bg);color:var(--blue);border-color:var(--blue-mid);'>BLUE PPV</span></td>
+            <td class='c'>-</td>
+            <td class='r'><span class='rs-tag'>31.6</span></td>
+        </tr>
+        
+        <tr class='srow'>
+            <td><a class='sym-tag' href='https://www.tradingview.com/chart/?symbol=NSE%3ASHREEPUSHK' target='_blank'>SHREEPUSHK</a></td>
+            <td class='r'>346.75</td>
+            <td class='r'>92.7%</td>
+            <td class='c'><span class='badge' style='background:var(--blue-bg);color:var(--blue);border-color:var(--blue-mid);'>BLUE PPV</span></td>
+            <td class='c'>-</td>
+            <td class='r'><span class='rs-tag'>78.4</span></td>
+        </tr>
+        
+        <tr class='srow'>
+            <td><a class='sym-tag' href='https://www.tradingview.com/chart/?symbol=NSE%3AGUJAPOLLO' target='_blank'>GUJAPOLLO</a></td>
+            <td class='r'>383.65</td>
+            <td class='r'>90.5%</td>
+            <td class='c'><span class='badge' style='background:var(--blue-bg);color:var(--blue);border-color:var(--blue-mid);'>BLUE PPV</span></td>
+            <td class='c'>-</td>
+            <td class='r'><span class='rs-tag'>69.7</span></td>
+        </tr>
+        
+        <tr class='srow'>
+            <td><a class='sym-tag' href='https://www.tradingview.com/chart/?symbol=NSE%3AGOCLCORP' target='_blank'>GOCLCORP</a></td>
+            <td class='r'>328.45</td>
+            <td class='r'>89.4%</td>
+            <td class='c'><span class='badge' style='background:var(--blue-bg);color:var(--blue);border-color:var(--blue-mid);'>BLUE PPV</span></td>
+            <td class='c'>-</td>
+            <td class='r'><span class='rs-tag'>68.7</span></td>
+        </tr>
+        
+        <tr class='srow'>
+            <td><a class='sym-tag' href='https://www.tradingview.com/chart/?symbol=NSE%3AVIKRAN' target='_blank'>VIKRAN</a></td>
+            <td class='r'>nan</td>
+            <td class='r'>89.0%</td>
+            <td class='c'><span class='badge' style='background:var(--blue-bg);color:var(--blue);border-color:var(--blue-mid);'>BLUE PPV</span></td>
+            <td class='c'>-</td>
+            <td class='r'><span class='rs-tag'>nan</span></td>
+        </tr>
+        
+        <tr class='srow'>
+            <td><a class='sym-tag' href='https://www.tradingview.com/chart/?symbol=NSE%3ANFL' target='_blank'>NFL</a></td>
+            <td class='r'>76.37</td>
+            <td class='r'>84.2%</td>
+            <td class='c'><span class='badge' style='background:var(--blue-bg);color:var(--blue);border-color:var(--blue-mid);'>BLUE PPV</span></td>
+            <td class='c'>-</td>
+            <td class='r'><span class='rs-tag'>33.1</span></td>
+        </tr>
+        
+        <tr class='srow'>
+            <td><a class='sym-tag' href='https://www.tradingview.com/chart/?symbol=NSE%3AFINPIPE' target='_blank'>FINPIPE</a></td>
+            <td class='r'>173.11</td>
+            <td class='r'>83.3%</td>
+            <td class='c'><span class='badge' style='background:var(--blue-bg);color:var(--blue);border-color:var(--blue-mid);'>BLUE PPV</span></td>
+            <td class='c'>-</td>
+            <td class='r'><span class='rs-tag'>51.2</span></td>
+        </tr>
+        
+        <tr class='srow'>
+            <td><a class='sym-tag' href='https://www.tradingview.com/chart/?symbol=NSE%3AATGL' target='_blank'>ATGL</a></td>
+            <td class='r'>652.8</td>
+            <td class='r'>82.2%</td>
+            <td class='c'><span class='badge' style='background:var(--blue-bg);color:var(--blue);border-color:var(--blue-mid);'>BLUE PPV</span></td>
+            <td class='c'>-</td>
+            <td class='r'><span class='rs-tag'>59.8</span></td>
+        </tr>
+        
+        <tr class='srow'>
+            <td><a class='sym-tag' href='https://www.tradingview.com/chart/?symbol=NSE%3AGANESHCP' target='_blank'>GANESHCP</a></td>
+            <td class='r'>nan</td>
+            <td class='r'>75.3%</td>
+            <td class='c'><span class='badge' style='background:var(--blue-bg);color:var(--blue);border-color:var(--blue-mid);'>BLUE PPV</span></td>
+            <td class='c'>-</td>
+            <td class='r'><span class='rs-tag'>nan</span></td>
+        </tr>
+        
+        <tr class='srow'>
+            <td><a class='sym-tag' href='https://www.tradingview.com/chart/?symbol=NSE%3ASWANDEF' target='_blank'>SWANDEF</a></td>
+            <td class='r'>nan</td>
+            <td class='r'>61.8%</td>
+            <td class='c'><span class='badge' style='background:var(--blue-bg);color:var(--blue);border-color:var(--blue-mid);'>BLUE PPV</span></td>
+            <td class='c'>-</td>
+            <td class='r'><span class='rs-tag'>nan</span></td>
+        </tr>
+        
+        <tr class='srow'>
+            <td><a class='sym-tag' href='https://www.tradingview.com/chart/?symbol=NSE%3AEMSLIMITED' target='_blank'>EMSLIMITED</a></td>
+            <td class='r'>324.2</td>
+            <td class='r'>52.2%</td>
+            <td class='c'><span class='badge' style='background:var(--blue-bg);color:var(--blue);border-color:var(--blue-mid);'>BLUE PPV</span></td>
+            <td class='c'>-</td>
+            <td class='r'><span class='rs-tag'>4.9</span></td>
+        </tr>
+        
+        <tr class='srow'>
+            <td><a class='sym-tag' href='https://www.tradingview.com/chart/?symbol=NSE%3ALOKESHMACH' target='_blank'>LOKESHMACH</a></td>
+            <td class='r'>262.54</td>
+            <td class='r'>50.2%</td>
+            <td class='c'><span class='badge' style='background:var(--blue-bg);color:var(--blue);border-color:var(--blue-mid);'>BLUE PPV</span></td>
+            <td class='c'>-</td>
+            <td class='r'><span class='rs-tag'>86.6</span></td>
+        </tr>
+        
+        <tr class='srow'>
+            <td><a class='sym-tag' href='https://www.tradingview.com/chart/?symbol=NSE%3AFACT' target='_blank'>FACT</a></td>
+            <td class='r'>879.25</td>
+            <td class='r'>21.3%</td>
+            <td class='c'><span class='badge' style='background:var(--blue-bg);color:var(--blue);border-color:var(--blue-mid);'>BLUE PPV</span></td>
+            <td class='c'>-</td>
+            <td class='r'><span class='rs-tag'>59.4</span></td>
+        </tr>
+        
+        <tr class='srow'>
+            <td><a class='sym-tag' href='https://www.tradingview.com/chart/?symbol=NSE%3AFIRSTCRY' target='_blank'>FIRSTCRY</a></td>
+            <td class='r'>234.9</td>
+            <td class='r'>21.2%</td>
+            <td class='c'><span class='badge' style='background:var(--blue-bg);color:var(--blue);border-color:var(--blue-mid);'>BLUE PPV</span></td>
+            <td class='c'>-</td>
+            <td class='r'><span class='rs-tag'>17.5</span></td>
+        </tr>
+        
+        <tr class='srow'>
+            <td><a class='sym-tag' href='https://www.tradingview.com/chart/?symbol=NSE%3AKENNAMET' target='_blank'>KENNAMET</a></td>
+            <td class='r'>nan</td>
+            <td class='r'>nan%</td>
+            <td class='c'><span class='badge' style='background:var(--blue-bg);color:var(--blue);border-color:var(--blue-mid);'>BLUE PPV</span></td>
+            <td class='c'>-</td>
+            <td class='r'><span class='rs-tag'>nan</span></td>
+        </tr>
+        
+        <tr class='srow'>
+            <td><a class='sym-tag' href='https://www.tradingview.com/chart/?symbol=NSE%3ACOCKERILL' target='_blank'>COCKERILL</a></td>
+            <td class='r'>nan</td>
+            <td class='r'>nan%</td>
+            <td class='c'><span class='badge' style='background:var(--blue-bg);color:var(--blue);border-color:var(--blue-mid);'>BLUE PPV</span></td>
+            <td class='c'>-</td>
+            <td class='r'><span class='rs-tag'>nan</span></td>
+        </tr>
+        
+        <tr class='srow'>
+            <td><a class='sym-tag' href='https://www.tradingview.com/chart/?symbol=NSE%3ANILE' target='_blank'>NILE</a></td>
+            <td class='r'>nan</td>
+            <td class='r'>nan%</td>
+            <td class='c'><span class='badge' style='background:var(--blue-bg);color:var(--blue);border-color:var(--blue-mid);'>BLUE PPV</span></td>
+            <td class='c'>-</td>
+            <td class='r'><span class='rs-tag'>nan</span></td>
+        </tr>
+        
+        <tr class='srow'>
+            <td><a class='sym-tag' href='https://www.tradingview.com/chart/?symbol=NSE%3AGRAUWEIL' target='_blank'>GRAUWEIL</a></td>
+            <td class='r'>nan</td>
+            <td class='r'>nan%</td>
+            <td class='c'><span class='badge' style='background:var(--blue-bg);color:var(--blue);border-color:var(--blue-mid);'>BLUE PPV</span></td>
+            <td class='c'>-</td>
+            <td class='r'><span class='rs-tag'>nan</span></td>
+        </tr>
+        
+        <tr class='srow'>
+            <td><a class='sym-tag' href='https://www.tradingview.com/chart/?symbol=NSE%3ARMC' target='_blank'>RMC</a></td>
+            <td class='r'>nan</td>
+            <td class='r'>nan%</td>
+            <td class='c'><span class='badge' style='background:var(--blue-bg);color:var(--blue);border-color:var(--blue-mid);'>BLUE PPV</span></td>
+            <td class='c'>-</td>
+            <td class='r'><span class='rs-tag'>nan</span></td>
+        </tr>
+        
+        <tr class='srow'>
+            <td><a class='sym-tag' href='https://www.tradingview.com/chart/?symbol=NSE%3ABNAGROCHEM' target='_blank'>BNAGROCHEM</a></td>
+            <td class='r'>nan</td>
+            <td class='r'>nan%</td>
+            <td class='c'><span class='badge' style='background:var(--blue-bg);color:var(--blue);border-color:var(--blue-mid);'>BLUE PPV</span></td>
+            <td class='c'>-</td>
+            <td class='r'><span class='rs-tag'>nan</span></td>
+        </tr>
+        
+        <tr class='srow'>
+            <td><a class='sym-tag' href='https://www.tradingview.com/chart/?symbol=NSE%3ANITTAGELA' target='_blank'>NITTAGELA</a></td>
+            <td class='r'>nan</td>
+            <td class='r'>nan%</td>
+            <td class='c'><span class='badge' style='background:var(--blue-bg);color:var(--blue);border-color:var(--blue-mid);'>BLUE PPV</span></td>
+            <td class='c'>-</td>
+            <td class='r'><span class='rs-tag'>nan</span></td>
+        </tr>
+        
+        <tr class='srow'>
+            <td><a class='sym-tag' href='https://www.tradingview.com/chart/?symbol=NSE%3ASINGERIND' target='_blank'>SINGERIND</a></td>
+            <td class='r'>nan</td>
+            <td class='r'>nan%</td>
+            <td class='c'><span class='badge' style='background:var(--blue-bg);color:var(--blue);border-color:var(--blue-mid);'>BLUE PPV</span></td>
+            <td class='c'>-</td>
+            <td class='r'><span class='rs-tag'>nan</span></td>
+        </tr>
+        
+        <tr class='srow'>
+            <td><a class='sym-tag' href='https://www.tradingview.com/chart/?symbol=NSE%3AKPL' target='_blank'>KPL</a></td>
+            <td class='r'>nan</td>
+            <td class='r'>nan%</td>
+            <td class='c'><span class='badge' style='background:var(--blue-bg);color:var(--blue);border-color:var(--blue-mid);'>BLUE PPV</span></td>
+            <td class='c'>-</td>
+            <td class='r'><span class='rs-tag'>nan</span></td>
+        </tr>
+        
+        <tr class='srow'>
+            <td><a class='sym-tag' href='https://www.tradingview.com/chart/?symbol=NSE%3ATIMEX' target='_blank'>TIMEX</a></td>
+            <td class='r'>nan</td>
+            <td class='r'>nan%</td>
+            <td class='c'><span class='badge' style='background:var(--blue-bg);color:var(--blue);border-color:var(--blue-mid);'>BLUE PPV</span></td>
+            <td class='c'>-</td>
+            <td class='r'><span class='rs-tag'>nan</span></td>
+        </tr>
+        
+        <tr class='srow'>
+            <td><a class='sym-tag' href='https://www.tradingview.com/chart/?symbol=NSE%3ABIRLAPREC' target='_blank'>BIRLAPREC</a></td>
+            <td class='r'>nan</td>
+            <td class='r'>nan%</td>
+            <td class='c'><span class='badge' style='background:var(--blue-bg);color:var(--blue);border-color:var(--blue-mid);'>BLUE PPV</span></td>
+            <td class='c'>-</td>
+            <td class='r'><span class='rs-tag'>nan</span></td>
+        </tr>
+        
+        <tr class='srow'>
+            <td><a class='sym-tag' href='https://www.tradingview.com/chart/?symbol=NSE%3ASHARDUL' target='_blank'>SHARDUL</a></td>
+            <td class='r'>nan</td>
+            <td class='r'>nan%</td>
+            <td class='c'><span class='badge' style='background:var(--blue-bg);color:var(--blue);border-color:var(--blue-mid);'>BLUE PPV</span></td>
+            <td class='c'>-</td>
+            <td class='r'><span class='rs-tag'>nan</span></td>
+        </tr>
+        </tbody></table></div></section></body></html>
+    
