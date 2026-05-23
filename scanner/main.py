@@ -1,5 +1,3 @@
-Let me know where to add the above Modify conditions in main,py
-
 """
 scanner/main.py
 ---------------
