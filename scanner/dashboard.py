@@ -266,6 +266,7 @@ def build_passing_dashboard(passing: pd.DataFrame, out_path: Path, date_str: str
         tvpct      = row.get("traded_val_pct_mc", np.nan)
         ind_grp    = str(row.get("industry_group", "")) or "—"
         industry   = str(row.get("industry", ""))       or "—"
+        result_date = row.get("result_date", "—")
 
         close_s = f"₹{float(close):,.2f}" if _safe(close) else "N/A"
         ema10_s = f"₹{float(ema10):,.2f}" if _safe(ema10) else "N/A"
@@ -300,6 +301,7 @@ def build_passing_dashboard(passing: pd.DataFrame, out_path: Path, date_str: str
           <td class="r">{tvpct_s}</td>
           <td>{ind_grp}</td>
           <td>{industry}</td>
+          <td class="r">{result_date}</td>
         </tr>"""
 
         chart_labels.append(f'"{sym}"')
@@ -356,12 +358,12 @@ def build_passing_dashboard(passing: pd.DataFrame, out_path: Path, date_str: str
         <th class="r" data-col="close"  data-type="num">Close ₹<i class="si"></i></th>
         <th class="r" data-col="ema10"  data-type="num">EMA10 ₹<i class="si"></i></th>
         <th class="r" data-col="rs"     data-type="num">RS %ile<i class="si"></i></th>
-        <th class="r" data-col="result" data-type="str">Result Date<t class="si"></i></th>
         <th class="r" data-col="tmc"    data-type="num">Total Mkt Cap<i class="si"></i></th>
         <th class="r" data-col="tv"     data-type="num">Traded Value<i class="si"></i></th>
         <th class="r" data-col="tvpct"  data-type="num">TV % of Mkt Cap<i class="si"></i></th>
         <th          data-col="indgrp" data-type="str">Industry Group<i class="si"></i></th>
         <th          data-col="ind"    data-type="str">Industry<i class="si"></i></th>
+        <th class="r" data-col="result" data-type="str">Result Date<t class="si"></i></th>
       </tr></thead>
       <tbody id="tableBody">{rows_html}</tbody>
     </table>
@@ -440,6 +442,7 @@ def build_passing_ema10_dashboard(
         tvpct    = row.get("traded_val_pct_mc", np.nan)
         ind_grp  = str(row.get("industry_group", "")) or "—"
         industry = str(row.get("industry", ""))       or "—"
+        result_date = row.get("result_date", "—")
 
         close_s = f"₹{float(close):,.2f}" if _safe(close) else "N/A"
         ema10_s = f"₹{float(ema10):,.2f}" if _safe(ema10) else "N/A"
@@ -474,6 +477,7 @@ def build_passing_ema10_dashboard(
           <td class="r">{tvpct_s}</td>
           <td>{ind_grp}</td>
           <td>{industry}</td>
+          <td class="r">{result_date}</td>
         </tr>"""
 
     # ── Build history line-chart data ─────────────────────────────────────────
@@ -568,12 +572,12 @@ def build_passing_ema10_dashboard(
         <th class="r" data-col="ema10"  data-type="num">EMA10 ₹<i class="si"></i></th>
         <th class="r" data-col="gap"    data-type="num">Gap % Above EMA10<i class="si"></i></th>
         <th class="r" data-col="rs"     data-type="num">RS %ile<i class="si"></i></th>
-        <th class="r" data-col="result" data-type="str">Result Date<t class="si"></i></th>
         <th class="r" data-col="tmc"    data-type="num">Total Mkt Cap<i class="si"></i></th>
         <th class="r" data-col="tv"     data-type="num">Traded Value<i class="si"></i></th>
         <th class="r" data-col="tvpct"  data-type="num">TV % of Mkt Cap<i class="si"></i></th>
         <th          data-col="indgrp" data-type="str">Industry Group<i class="si"></i></th>
         <th          data-col="ind"    data-type="str">Industry<i class="si"></i></th>
+        <th class="r" data-col="result" data-type="str">Result Date<t class="si"></i></th>
       </tr></thead>
       <tbody id="tableBody">{rows_html}</tbody>
     </table>
@@ -684,6 +688,7 @@ def build_volume_action_dashboard(
 
         ind_grp    = str(row.get("industry_group", "")) or "—"
         industry   = str(row.get("industry", "")) or "—"
+        result_date = row.get("result_date", "—")
 
         rows += f"""
         <tr class='srow'
@@ -733,6 +738,7 @@ def build_volume_action_dashboard(
 
             <td>{ind_grp}</td>
             <td>{industry}</td>
+            <td class='r'>{result_date}</td>
         </tr>
         """
 
