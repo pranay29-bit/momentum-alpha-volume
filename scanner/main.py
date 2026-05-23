@@ -155,7 +155,7 @@ def run() -> None:
             history=history,
         )
 
-        if not volume_action.empty:
+    if not volume_action.empty:
         build_volume_action_dashboard(
             volume_action,
             out_dir / f"volume_dashboard_{today_str}.html",
