@@ -658,33 +658,190 @@ new Chart(document.getElementById('tvChart'), {{
 #  VOLUME ACTION DASHBOARD
 # ─────────────────────────────────────────────────────────────────────────────
 
-def build_volume_action_dashboard(volume_df: pd.DataFrame, out_path: Path, date_str: str) -> None:
+# ─────────────────────────────────────────────────────────────────────────────
+#  VOLUME ACTION DASHBOARD
+# ─────────────────────────────────────────────────────────────────────────────
+
+def build_volume_action_dashboard(
+    volume_df: pd.DataFrame,
+    out_path: Path,
+    date_str: str
+) -> None:
+
     date_display = datetime.strptime(date_str, "%Y%m%d").strftime("%d %b %Y")
+
     rows = ""
-    for _, row in volume_df.sort_values("relative_volume", ascending=False).iterrows():
-        sym = str(row.get("symbol", "")).replace(".NS", "")
+
+    for _, row in volume_df.sort_values(
+        "relative_volume",
+        ascending=False
+    ).iterrows():
+
+        sym        = str(row.get("symbol", "")).replace(".NS", "")
+        close      = row.get("close", np.nan)
+        rel_vol    = row.get("relative_volume", np.nan)
+        rs         = row.get("rs_percentile", np.nan)
+
+        ind_grp    = str(row.get("industry_group", "")) or "—"
+        industry   = str(row.get("industry", "")) or "—"
+
         rows += f"""
-        <tr class='srow'>
-            <td><a class='sym-tag' href='{_tv_link(sym)}' target='_blank'>{sym}</a></td>
-            <td class='r'>{round(float(row.get('close',0)),2)}</td>
-            <td class='r'>{round(float(row.get('relative_volume',0)),1)}%</td>
-            <td class='c'><span class='badge' style='background:var(--blue-bg);color:var(--blue);border-color:var(--blue-mid);'>BLUE PPV</span></td>
-            <td class='c'>{'🔥' if row.get('bull_snort', False) else '-'}</td>
-            <td class='r'><span class='rs-tag'>{round(float(row.get('rs_percentile',0)),1)}</span></td>
+        <tr class='srow'
+            data-sym="{sym}"
+            data-indgrp="{ind_grp}"
+            data-ind="{industry}"
+            data-close="{_r(close)}"
+            data-relvol="{_r(rel_vol)}"
+            data-rs="{_r(rs)}">
+
+            <td>
+                <a class='sym-tag'
+                   style="background:var(--blue-bg);border-color:#bfdbfe;color:#1d4ed8"
+                   href='{_tv_link(sym)}'
+                   target='_blank'
+                   rel='noopener'>
+                   {sym}
+                </a>
+            </td>
+
+            <td class='r'>
+                {"₹{:,.2f}".format(float(close)) if _safe(close) else "N/A"}
+            </td>
+
+            <td class='r'>
+                {"{:.1f}%".format(float(rel_vol)) if _safe(rel_vol) else "N/A"}
+            </td>
+
+            <td class='c'>
+                <span class='badge'
+                    style='background:var(--blue-bg);
+                           color:var(--blue);
+                           border-color:var(--blue-mid);'>
+                    BLUE PPV
+                </span>
+            </td>
+
+            <td class='c'>
+                {'🔥' if row.get('bull_snort', False) else '-'}
+            </td>
+
+            <td class='r'>
+                <span class='rs-tag'>
+                    {round(float(rs),1) if _safe(rs) else "N/A"}
+                </span>
+            </td>
+
+            <td>{ind_grp}</td>
+            <td>{industry}</td>
         </tr>
         """
 
     html = _html_head("Volume Action Dashboard") + f"""
-    <header>
-      <div><div class='logo-line'><span class='logo-dot' style='background:var(--blue)'></span><span class='logo-tag'>Momentum Alpha</span></div>
-      <h1>Volume Action</h1><div class='sub'>Pocket Pivot / Blue Volume Stocks • {date_display}</div></div>
-      <div class='date-chip' style='border-color:var(--blue-mid);background:var(--blue-bg);color:var(--blue);'>{len(volume_df)} Stocks</div>
-    </header>
-    <section class='table-section'>
-    <div class='tbl-wrap'>
-    <table>
-    <thead><tr><th>Symbol</th><th class='r'>Close</th><th class='r'>Rel Volume</th><th class ='r'>Result Date</th><th class='c'>Signal</th><th class='c'>Bull Snort</th><th class='r'>RS</th></tr></thead>
-    <tbody>{rows}</tbody></table></div></section></body></html>
-    """
+
+<header>
+  <div>
+    <div class='logo-line'>
+      <span class='logo-dot' style='background:var(--blue)'></span>
+      <span class='logo-tag'>Momentum Alpha</span>
+    </div>
+
+    <h1>Volume Action</h1>
+
+    <div class='sub'>
+      Pocket Pivot / Blue Volume Stocks • {date_display}
+    </div>
+  </div>
+
+  <div class='date-chip'
+       style='border-color:var(--blue-mid);
+              background:var(--blue-bg);
+              color:var(--blue);'>
+       {len(volume_df)} Stocks
+  </div>
+</header>
+
+<div class="table-section">
+
+  <div class="sec-head">
+
+    <span class="sec-title">
+      Volume Action Stocks
+    </span>
+
+    <div class="controls">
+      <input class="search-input"
+             id="searchInput"
+             type="text"
+             placeholder="Search symbol / industry…"
+             oninput="filterRows()"/>
+    </div>
+
+  </div>
+
+  <div class='tbl-wrap'>
+
+    <table id="mainTable">
+
+      <thead>
+        <tr>
+          <th data-col="sym" data-type="str">
+            Symbol<i class="si"></i>
+          </th>
+
+          <th class='r' data-col="close" data-type="num">
+            Close<i class="si"></i>
+          </th>
+
+          <th class='r' data-col="relvol" data-type="num">
+            Rel Volume<i class="si"></i>
+          </th>
+
+          <th class='c'>
+            Signal
+          </th>
+
+          <th class='c'>
+            Bull Snort
+          </th>
+
+          <th class='r' data-col="rs" data-type="num">
+            RS<i class="si"></i>
+          </th>
+
+          <th data-col="indgrp" data-type="str">
+            Industry Group<i class="si"></i>
+          </th>
+
+          <th data-col="ind" data-type="str">
+            Industry<i class="si"></i>
+          </th>
+
+        </tr>
+      </thead>
+
+      <tbody id="tableBody">
+        {rows}
+      </tbody>
+
+    </table>
+
+  </div>
+</div>
+
+<footer>
+  Data from NSE India &nbsp;·&nbsp;
+  Generated {date_display}
+</footer>
+
+<script>
+{_FILTER_JS}
+{_TABLE_SORT_JS}
+</script>
+
+</body>
+</html>
+"""
+
     out_path.write_text(html, encoding='utf-8')
+
     logger.info("Volume action dashboard → %s", out_path)
