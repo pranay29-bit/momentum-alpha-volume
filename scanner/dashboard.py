@@ -356,6 +356,7 @@ def build_passing_dashboard(passing: pd.DataFrame, out_path: Path, date_str: str
         <th class="r" data-col="close"  data-type="num">Close ₹<i class="si"></i></th>
         <th class="r" data-col="ema10"  data-type="num">EMA10 ₹<i class="si"></i></th>
         <th class="r" data-col="rs"     data-type="num">RS %ile<i class="si"></i></th>
+        <th class="r" data-col="result" data-type="str">Result Date<t class="si"></i></th>
         <th class="r" data-col="tmc"    data-type="num">Total Mkt Cap<i class="si"></i></th>
         <th class="r" data-col="tv"     data-type="num">Traded Value<i class="si"></i></th>
         <th class="r" data-col="tvpct"  data-type="num">TV % of Mkt Cap<i class="si"></i></th>
@@ -567,6 +568,7 @@ def build_passing_ema10_dashboard(
         <th class="r" data-col="ema10"  data-type="num">EMA10 ₹<i class="si"></i></th>
         <th class="r" data-col="gap"    data-type="num">Gap % Above EMA10<i class="si"></i></th>
         <th class="r" data-col="rs"     data-type="num">RS %ile<i class="si"></i></th>
+        <th class="r" data-col="result" data-type="str">Result Date<t class="si"></i></th>
         <th class="r" data-col="tmc"    data-type="num">Total Mkt Cap<i class="si"></i></th>
         <th class="r" data-col="tv"     data-type="num">Traded Value<i class="si"></i></th>
         <th class="r" data-col="tvpct"  data-type="num">TV % of Mkt Cap<i class="si"></i></th>
@@ -681,7 +683,7 @@ def build_volume_action_dashboard(volume_df: pd.DataFrame, out_path: Path, date_
     <section class='table-section'>
     <div class='tbl-wrap'>
     <table>
-    <thead><tr><th>Symbol</th><th class='r'>Close</th><th class='r'>Rel Volume</th><th class='c'>Signal</th><th class='c'>Bull Snort</th><th class='r'>RS</th></tr></thead>
+    <thead><tr><th>Symbol</th><th class='r'>Close</th><th class='r'>Rel Volume</th><th class ='r'>Result Date</th><th class='c'>Signal</th><th class='c'>Bull Snort</th><th class='r'>RS</th></tr></thead>
     <tbody>{rows}</tbody></table></div></section></body></html>
     """
     out_path.write_text(html, encoding='utf-8')
