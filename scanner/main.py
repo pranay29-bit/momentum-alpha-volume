@@ -81,7 +81,19 @@ def run() -> None:
     passing = df[df["all_conditions_met"]].copy()
 
     if not passing.empty:
-        passing = enrich_with_market_caps(passing)
+    passing = enrich_with_market_caps(passing)
+
+    logger.info("Fetching quarterly result dates for passing stocks...")
+
+    passing["result_date"] = passing["symbol"].apply(
+        get_result_date
+    )
+
+    print(
+        passing[
+            ["symbol", "result_date"]
+        ].head(20)
+    )
 
     passing_path = out_dir / f"passing_stocks_{today_str}.csv"
     passing.to_csv(passing_path, index=False)
@@ -97,6 +109,16 @@ def run() -> None:
     else:
         passing_ema10 = pd.DataFrame()
 
+    if not passing_ema10.empty:
+
+      logger.info("Fetching quarterly result dates for elite stocks...")
+
+      passing_ema10["result_date"] = (
+        passing_ema10["symbol"].apply(
+            get_result_date
+        )
+    )
+
     ema10_path = out_dir / f"passing_ema10_{today_str}.csv"
     passing_ema10.to_csv(ema10_path, index=False)
     logger.info("Passing+EMA10 stocks (%d) → %s", len(passing_ema10), ema10_path)
@@ -109,8 +131,26 @@ def run() -> None:
 
     # ── 8. Volume Action ──────────────────────────────────────────────────────
     volume_action = df[df["volume_signal"] == "ppv"].copy()
+    if not volume_action.empty:
+
+    logger.info("Fetching quarterly result dates for volume action stocks...")
+
+      volume_action["result_date"] = (
+        volume_action["symbol"].apply(
+            get_result_date
+        )
+    )
+
+    print(
+        volume_action[
+            ["symbol", "result_date"]
+        ].head(20)
+    )
+  
     volume_action_path = out_dir / f"volume_action_{today_str}.csv"
     volume_action.to_csv(volume_action_path, index=False)
+
+  
 
     # ── 9. HTML Dashboards ────────────────────────────────────────────────────
     if not passing.empty:
