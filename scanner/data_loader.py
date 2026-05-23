@@ -2,7 +2,8 @@
 scanner/data_loader.py
 ----------------------
 Loads symbol list from CSV and downloads OHLCV data from Yahoo Finance
-in configurable batches.
+in configurable batches. Also loads Industry & Industry Group metadata
+from the same CSV and merges it into the result DataFrame.
 """
 
 from __future__ import annotations
@@ -23,12 +24,34 @@ from .indicators import add_indicators, evaluate_trend_template, compute_12m_ret
 logger = logging.getLogger(__name__)
 
 
-# ── Symbol list ───────────────────────────────────────────────────────────────
+# ── Symbol list & metadata ─────────────────────────────────────────────────────
 
 def load_symbols(csv_path: str = CSV_PATH, symbol_col: str = SYMBOL_COLUMN) -> list[str]:
     df  = pd.read_csv(csv_path)
     raw = df[symbol_col].dropna().astype(str).str.strip().unique().tolist()
     return [s if "." in s else s + EXCHANGE_SUFFIX for s in raw]
+
+
+def load_symbol_metadata(csv_path: str = CSV_PATH, symbol_col: str = SYMBOL_COLUMN) -> pd.DataFrame:
+    """
+    Return a DataFrame indexed by the Yahoo-suffixed symbol with
+    'industry_group' and 'industry' columns (sourced from NSE_Stocks.csv).
+    """
+    df = pd.read_csv(csv_path)
+    df[symbol_col] = df[symbol_col].dropna().astype(str).str.strip()
+    df = df[df[symbol_col].str.len() > 0].copy()
+    df["symbol_ns"] = df[symbol_col].apply(
+        lambda s: s if "." in s else s + EXCHANGE_SUFFIX
+    )
+
+    meta_cols = {"symbol_ns": "symbol_ns"}
+    if "Industry Group" in df.columns:
+        meta_cols["Industry Group"] = "industry_group"
+    if "Industry" in df.columns:
+        meta_cols["Industry"] = "industry"
+
+    meta = df[[c for c in meta_cols]].rename(columns=meta_cols)
+    return meta.drop_duplicates(subset=["symbol_ns"]).set_index("symbol_ns")
 
 
 # ── Batch downloader ──────────────────────────────────────────────────────────
@@ -50,9 +73,9 @@ def _process_symbol(sym: str, data: pd.DataFrame, is_multi: bool) -> dict | None
         if df_sym.empty:
             return None
 
-        df_sym  = add_indicators(df_sym)
-        tpl     = evaluate_trend_template(df_sym)
-        rs_ret  = compute_12m_return(df_sym)
+        df_sym   = add_indicators(df_sym)
+        tpl      = evaluate_trend_template(df_sym)
+        rs_ret   = compute_12m_return(df_sym)
         vol_data = compute_volume_action(df_sym)
 
         return {
@@ -73,9 +96,9 @@ def _process_symbol(sym: str, data: pd.DataFrame, is_multi: bool) -> dict | None
             "cond9_price_above_ema10":     tpl["cond9_price_above_ema10"],
             "fresh_ma12_cross_today":      tpl["fresh_ma12_cross_today"],
             "12m_return_pct": rs_ret,
-            "volume_signal": vol_data["volume_signal"],
+            "volume_signal":  vol_data["volume_signal"],
             "relative_volume": vol_data["relative_volume"],
-            "bull_snort": vol_data["bull_snort"],
+            "bull_snort":     vol_data["bull_snort"],
         }
     except Exception as exc:
         logger.error("Error processing %s: %r", sym, exc)
@@ -85,8 +108,16 @@ def _process_symbol(sym: str, data: pd.DataFrame, is_multi: bool) -> dict | None
 def download_all(symbols: list[str]) -> pd.DataFrame:
     """
     Download price history for all *symbols* in batches and return a
-    consolidated DataFrame with indicators + trend-template flags.
+    consolidated DataFrame with indicators + trend-template flags,
+    enriched with Industry Group and Industry from NSE_Stocks.csv.
     """
+    # Load industry metadata once
+    try:
+        meta = load_symbol_metadata()
+    except Exception as exc:
+        logger.warning("Could not load symbol metadata: %s", exc)
+        meta = pd.DataFrame()
+
     all_rows: list[dict] = []
     total = ceil(len(symbols) / BATCH_SIZE)
 
@@ -115,4 +146,10 @@ def download_all(symbols: list[str]) -> pd.DataFrame:
             if row:
                 all_rows.append(row)
 
-    return pd.DataFrame(all_rows)
+    df = pd.DataFrame(all_rows)
+
+    # Merge industry metadata
+    if not df.empty and not meta.empty:
+        df = df.join(meta, on="symbol", how="left")
+
+    return df
