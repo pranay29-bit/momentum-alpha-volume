@@ -22,8 +22,69 @@ _EMPTY = {
     "traded_value_cr":      np.nan,
     "traded_volume":        np.nan,
     "traded_val_pct_mc":    np.nan,
+    "price_band":           "-",
 }
 
+_HEADERS = {
+    "User-Agent": "Mozilla/5.0",
+    "Accept": "application/json,text/plain,*/*",
+    "Referer": "https://www.nseindia.com/",
+}
+
+
+def fetch_price_band(symbol_ns: str) -> str:
+    """
+    Fetch NSE price band.
+    Example:
+      2
+      5
+      10
+      20
+      No Band
+    """
+
+    symbol = symbol_ns.replace(".NS", "").upper()
+
+    try:
+        session = requests.Session()
+
+        session.get(
+            "https://www.nseindia.com",
+            headers=_HEADERS,
+            timeout=10,
+        )
+
+        url = (
+            f"https://www.nseindia.com/api/"
+            f"quote-equity?symbol={symbol}"
+        )
+
+        r = session.get(
+            url,
+            headers=_HEADERS,
+            timeout=10,
+        )
+
+        data = r.json()
+
+        security_info = data.get(
+            "securityInfo",
+            {}
+        )
+
+        pb = security_info.get("priceBand")
+
+        if pb:
+            return str(pb)
+
+    except Exception as exc:
+        logger.debug(
+            "Price band fetch failed for %s: %s",
+            symbol,
+            exc,
+        )
+
+    return "—"
 
 def fetch_market_cap(symbol_ns: str) -> dict:
     """
@@ -36,6 +97,7 @@ def fetch_market_cap(symbol_ns: str) -> dict:
 
     All monetary values are converted to ₹ Crores (1 Cr = 10,000,000).
     """
+    price_band = fetch_price_band(symbol_ns)
     try:
         ticker = yf.Ticker(symbol_ns)
 
@@ -97,6 +159,7 @@ def fetch_market_cap(symbol_ns: str) -> dict:
             "traded_value_cr":     _rnd(traded_value_cr),
             "traded_volume":       int(volume) if volume else np.nan,
             "traded_val_pct_mc":   _rnd(traded_val_pct_mc, 4),
+            "price_band":          price_band,
         }
 
     except Exception as exc:
@@ -119,6 +182,7 @@ def enrich_with_market_caps(passing_df: pd.DataFrame) -> pd.DataFrame:
         "traded_value_cr":     [],
         "traded_volume":       [],
         "traded_val_pct_mc":   [],
+        "price_band":          [],
     }
 
     for i, sym in enumerate(passing_df["symbol"], start=1):
