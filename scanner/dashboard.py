@@ -207,7 +207,10 @@ _FILTER_JS = """
 function filterRows() {
   const q = document.getElementById('searchInput').value.toLowerCase();
   document.querySelectorAll('#tableBody .srow').forEach(r => {
-    r.style.display = r.dataset.sym.toLowerCase().includes(q) ? '' : 'none';
+    const sym    = (r.dataset.sym    || '').toLowerCase();
+    const indgrp = (r.dataset.indgrp || '').toLowerCase();
+    const ind    = (r.dataset.ind    || '').toLowerCase();
+    r.style.display = (sym.includes(q) || indgrp.includes(q) || ind.includes(q)) ? '' : 'none';
   });
 }
 """
@@ -244,27 +247,25 @@ def build_passing_dashboard(passing: pd.DataFrame, out_path: Path, date_str: str
     n_stocks    = len(passing)
     n_above_ema = int(passing.get("cond9_price_above_ema10", pd.Series(dtype=bool)).sum()) \
                   if "cond9_price_above_ema10" in passing.columns else "N/A"
-    avg_ff_s    = (f"{passing['ff_pct'].dropna().mean():.1f}%"
-                   if "ff_pct" in passing.columns and not passing["ff_pct"].dropna().empty
-                   else "N/A")
     total_tmc_s = fmt_cr(passing["total_market_cap_cr"].dropna().sum()) \
                   if "total_market_cap_cr" in passing.columns else "N/A"
     total_tv_s  = fmt_cr(passing["traded_value_cr"].dropna().sum()) \
                   if "traded_value_cr" in passing.columns else "N/A"
 
     rows_html = ""
-    chart_labels, chart_total, chart_ffpct = [], [], []
+    chart_labels, chart_total = [], []
 
     for _, row in passing.sort_values("rs_percentile", ascending=False).iterrows():
-        sym   = str(row.get("symbol", "")).replace(".NS", "")
-        link  = _tv_link(row.get("symbol", sym))
-        close = row.get("close", np.nan)
-        ema10 = row.get("EMA10",  np.nan)
-        rs    = row.get("rs_percentile", np.nan)
-        tmc   = row.get("total_market_cap_cr", np.nan)
-        ffpct = row.get("ff_pct",  np.nan)
-        tv    = row.get("traded_value_cr", np.nan)
-        tvpct = row.get("traded_val_pct_of_ff", np.nan)
+        sym        = str(row.get("symbol", "")).replace(".NS", "")
+        link       = _tv_link(row.get("symbol", sym))
+        close      = row.get("close", np.nan)
+        ema10      = row.get("EMA10",  np.nan)
+        rs         = row.get("rs_percentile", np.nan)
+        tmc        = row.get("total_market_cap_cr", np.nan)
+        tv         = row.get("traded_value_cr", np.nan)
+        tvpct      = row.get("traded_val_pct_mc", np.nan)
+        ind_grp    = str(row.get("industry_group", "")) or "—"
+        industry   = str(row.get("industry", ""))       or "—"
 
         close_s = f"₹{float(close):,.2f}" if _safe(close) else "N/A"
         ema10_s = f"₹{float(ema10):,.2f}" if _safe(ema10) else "N/A"
@@ -281,19 +282,12 @@ def build_passing_dashboard(passing: pd.DataFrame, out_path: Path, date_str: str
         except Exception:
             ema_col = "#78716c"; ema_bg = "#f5f5f4"; ema_bdr = "#d4d0cb"
 
-        try:
-            ffpct_f = float(ffpct)
-            ffpct_s = f"{ffpct_f:.1f}%"
-            bar_w   = max(0, min(100, ffpct_f))
-            bar_col = "#dc2626" if ffpct_f < 25 else ("#b45309" if ffpct_f < 50 else "#15803d")
-        except Exception:
-            ffpct_f = -1; ffpct_s = "N/A"; bar_w = 0; bar_col = "#a8a29e"
-
         rows_html += f"""
         <tr class="srow"
           data-sym="{sym}" data-close="{_r(close)}" data-rs="{_r(rs)}"
           data-ema10="{_r(ema10)}" data-tmc="{_r(tmc)}"
-          data-ff="{_r(ffpct)}" data-tv="{_r(tv)}" data-tvpct="{_r(tvpct, 6)}">
+          data-tv="{_r(tv)}" data-tvpct="{_r(tvpct, 6)}"
+          data-indgrp="{ind_grp}" data-ind="{industry}">
           <td><a class="sym-tag"
                  style="background:var(--blue-bg);border-color:#bfdbfe;color:#1d4ed8"
                  href="{link}" target="_blank" rel="noopener">{sym}</a></td>
@@ -302,34 +296,14 @@ def build_passing_dashboard(passing: pd.DataFrame, out_path: Path, date_str: str
                style="background:{ema_bg};border-color:{ema_bdr};color:{ema_col}">{ema10_s}</span></td>
           <td class="r"><span class="rs-tag">{rs_s}</span></td>
           <td class="r">{tmc_s}</td>
-          <td>
-            <div class="bar-cell">
-              <div class="bar-bg">
-                <div class="bar-fill" style="width:{bar_w}%;background:{bar_col}"></div>
-              </div>
-              <span class="bar-pct" style="color:{bar_col}">{ffpct_s}</span>
-            </div>
-          </td>
           <td class="r">{tv_s}</td>
           <td class="r">{tvpct_s}</td>
+          <td>{ind_grp}</td>
+          <td>{industry}</td>
         </tr>"""
 
         chart_labels.append(f'"{sym}"')
         chart_total.append(_r(tmc))
-        chart_ffpct.append(_r(ffpct))
-
-    def _ff_bg(v):
-        if v == "null": return "#e4e0d8"
-        fv = float(v)
-        return "#fecaca" if fv < 25 else ("#fde68a" if fv < 50 else "#bbf7d0")
-
-    def _ff_bdr(v):
-        if v == "null": return "#a8a29e"
-        fv = float(v)
-        return "#dc2626" if fv < 25 else ("#b45309" if fv < 50 else "#15803d")
-
-    ff_bg_js  = ",".join(f'"{_ff_bg(v)}"'  for v in chart_ffpct)
-    ff_bdr_js = ",".join(f'"{_ff_bdr(v)}"' for v in chart_ffpct)
 
     html = _html_head(f"Market Cap Dashboard — {date_display}")
     html += f"""
@@ -340,7 +314,7 @@ def build_passing_dashboard(passing: pd.DataFrame, out_path: Path, date_str: str
       <span class="logo-tag" style="color:var(--blue)">Momentum Alpha · Minervini Scanner</span>
     </div>
     <h1>Market Cap Dashboard</h1>
-    <p class="sub">Passing stocks · EMA10 filter · Free float &amp; traded value · NSE data</p>
+    <p class="sub">Passing stocks · EMA10 filter · Market cap &amp; traded value · NSE data</p>
   </div>
   <div class="date-chip" style="background:var(--blue-bg);border-color:var(--blue-mid);color:var(--blue)">{date_display}</div>
 </header>
@@ -352,20 +326,14 @@ def build_passing_dashboard(passing: pd.DataFrame, out_path: Path, date_str: str
     <div class="kpi-label">Above EMA10</div><div class="kpi-val">{n_above_ema}</div></div>
   <div class="kpi teal"><div class="kpi-accent"></div>
     <div class="kpi-label">Combined Market Cap</div><div class="kpi-val">{total_tmc_s}</div></div>
-  <div class="kpi amber"><div class="kpi-accent"></div>
-    <div class="kpi-label">Avg Free Float</div><div class="kpi-val">{avg_ff_s}</div></div>
   <div class="kpi green"><div class="kpi-accent"></div>
     <div class="kpi-label">Total Traded Value</div><div class="kpi-val">{total_tv_s}</div></div>
 </div>
 
-<div class="charts-grid">
+<div class="charts-grid" style="grid-template-columns:1fr">
   <div class="chart-card">
     <div class="chart-title">Total Market Cap (₹ Cr)</div>
     <div class="chart-wrap"><canvas id="barChart"></canvas></div>
-  </div>
-  <div class="chart-card">
-    <div class="chart-title">Free Float % of Total Mkt Cap</div>
-    <div class="chart-wrap"><canvas id="ffChart"></canvas></div>
   </div>
 </div>
 
@@ -376,10 +344,9 @@ def build_passing_dashboard(passing: pd.DataFrame, out_path: Path, date_str: str
       <div class="legend">
         <div class="leg-item"><div class="leg-dot" style="background:#15803d"></div>Close &gt; EMA10</div>
         <div class="leg-item"><div class="leg-dot" style="background:#dc2626"></div>Close ≤ EMA10</div>
-        <div class="leg-item"><div class="leg-dot" style="background:#b45309"></div>FF 25–50%</div>
       </div>
       <input class="search-input" id="searchInput" type="text"
-             placeholder="Search symbol…" oninput="filterRows()"/>
+             placeholder="Search symbol / industry…" oninput="filterRows()"/>
     </div>
   </div>
   <div class="tbl-wrap">
@@ -390,9 +357,10 @@ def build_passing_dashboard(passing: pd.DataFrame, out_path: Path, date_str: str
         <th class="r" data-col="ema10"  data-type="num">EMA10 ₹<i class="si"></i></th>
         <th class="r" data-col="rs"     data-type="num">RS %ile<i class="si"></i></th>
         <th class="r" data-col="tmc"    data-type="num">Total Mkt Cap<i class="si"></i></th>
-        <th          data-col="ff"     data-type="num">FF % of Total<i class="si"></i></th>
         <th class="r" data-col="tv"     data-type="num">Traded Value<i class="si"></i></th>
-        <th class="r" data-col="tvpct"  data-type="num">TV % of FF MC<i class="si"></i></th>
+        <th class="r" data-col="tvpct"  data-type="num">TV % of Mkt Cap<i class="si"></i></th>
+        <th          data-col="indgrp" data-type="str">Industry Group<i class="si"></i></th>
+        <th          data-col="ind"    data-type="str">Industry<i class="si"></i></th>
       </tr></thead>
       <tbody id="tableBody">{rows_html}</tbody>
     </table>
@@ -405,7 +373,6 @@ def build_passing_dashboard(passing: pd.DataFrame, out_path: Path, date_str: str
 <script>
 const labels    = [{",".join(chart_labels)}];
 const totalData = [{",".join(chart_total)}];
-const ffPcts    = [{",".join(chart_ffpct)}];
 {_CHARTJS_DEFAULTS}
 new Chart(document.getElementById('barChart'), {{
   type:'bar',
@@ -424,27 +391,6 @@ new Chart(document.getElementById('barChart'), {{
     scales:{{
       x:{{ ticks:{{color:'#a8a29e'}}, grid:{{color:'#f0ede8'}} }},
       y:{{ ticks:{{color:'#a8a29e', callback: v=>'₹'+Number(v).toLocaleString('en-IN')}}, grid:{{color:'#f0ede8'}} }},
-    }},
-  }},
-}});
-new Chart(document.getElementById('ffChart'), {{
-  type:'bar',
-  data:{{ labels, datasets:[{{
-    label:'Free Float %', data:ffPcts,
-    backgroundColor:[{ff_bg_js}], borderColor:[{ff_bdr_js}],
-    borderWidth:1, borderRadius:4,
-  }}]}},
-  options:{{
-    responsive:true, maintainAspectRatio:false,
-    plugins:{{
-      legend:{{ display:false }},
-      tooltip:{{ backgroundColor:'#fff', borderColor:'#e4e0d8', borderWidth:1,
-        titleColor:'#1c1917', bodyColor:'#78716c', padding:10,
-        callbacks:{{ label: c => ` FF%: ${{c.parsed.y!==null ? c.parsed.y.toFixed(1)+'%' : 'N/A'}}` }} }},
-    }},
-    scales:{{
-      x:{{ ticks:{{color:'#a8a29e'}}, grid:{{color:'#f0ede8'}} }},
-      y:{{ min:0, max:100, ticks:{{color:'#a8a29e', callback: v=>v+'%'}}, grid:{{color:'#f0ede8'}} }},
     }},
   }},
 }});
@@ -474,26 +420,25 @@ def build_passing_ema10_dashboard(
     date_display = datetime.strptime(date_str, "%Y%m%d").strftime("%d %b %Y")
 
     n_total     = len(df)
-    avg_ff_s    = f"{df['ff_pct'].dropna().mean():.1f}%"  \
-                  if "ff_pct" in df.columns and not df["ff_pct"].dropna().empty else "N/A"
     total_tmc_s = fmt_cr(df["total_market_cap_cr"].dropna().sum()) \
                   if "total_market_cap_cr" in df.columns else "N/A"
     total_tv_s  = fmt_cr(df["traded_value_cr"].dropna().sum()) \
                   if "traded_value_cr" in df.columns else "N/A"
 
     rows_html = ""
-    chart_labels, chart_total_mc, ff_vals = [], [], []
+    chart_labels, chart_total_mc = [], []
 
     for _, row in df.iterrows():
-        sym   = str(row.get("symbol", "")).replace(".NS", "")
-        link  = _tv_link(row.get("symbol", sym))
-        close = row.get("close",  np.nan)
-        ema10 = row.get("EMA10",  np.nan)
-        rs    = row.get("rs_percentile", np.nan)
-        tmc   = row.get("total_market_cap_cr", np.nan)
-        ffpct = row.get("ff_pct",  np.nan)
-        tv    = row.get("traded_value_cr", np.nan)
-        tvpct = row.get("traded_val_pct_of_ff", np.nan)
+        sym      = str(row.get("symbol", "")).replace(".NS", "")
+        link     = _tv_link(row.get("symbol", sym))
+        close    = row.get("close",  np.nan)
+        ema10    = row.get("EMA10",  np.nan)
+        rs       = row.get("rs_percentile", np.nan)
+        tmc      = row.get("total_market_cap_cr", np.nan)
+        tv       = row.get("traded_value_cr", np.nan)
+        tvpct    = row.get("traded_val_pct_mc", np.nan)
+        ind_grp  = str(row.get("industry_group", "")) or "—"
+        industry = str(row.get("industry", ""))       or "—"
 
         close_s = f"₹{float(close):,.2f}" if _safe(close) else "N/A"
         ema10_s = f"₹{float(ema10):,.2f}" if _safe(ema10) else "N/A"
@@ -509,21 +454,12 @@ def build_passing_ema10_dashboard(
         except Exception:
             gap_pct = -1.0; gap_s = "N/A"; gap_col = "#a8a29e"
 
-        try:
-            ffpct_f = float(ffpct)
-            ffpct_s = f"{ffpct_f:.1f}%"
-            bar_w   = max(0, min(100, ffpct_f))
-            bar_col = "#dc2626" if ffpct_f < 25 else ("#b45309" if ffpct_f < 50 else "#15803d")
-            ff_vals.append(ffpct_f)
-        except Exception:
-            ffpct_f = -1; ffpct_s = "N/A"; bar_w = 0; bar_col = "#a8a29e"
-            ff_vals.append(-1)
-
         rows_html += f"""
         <tr class="srow"
           data-sym="{sym}" data-close="{_r(close)}" data-ema10="{_r(ema10)}"
           data-gap="{_r(gap_pct, 4)}" data-rs="{_r(rs)}" data-tmc="{_r(tmc)}"
-          data-ff="{_r(ffpct)}" data-tv="{_r(tv)}" data-tvpct="{_r(tvpct, 6)}">
+          data-tv="{_r(tv)}" data-tvpct="{_r(tvpct, 6)}"
+          data-indgrp="{ind_grp}" data-ind="{industry}">
           <td><a class="sym-tag"
                  style="background:var(--green-bg);border-color:var(--green-mid);color:var(--emerald)"
                  href="{link}" target="_blank" rel="noopener">{sym}</a></td>
@@ -533,16 +469,10 @@ def build_passing_ema10_dashboard(
           <td class="r" style="color:{gap_col};font-weight:700">{gap_s}</td>
           <td class="r"><span class="rs-tag">{rs_s}</span></td>
           <td class="r">{tmc_s}</td>
-          <td>
-            <div class="bar-cell">
-              <div class="bar-bg">
-                <div class="bar-fill" style="width:{bar_w}%;background:{bar_col}"></div>
-              </div>
-              <span class="bar-pct" style="color:{bar_col}">{ffpct_s}</span>
-            </div>
-          </td>
           <td class="r">{tv_s}</td>
           <td class="r">{tvpct_s}</td>
+          <td>{ind_grp}</td>
+          <td>{industry}</td>
         </tr>"""
 
     # ── Build history line-chart data ─────────────────────────────────────────
@@ -597,8 +527,6 @@ def build_passing_ema10_dashboard(
     <div class="kpi-label">Elite Stocks</div><div class="kpi-val">{n_total}</div></div>
   <div class="kpi teal"><div class="kpi-accent"></div>
     <div class="kpi-label">Combined Market Cap</div><div class="kpi-val">{total_tmc_s}</div></div>
-  <div class="kpi amber"><div class="kpi-accent"></div>
-    <div class="kpi-label">Avg Free Float</div><div class="kpi-val">{avg_ff_s}</div></div>
   <div class="kpi blue"><div class="kpi-accent"></div>
     <div class="kpi-label">Total Traded Value</div><div class="kpi-val">{total_tv_s}</div></div>
 </div>
@@ -628,7 +556,7 @@ def build_passing_ema10_dashboard(
         <div class="leg-item"><div class="leg-dot" style="background:#dc2626"></div>FF &lt; 25%</div>
       </div>
       <input class="search-input" id="searchInput" type="text"
-             placeholder="Search symbol…" oninput="filterRows()"/>
+             placeholder="Search symbol / industry…" oninput="filterRows()"/>
     </div>
   </div>
   <div class="tbl-wrap">
@@ -640,9 +568,10 @@ def build_passing_ema10_dashboard(
         <th class="r" data-col="gap"    data-type="num">Gap % Above EMA10<i class="si"></i></th>
         <th class="r" data-col="rs"     data-type="num">RS %ile<i class="si"></i></th>
         <th class="r" data-col="tmc"    data-type="num">Total Mkt Cap<i class="si"></i></th>
-        <th          data-col="ff"     data-type="num">FF % of Total<i class="si"></i></th>
         <th class="r" data-col="tv"     data-type="num">Traded Value<i class="si"></i></th>
-        <th class="r" data-col="tvpct"  data-type="num">TV % of FF MC<i class="si"></i></th>
+        <th class="r" data-col="tvpct"  data-type="num">TV % of Mkt Cap<i class="si"></i></th>
+        <th          data-col="indgrp" data-type="str">Industry Group<i class="si"></i></th>
+        <th          data-col="ind"    data-type="str">Industry<i class="si"></i></th>
       </tr></thead>
       <tbody id="tableBody">{rows_html}</tbody>
     </table>
