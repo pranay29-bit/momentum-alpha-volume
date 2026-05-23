@@ -271,6 +271,7 @@ def _update_index(today_str: str, out_dir: Path, n_passing: int, n_elite: int) -
         <th>Date</th>
         <th>Minervini Trend Template Stocks</th>
         <th>Minervini Trend Template Stocks (Above EMA10)</th>
+        <th>Volume Action Stocks</th>
       </tr>
     </thead>
     <tbody>{rows}</tbody>
