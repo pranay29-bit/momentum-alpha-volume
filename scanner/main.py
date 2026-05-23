@@ -133,10 +133,10 @@ def run() -> None:
     volume_action = df[df["volume_signal"] == "ppv"].copy()
     if not volume_action.empty:
 
-    logger.info("Fetching quarterly result dates for volume action stocks...")
+      logger.info("Fetching quarterly result dates for volume action stocks...")
 
-      volume_action["result_date"] = (
-        volume_action["symbol"].apply(
+        volume_action["result_date"] = (
+          volume_action["symbol"].apply(
             get_result_date
         )
     )
