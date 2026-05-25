@@ -1,0 +1,5888 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Volume Action Dashboard</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@500;600&display=swap" rel="stylesheet"/>
+<style>
+:root {
+  --bg:#f5f3ef; --surface:#ffffff; --border:#e4e0d8; --border2:#ccc8bf;
+  --text:#1c1917; --muted:#78716c; --subtle:#a8a29e;
+  --blue:#2563eb; --blue-bg:#eff6ff; --blue-mid:#bfdbfe;
+  --teal:#0d9488; --amber:#b45309; --amber-bg:#fffbeb;
+  --green:#15803d; --green-bg:#f0fdf4; --green-mid:#86efac;
+  --emerald:#059669; --red:#dc2626;
+  --purple:#7c3aed; --purple-bg:#f5f3ff;
+  --sans:'Inter',sans-serif; --serif:'Playfair Display',Georgia,serif;
+  --r:10px; --rl:14px;
+}
+*, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
+html { font-size:15px; }
+body { background:var(--bg); color:var(--text); font-family:var(--sans);
+       line-height:1.6; min-height:100vh; }
+a { color:inherit; text-decoration:none; }
+
+/* ── Header ── */
+header { background:var(--surface); border-bottom:1px solid var(--border);
+         padding:1.75rem 3rem; display:flex; align-items:flex-end;
+         justify-content:space-between; gap:1rem; flex-wrap:wrap; }
+.logo-line { display:flex; align-items:center; gap:.6rem; margin-bottom:.3rem; }
+.logo-dot  { width:8px; height:8px; border-radius:50%; }
+.logo-tag  { font-size:.68rem; letter-spacing:.14em; text-transform:uppercase;
+             font-weight:700; }
+header h1  { font-family:var(--serif); font-size:clamp(1.5rem,3vw,2.1rem);
+             font-weight:600; letter-spacing:-.02em; line-height:1.1; }
+header .sub { font-size:.8rem; color:var(--muted); margin-top:.2rem; }
+.date-chip  { border-radius:999px; padding:.35rem 1rem; font-size:.78rem;
+              font-weight:700; white-space:nowrap; border:1px solid; }
+
+/* ── KPI row ── */
+.kpi-row { display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr));
+           gap:1rem; padding:1.5rem 3rem; }
+.kpi { background:var(--surface); border:1px solid var(--border);
+       border-radius:var(--rl); padding:1rem 1.3rem; position:relative;
+       overflow:hidden; min-width:0; }
+.kpi-accent { position:absolute; top:0; left:1.3rem; height:3px; width:28px;
+              border-radius:0 0 3px 3px; }
+.kpi-label  { font-size:.65rem; text-transform:uppercase; letter-spacing:.1em;
+              color:var(--muted); font-weight:700; margin-bottom:.4rem; }
+.kpi-val    { font-family:var(--serif); font-size:clamp(.95rem,2vw,1.65rem);
+              font-weight:600; line-height:1; word-break:break-word; }
+.kpi.blue   .kpi-val { color:var(--blue); }
+.kpi.blue   .kpi-accent { background:var(--blue); }
+.kpi.teal   .kpi-val { color:var(--teal); }
+.kpi.teal   .kpi-accent { background:var(--teal); }
+.kpi.amber  .kpi-val { color:var(--amber); }
+.kpi.amber  .kpi-accent { background:var(--amber); }
+.kpi.green  .kpi-val { color:var(--emerald); }
+.kpi.green  .kpi-accent { background:var(--emerald); }
+.kpi.purple .kpi-val { color:var(--purple); }
+.kpi.purple .kpi-accent { background:var(--purple); }
+
+/* ── Charts ── */
+.charts-grid { padding:0 3rem 1.5rem; display:grid; gap:1rem;
+               grid-template-columns:3fr 2fr; }
+@media(max-width:860px) { .charts-grid { grid-template-columns:1fr; } }
+.chart-card  { background:var(--surface); border:1px solid var(--border);
+               border-radius:var(--rl); padding:1.25rem 1.4rem 1rem; }
+.chart-title { font-size:.68rem; text-transform:uppercase; letter-spacing:.1em;
+               color:var(--muted); font-weight:700; margin-bottom:1rem; }
+.chart-wrap  { position:relative; height:250px; }
+
+/* ── Table section ── */
+.table-section { padding:0 3rem 3rem; }
+.sec-head  { display:flex; align-items:center; justify-content:space-between;
+             margin-bottom:.85rem; flex-wrap:wrap; gap:.75rem; }
+.sec-title { font-size:.68rem; text-transform:uppercase; letter-spacing:.1em;
+             color:var(--muted); font-weight:700; }
+.controls  { display:flex; align-items:center; gap:1.25rem; flex-wrap:wrap; }
+.search-input { background:var(--surface); border:1px solid var(--border2);
+                border-radius:var(--r); color:var(--text); font-family:var(--sans);
+                font-size:.82rem; padding:.4rem .85rem; outline:none; width:190px;
+                transition:border-color .18s; }
+.search-input::placeholder { color:var(--subtle); }
+.legend { display:flex; gap:1.1rem; font-size:.7rem; color:var(--muted);
+          flex-wrap:wrap; align-items:center; }
+.leg-item { display:flex; align-items:center; gap:.3rem; }
+.leg-dot  { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+.tbl-wrap { background:var(--surface); border:1px solid var(--border);
+            border-radius:var(--rl); overflow:auto; }
+table { width:100%; border-collapse:collapse; font-size:.82rem; white-space:nowrap; }
+thead tr { background:#faf9f7; border-bottom:1px solid var(--border);
+           position:sticky; top:0; z-index:2; }
+th { font-size:.65rem; font-weight:700; text-transform:uppercase; letter-spacing:.09em;
+     color:var(--muted); padding:.7rem 1rem; text-align:left; cursor:pointer;
+     user-select:none; transition:background .12s; }
+th:hover { background:#f0ede8; }
+th.r { text-align:right; } th.c { text-align:center; }
+th .si { margin-left:.3rem; opacity:.35; font-style:normal; font-size:.7rem; }
+th.sort-asc  .si::after { content:'▲'; opacity:1; }
+th.sort-desc .si::after { content:'▼'; opacity:1; }
+th:not(.sort-asc):not(.sort-desc) .si::after { content:'⇅'; }
+.srow { border-bottom:1px solid var(--border); transition:background .12s; }
+.srow:last-child { border-bottom:none; }
+.srow:hover { background:#fafaf8; }
+td { padding:.7rem 1rem; vertical-align:middle; }
+td.r { text-align:right; } td.c { text-align:center; }
+a.sym-tag { display:inline-block; font-weight:700; font-size:.75rem;
+            padding:.17rem .55rem; border-radius:6px; letter-spacing:.04em;
+            text-decoration:none; border:1px solid; transition:background .15s; }
+.rs-tag  { display:inline-block; background:var(--amber-bg); border:1px solid #fde68a;
+           color:var(--amber); font-size:.73rem; font-weight:700;
+           padding:.14rem .5rem; border-radius:999px; }
+.ema-tag { display:inline-block; font-size:.73rem; font-weight:700;
+           padding:.14rem .5rem; border-radius:999px; border:1px solid transparent; }
+.bar-cell { display:flex; align-items:center; gap:.5rem; min-width:150px; }
+.bar-bg   { flex:1; height:5px; background:#ebe9e4; border-radius:99px; overflow:hidden; }
+.bar-fill { height:100%; border-radius:99px; }
+.bar-pct  { font-size:.73rem; font-weight:700; min-width:36px; text-align:right; }
+.badge    { font-size:.65rem; font-weight:700; letter-spacing:.06em;
+            text-transform:uppercase; border-radius:999px; padding:.22rem .7rem;
+            border:1px solid; }
+.badge-row { display:flex; gap:.5rem; margin-top:.5rem; flex-wrap:wrap; }
+footer { text-align:center; padding:1.1rem; font-size:.7rem; color:var(--subtle);
+         border-top:1px solid var(--border); background:var(--surface); }
+</style>
+</head>
+<body>
+
+
+<header>
+  <div>
+    <div class='logo-line'>
+      <span class='logo-dot' style='background:var(--blue)'></span>
+      <span class='logo-tag'>Momentum Alpha</span>
+    </div>
+
+    <h1>Volume Action</h1>
+
+    <div class='sub'>
+      Pocket Pivot / Blue Volume Stocks • 25 May 2026
+    </div>
+  </div>
+
+  <div class='date-chip'
+       style='border-color:var(--blue-mid);
+              background:var(--blue-bg);
+              color:var(--blue);'>
+       110 Stocks
+  </div>
+</header>
+
+<div class="table-section">
+
+  <div class="sec-head">
+
+    <span class="sec-title">
+      Volume Action Stocks
+    </span>
+
+    <div class="controls">
+      <input class="search-input"
+             id="searchInput"
+             type="text"
+             placeholder="Search symbol / industry…"
+             oninput="filterRows()"/>
+    </div>
+
+  </div>
+
+  <div class='tbl-wrap'>
+
+    <table id="mainTable">
+
+      <thead>
+        <tr>
+          <th data-col="sym" data-type="str">
+            Symbol<i class="si"></i>
+          </th>
+
+          <th class='r' data-col="close" data-type="num">
+            Close<i class="si"></i>
+          </th>
+
+          <th class='r' data-col="relvol" data-type="num">
+            Rel Volume<i class="si"></i>
+          </th>
+
+          <th class='c'>
+            Signal
+          </th>
+
+          <th class='c'>
+            Bull Snort
+          </th>
+
+          <th class='r' data-col="rs" data-type="num">
+            RS<i class="si"></i>
+          </th>
+
+          <th data-col="indgrp" data-type="str">
+            Industry Group<i class="si"></i>
+          </th>
+
+          <th data-col="ind" data-type="str">
+            Industry<i class="si"></i>
+          </th>
+
+          <th class="r" data-col="result" data-type="str">
+            Result Date<i class="si"></i>
+
+          <th class="c" data-col="priceband" data-type="str">
+            Price Band<i class="si"></i></th>
+
+          </th>
+
+        </tr>
+      </thead>
+
+      <tbody id="tableBody">
+        
+        <tr class='srow'
+            data-sym="CENTURYPLY"
+            data-indgrp="Consumer Durables"
+            data-ind="Plywood Boards/ Laminates"
+            data-close="782.95"
+            data-relvol="1862.53"
+            data-rs="66.86">
+
+            <td>
+                <a class='sym-tag'
+                   style="background:var(--blue-bg);border-color:#bfdbfe;color:#1d4ed8"
+                   href='https://www.tradingview.com/chart/?symbol=NSE%3ACENTURYPLY'
+                   target='_blank'
+                   rel='noopener'>
+                   CENTURYPLY
+                </a>
+            </td>
+
+            <td class='r'>
+                ₹782.95
+            </td>
+
+            <td class='r'>
+                1862.5%
+            </td>
+
+            <td class='c'>
+                <span class='badge'
+                    style='background:var(--blue-bg);
+                           color:var(--blue);
+                           border-color:var(--blue-mid);'>
+                    BLUE PPV
+                </span>
+            </td>
+
+            <td class='c'>
+                -
+            </td>
+
+            <td class='r'>
+                <span class='rs-tag'>
+                    66.9
+                </span>
+            </td>
+
+            <td>Consumer Durables</td>
+            <td>Plywood Boards/ Laminates</td>
+            <td class='r'>—</td>
+            <td class="c">—</td>
+        </tr>
+        
+        <tr class='srow'
+            data-sym="RAMCOSYS"
+            data-indgrp="IT - Software"
+            data-ind="Software Products"
+            data-close="487.45"
+            data-relvol="1686.41"
+            data-rs="84.84">
+
+            <td>
+                <a class='sym-tag'
+                   style="background:var(--blue-bg);border-color:#bfdbfe;color:#1d4ed8"
+                   href='https://www.tradingview.com/chart/?symbol=NSE%3ARAMCOSYS'
+                   target='_blank'
+                   rel='noopener'>
+                   RAMCOSYS
+                </a>
+            </td>
+
+            <td class='r'>
+                ₹487.45
+            </td>
+
+            <td class='r'>
+                1686.4%
+            </td>
+
+            <td class='c'>
+                <span class='badge'
+                    style='background:var(--blue-bg);
+                           color:var(--blue);
+                           border-color:var(--blue-mid);'>
+                    BLUE PPV
+                </span>
+            </td>
+
+            <td class='c'>
+                -
+            </td>
+
+            <td class='r'>
+                <span class='rs-tag'>
+                    84.8
+                </span>
+            </td>
+
+            <td>IT - Software</td>
+            <td>Software Products</td>
+            <td class='r'>—</td>
+            <td class="c">—</td>
+        </tr>
+        
+        <tr class='srow'
+            data-sym="GREENLAM"
+            data-indgrp="Consumer Durables"
+            data-ind="Plywood Boards/ Laminates"
+            data-close="254.12"
+            data-relvol="1555.83"
+            data-rs="63.36">
+
+            <td>
+                <a class='sym-tag'
+                   style="background:var(--blue-bg);border-color:#bfdbfe;color:#1d4ed8"
+                   href='https://www.tradingview.com/chart/?symbol=NSE%3AGREENLAM'
+                   target='_blank'
+                   rel='noopener'>
+                   GREENLAM
+                </a>
+            </td>
+
+            <td class='r'>
+                ₹254.12
+            </td>
+
+            <td class='r'>
+                1555.8%
+            </td>
+
+            <td class='c'>
+                <span class='badge'
+                    style='background:var(--blue-bg);
+                           color:var(--blue);
+                           border-color:var(--blue-mid);'>
+                    BLUE PPV
+                </span>
+            </td>
+
+            <td class='c'>
+                -
+            </td>
+
+            <td class='r'>
+                <span class='rs-tag'>
+                    63.4
+                </span>
+            </td>
+
+            <td>Consumer Durables</td>
+            <td>Plywood Boards/ Laminates</td>
+            <td class='r'>—</td>
+            <td class="c">—</td>
+        </tr>
+        
+        <tr class='srow'
+            data-sym="APTECHT"
+            data-indgrp="Other Consumer Services"
+            data-ind="Education"
+            data-close="111.57"
+            data-relvol="1288.02"
+            data-rs="16.57">
+
+            <td>
+                <a class='sym-tag'
+                   style="background:var(--blue-bg);border-color:#bfdbfe;color:#1d4ed8"
+                   href='https://www.tradingview.com/chart/?symbol=NSE%3AAPTECHT'
+                   target='_blank'
+                   rel='noopener'>
+                   APTECHT
+                </a>
+            </td>
+
+            <td class='r'>
+                ₹111.57
+            </td>
+
+            <td class='r'>
+                1288.0%
+            </td>
+
+            <td class='c'>
+                <span class='badge'
+                    style='background:var(--blue-bg);
+                           color:var(--blue);
+                           border-color:var(--blue-mid);'>
+                    BLUE PPV
+                </span>
+            </td>
+
+            <td class='c'>
+                🔥
+            </td>
+
+            <td class='r'>
+                <span class='rs-tag'>
+                    16.6
+                </span>
+            </td>
+
+            <td>Other Consumer Services</td>
+            <td>Education</td>
+            <td class='r'>—</td>
+            <td class="c">—</td>
+        </tr>
+        
+        <tr class='srow'
+            data-sym="JAYKAY"
+            data-indgrp="Aerospace & Defense"
+            data-ind="Aerospace & Defense"
+            data-close="null"
+            data-relvol="1244.14"
+            data-rs="null">
+
+            <td>
+                <a class='sym-tag'
+                   style="background:var(--blue-bg);border-color:#bfdbfe;color:#1d4ed8"
+                   href='https://www.tradingview.com/chart/?symbol=NSE%3AJAYKAY'
+                   target='_blank'
+                   rel='noopener'>
+                   JAYKAY
+                </a>
+            </td>
+
+            <td class='r'>
+                N/A
+            </td>
+
+            <td class='r'>
+                1244.1%
+            </td>
+
+            <td class='c'>
+                <span class='badge'
+                    style='background:var(--blue-bg);
+                           color:var(--blue);
+                           border-color:var(--blue-mid);'>
+                    BLUE PPV
+                </span>
+            </td>
+
+            <td class='c'>
+                🔥
+            </td>
+
+            <td class='r'>
+                <span class='rs-tag'>
+                    N/A
+                </span>
+            </td>
+
+            <td>Aerospace & Defense</td>
+            <td>Aerospace & Defense</td>
+            <td class='r'>—</td>
+            <td class="c">—</td>
+        </tr>
+        
+        <tr class='srow'
+            data-sym="LAXMIDENTL"
+            data-indgrp="Healthcare Equipment & Supplies"
+            data-ind="Medical Equipment & Supplies"
+            data-close="261.81"
+            data-relvol="1214.26"
+            data-rs="14.46">
+
+            <td>
+                <a class='sym-tag'
+                   style="background:var(--blue-bg);border-color:#bfdbfe;color:#1d4ed8"
+                   href='https://www.tradingview.com/chart/?symbol=NSE%3ALAXMIDENTL'
+                   target='_blank'
+                   rel='noopener'>
+                   LAXMIDENTL
+                </a>
+            </td>
+
+            <td class='r'>
+                ₹261.81
+            </td>
+
+            <td class='r'>
+                1214.3%
+            </td>
+
+            <td class='c'>
+                <span class='badge'
+                    style='background:var(--blue-bg);
+                           color:var(--blue);
+                           border-color:var(--blue-mid);'>
+                    BLUE PPV
+                </span>
+            </td>
+
+            <td class='c'>
+                -
+            </td>
+
+            <td class='r'>
+                <span class='rs-tag'>
+                    14.5
+                </span>
+            </td>
+
+            <td>Healthcare Equipment & Supplies</td>
+            <td>Medical Equipment & Supplies</td>
+            <td class='r'>—</td>
+            <td class="c">—</td>
+        </tr>
+        
+        <tr class='srow'
+            data-sym="KOPRAN"
+            data-indgrp="Pharmaceuticals & Biotechnology"
+            data-ind="Pharmaceuticals"
+            data-close="182.32"
+            data-relvol="1199.81"
+            data-rs="55.91">
+
+            <td>
+                <a class='sym-tag'
+                   style="background:var(--blue-bg);border-color:#bfdbfe;color:#1d4ed8"
+                   href='https://www.tradingview.com/chart/?symbol=NSE%3AKOPRAN'
+                   target='_blank'
+                   rel='noopener'>
+                   KOPRAN
+                </a>
+            </td>
+
+            <td class='r'>
+                ₹182.32
+            </td>
+
+            <td class='r'>
+                1199.8%
+            </td>
+
+            <td class='c'>
+                <span class='badge'
+                    style='background:var(--blue-bg);
+                           color:var(--blue);
+                           border-color:var(--blue-mid);'>
+                    BLUE PPV
+                </span>
+            </td>
+
+            <td class='c'>
+                -
+            </td>
+
+            <td class='r'>
+                <span class='rs-tag'>
+                    55.9
+                </span>
+            </td>
+
+            <td>Pharmaceuticals & Biotechnology</td>
+            <td>Pharmaceuticals</td>
+            <td class='r'>—</td>
+            <td class="c">—</td>
+        </tr>
+        
+        <tr class='srow'
+            data-sym="20MICRONS"
+            data-indgrp="Minerals & Mining"
+            data-ind="Industrial Minerals"
+            data-close="201.39"
+            data-relvol="1148.03"
+            data-rs="39.88">
+
+            <td>
+                <a class='sym-tag'
+                   style="background:var(--blue-bg);border-color:#bfdbfe;color:#1d4ed8"
+                   href='https://www.tradingview.com/chart/?symbol=NSE%3A20MICRONS'
+                   target='_blank'
+                   rel='noopener'>
+                   20MICRONS
+                </a>
+            </td>
+
+            <td class='r'>
+                ₹201.39
+            </td>
+
+            <td class='r'>
+                1148.0%
+            </td>
+
+            <td class='c'>
+                <span class='badge'
+                    style='background:var(--blue-bg);
+                           color:var(--blue);
+                           border-color:var(--blue-mid);'>
+                    BLUE PPV
+                </span>
+            </td>
+
+            <td class='c'>
+                🔥
+            </td>
+
+            <td class='r'>
+                <span class='rs-tag'>
+                    39.9
+                </span>
+            </td>
+
+            <td>Minerals & Mining</td>
+            <td>Industrial Minerals</td>
+            <td class='r'>—</td>
+            <td class="c">—</td>
+        </tr>
+        
+        <tr class='srow'
+            data-sym="TINNARUBR"
+            data-indgrp="Industrial Products"
+            data-ind="Rubber"
+            data-close="798.95"
+            data-relvol="1136.69"
+            data-rs="27.09">
+
+            <td>
+                <a class='sym-tag'
+                   style="background:var(--blue-bg);border-color:#bfdbfe;color:#1d4ed8"
+                   href='https://www.tradingview.com/chart/?symbol=NSE%3ATINNARUBR'
+                   target='_blank'
+                   rel='noopener'>
+                   TINNARUBR
+                </a>
+            </td>
+
+            <td class='r'>
+                ₹798.95
+            </td>
+
+            <td class='r'>
+                1136.7%
+            </td>
+
+            <td class='c'>
+                <span class='badge'
+                    style='background:var(--blue-bg);
+                           color:var(--blue);
+                           border-color:var(--blue-mid);'>
+                    BLUE PPV
+                </span>
+            </td>
+
+            <td class='c'>
+                -
+            </td>
+
+            <td class='r'>
+                <span class='rs-tag'>
+                    27.1
+                </span>
+            </td>
+
+            <td>Industrial Products</td>
+            <td>Rubber</td>
+            <td class='r'>—</td>
+            <td class="c">—</td>
+        </tr>
+        
+        <tr class='srow'
+            data-sym="PREMEXPLN"
+            data-indgrp="Chemicals & Petrochemicals"
+            data-ind="Explosives"
+            data-close="714.6"
+            data-relvol="1125.38"
+            data-rs="80.09">
+
+            <td>
+                <a class='sym-tag'
+                   style="background:var(--blue-bg);border-color:#bfdbfe;color:#1d4ed8"
+                   href='https://www.tradingview.com/chart/?symbol=NSE%3APREMEXPLN'
+                   target='_blank'
+                   rel='noopener'>
+                   PREMEXPLN
+                </a>
+            </td>
+
+            <td class='r'>
+                ₹714.60
+            </td>
+
+            <td class='r'>
+                1125.4%
+            </td>
+
+            <td class='c'>
+                <span class='badge'
+                    style='background:var(--blue-bg);
+                           color:var(--blue);
+                           border-color:var(--blue-mid);'>
+                    BLUE PPV
+                </span>
+            </td>
+
+            <td class='c'>
+                🔥
+            </td>
+
+            <td class='r'>
+                <span class='rs-tag'>
+                    80.1
+                </span>
+            </td>
+
+            <td>Chemicals & Petrochemicals</td>
+            <td>Explosives</td>
+            <td class='r'>—</td>
+            <td class="c">—</td>
+        </tr>
+        
+        <tr class='srow'
+            data-sym="TARSONS"
+            data-indgrp="Healthcare Equipment & Supplies"
+            data-ind="Medical Equipment & Supplies"
+            data-close="229.73"
+            data-relvol="1024.64"
+            data-rs="8.09">
+
+            <td>
+                <a class='sym-tag'
+                   style="background:var(--blue-bg);border-color:#bfdbfe;color:#1d4ed8"
+                   href='https://www.tradingview.com/chart/?symbol=NSE%3ATARSONS'
+                   target='_blank'
+                   rel='noopener'>
+                   TARSONS
+                </a>
+            </td>
+
+            <td class='r'>
+                ₹229.73
+            </td>
+
+            <td class='r'>
+                1024.6%
+            </td>
+
+            <td class='c'>
+                <span class='badge'
+                    style='background:var(--blue-bg);
+                           color:var(--blue);
+                           border-color:var(--blue-mid);'>
+                    BLUE PPV
+                </span>
+            </td>
+
+            <td class='c'>
+                -
+            </td>
+
+            <td class='r'>
+                <span class='rs-tag'>
+                    8.1
+                </span>
+            </td>
+
+            <td>Healthcare Equipment & Supplies</td>
+            <td>Medical Equipment & Supplies</td>
+            <td class='r'>—</td>
+            <td class="c">—</td>
+        </tr>
+        
+        <tr class='srow'
+            data-sym="TVSELECT"
+            data-indgrp="IT - Hardware"
+            data-ind="Computers Hardware & Equipments"
+            data-close="539.5"
+            data-relvol="1014.44"
+            data-rs="85.7">
+
+            <td>
+                <a class='sym-tag'
+                   style="background:var(--blue-bg);border-color:#bfdbfe;color:#1d4ed8"
+                   href='https://www.tradingview.com/chart/?symbol=NSE%3ATVSELECT'
+                   target='_blank'
+                   rel='noopener'>
+                   TVSELECT
+                </a>
+            </td>
+
+            <td class='r'>
+                ₹539.50
+            </td>
+
+            <td class='r'>
+                1014.4%
+            </td>
+
+            <td class='c'>
+                <span class='badge'
+                    style='background:var(--blue-bg);
+                           color:var(--blue);
+                           border-color:var(--blue-mid);'>
+                    BLUE PPV
+                </span>
+            </td>
+
+            <td class='c'>
+                🔥
+            </td>
+
+            <td class='r'>
+                <span class='rs-tag'>
+                    85.7
+                </span>
+            </td>
+
+            <td>IT - Hardware</td>
+            <td>Computers Hardware & Equipments</td>
+            <td class='r'>—</td>
+            <td class="c">—</td>
+        </tr>
+        
+        <tr class='srow'
+            data-sym="ABSMARINE"
+            data-indgrp="Transport Services"
+            data-ind="Shipping"
+            data-close="301.35"
+            data-relvol="855.96"
+            data-rs="97.57">
+
+            <td>
+                <a class='sym-tag'
+                   style="background:var(--blue-bg);border-color:#bfdbfe;color:#1d4ed8"
+                   href='https://www.tradingview.com/chart/?symbol=NSE%3AABSMARINE'
+                   target='_blank'
+                   rel='noopener'>
+                   ABSMARINE
+                </a>
+            </td>
+
+            <td class='r'>
+                ₹301.35
+            </td>
+
+            <td class='r'>
+                856.0%
+            </td>
+
+            <td class='c'>
+                <span class='badge'
+                    style='background:var(--blue-bg);
+                           color:var(--blue);
+                           border-color:var(--blue-mid);'>
+                    BLUE PPV
+                </span>
+            </td>
+
+            <td class='c'>
+                -
+            </td>
+
+            <td class='r'>
+                <span class='rs-tag'>
+                    97.6
+                </span>
+            </td>
+
+            <td>Transport Services</td>
+            <td>Shipping</td>
+            <td class='r'>—</td>
+            <td class="c">—</td>
+        </tr>
+        
+        <tr class='srow'
+            data-sym="HARIOMPIPE"
+            data-indgrp="Industrial Products"
+            data-ind="Iron & Steel Products"
+            data-close="413.2"
+            data-relvol="827.63"
+            data-rs="70.64">
+
+            <td>
+                <a class='sym-tag'
+                   style="background:var(--blue-bg);border-color:#bfdbfe;color:#1d4ed8"
+                   href='https://www.tradingview.com/chart/?symbol=NSE%3AHARIOMPIPE'
+                   target='_blank'
+                   rel='noopener'>
+                   HARIOMPIPE
+                </a>
+            </td>
+
+            <td class='r'>
+                ₹413.20
+            </td>
+
+            <td class='r'>
+                827.6%
+            </td>
+
+            <td class='c'>
+                <span class='badge'
+                    style='background:var(--blue-bg);
+                           color:var(--blue);
+                           border-color:var(--blue-mid);'>
+                    BLUE PPV
+                </span>
+            </td>
+
+            <td class='c'>
+                🔥
+            </td>
+
+            <td class='r'>
+                <span class='rs-tag'>
+                    70.6
+                </span>
+            </td>
+
+            <td>Industrial Products</td>
+            <td>Iron & Steel Products</td>
+            <td class='r'>—</td>
+            <td class="c">—</td>
+        </tr>
+        
+        <tr class='srow'
+            data-sym="SYNCOMF"
+            data-indgrp="Pharmaceuticals & Biotechnology"
+            data-ind="Pharmaceuticals"
+            data-close="15.63"
+            data-relvol="809.33"
+            data-rs="28.55">
+
+            <td>
+                <a class='sym-tag'
+                   style="background:var(--blue-bg);border-color:#bfdbfe;color:#1d4ed8"
+                   href='https://www.tradingview.com/chart/?symbol=NSE%3ASYNCOMF'
+                   target='_blank'
+                   rel='noopener'>
+                   SYNCOMF
+                </a>
+            </td>
+
+            <td class='r'>
+                ₹15.63
+            </td>
+
+            <td class='r'>
+                809.3%
+            </td>
+
+            <td class='c'>
+                <span class='badge'
+                    style='background:var(--blue-bg);
+                           color:var(--blue);
+                           border-color:var(--blue-mid);'>
+                    BLUE PPV
+                </span>
+            </td>
+
+            <td class='c'>
+                -
+            </td>
+
+            <td class='r'>
+                <span class='rs-tag'>
+                    28.5
+                </span>
+            </td>
+
+            <td>Pharmaceuticals & Biotechnology</td>
+            <td>Pharmaceuticals</td>
+            <td class='r'>—</td>
+            <td class="c">—</td>
+        </tr>
+        
+        <tr class='srow'
+            data-sym="UNIVCABLES"
+            data-indgrp="Industrial Products"
+            data-ind="Cables - Electricals"
+            data-close="1170.0"
+            data-relvol="789.56"
+            data-rs="96.28">
+
+            <td>
+                <a class='sym-tag'
+                   style="background:var(--blue-bg);border-color:#bfdbfe;color:#1d4ed8"
+                   href='https://www.tradingview.com/chart/?symbol=NSE%3AUNIVCABLES'
+                   target='_blank'
+                   rel='noopener'>
+                   UNIVCABLES
+                </a>
+            </td>
+
+            <td class='r'>
+                ₹1,170.00
+            </td>
+
+            <td class='r'>
+                789.6%
+            </td>
+
+            <td class='c'>
+                <span class='badge'
+                    style='background:var(--blue-bg);
+                           color:var(--blue);
+                           border-color:var(--blue-mid);'>
+                    BLUE PPV
+                </span>
+            </td>
+
+            <td class='c'>
+                🔥
+            </td>
+
+            <td class='r'>
+                <span class='rs-tag'>
+                    96.3
+                </span>
+            </td>
+
+            <td>Industrial Products</td>
+            <td>Cables - Electricals</td>
+            <td class='r'>—</td>
+            <td class="c">—</td>
+        </tr>
+        
+        <tr class='srow'
+            data-sym="REXPIPES"
+            data-indgrp="Industrial Products"
+            data-ind="Plastic Products - Industrial"
+            data-close="184.0"
+            data-relvol="728.48"
+            data-rs="95.74">
+
+            <td>
+                <a class='sym-tag'
+                   style="background:var(--blue-bg);border-color:#bfdbfe;color:#1d4ed8"
+                   href='https://www.tradingview.com/chart/?symbol=NSE%3AREXPIPES'
+                   target='_blank'
+                   rel='noopener'>
+                   REXPIPES
+                </a>
+            </td>
+
+            <td class='r'>
+                ₹184.00
+            </td>
+
+            <td class='r'>
+                728.5%
+            </td>
+
+            <td class='c'>
+                <span class='badge'
+                    style='background:var(--blue-bg);
+                           color:var(--blue);
+                           border-color:var(--blue-mid);'>
+                    BLUE PPV
+                </span>
+            </td>
+
+            <td class='c'>
+                🔥
+            </td>
+
+            <td class='r'>
+                <span class='rs-tag'>
+                    95.7
+                </span>
+            </td>
+
+            <td>Industrial Products</td>
+            <td>Plastic Products - Industrial</td>
+            <td class='r'>—</td>
+            <td class="c">—</td>
+        </tr>
+        
+        <tr class='srow'
+            data-sym="TCL"
+            data-indgrp="Auto Components"
+            data-ind="Auto Components & Equipments"
+            data-close="96.0"
+            data-relvol="714.29"
+            data-rs="58.45">
+
+            <td>
+                <a class='sym-tag'
+                   style="background:var(--blue-bg);border-color:#bfdbfe;color:#1d4ed8"
+                   href='https://www.tradingview.com/chart/?symbol=NSE%3ATCL'
+                   target='_blank'
+                   rel='noopener'>
+                   TCL
+                </a>
+            </td>
+
+            <td class='r'>
+                ₹96.00
+            </td>
+
+            <td class='r'>
+                714.3%
+            </td>
+
+            <td class='c'>
+                <span class='badge'
+                    style='background:var(--blue-bg);
+                           color:var(--blue);
+                           border-color:var(--blue-mid);'>
+                    BLUE PPV
+                </span>
+            </td>
+
+            <td class='c'>
+                -
+            </td>
+
+            <td class='r'>
+                <span class='rs-tag'>
+                    58.4
+                </span>
+            </td>
+
+            <td>Auto Components</td>
+            <td>Auto Components & Equipments</td>
+            <td class='r'>—</td>
+            <td class="c">—</td>
+        </tr>
+        
+        <tr class='srow'
+            data-sym="RUBYMILLS"
+            data-indgrp="Textiles & Apparels"
+            data-ind="Other Textile Products"
+            data-close="256.62"
+            data-relvol="696.91"
+            data-rs="78.47">
+
+            <td>
+                <a class='sym-tag'
+                   style="background:var(--blue-bg);border-color:#bfdbfe;color:#1d4ed8"
+                   href='https://www.tradingview.com/chart/?symbol=NSE%3ARUBYMILLS'
+                   target='_blank'
+                   rel='noopener'>
+                   RUBYMILLS
+                </a>
+            </td>
+
+            <td class='r'>
+                ₹256.62
+            </td>
+
+            <td class='r'>
+                696.9%
+            </td>
+
+            <td class='c'>
+                <span class='badge'
+                    style='background:var(--blue-bg);
+                           color:var(--blue);
+                           border-color:var(--blue-mid);'>
+                    BLUE PPV
+                </span>
+            </td>
+
+            <td class='c'>
+                🔥
+            </td>
+
+            <td class='r'>
+                <span class='rs-tag'>
+                    78.5
+                </span>
+            </td>
+
+            <td>Textiles & Apparels</td>
+            <td>Other Textile Products</td>
+            <td class='r'>—</td>
+            <td class="c">—</td>
+        </tr>
+        
+        <tr class='srow'
+            data-sym="SPARC"
+            data-indgrp="Pharmaceuticals & Biotechnology"
+            data-ind="Pharmaceuticals"
+            data-close="227.74"
+            data-relvol="656.57"
+            data-rs="86.45">
+
+            <td>
+                <a class='sym-tag'
+                   style="background:var(--blue-bg);border-color:#bfdbfe;color:#1d4ed8"
+                   href='https://www.tradingview.com/chart/?symbol=NSE%3ASPARC'
+                   target='_blank'
+                   rel='noopener'>
+                   SPARC
+                </a>
+            </td>
+
+            <td class='r'>
+                ₹227.74
+            </td>
+
+            <td class='r'>
+                656.6%
+            </td>
+
+            <td class='c'>
+                <span class='badge'
+                    style='background:var(--blue-bg);
+                           color:var(--blue);
+                           border-color:var(--blue-mid);'>
+                    BLUE PPV
+                </span>
+            </td>
+
+            <td class='c'>
+                🔥
+            </td>
+
+            <td class='r'>
+                <span class='rs-tag'>
+                    86.5
+                </span>
+            </td>
+
+            <td>Pharmaceuticals & Biotechnology</td>
+            <td>Pharmaceuticals</td>
+            <td class='r'>—</td>
+            <td class="c">—</td>
+        </tr>
+        
+        <tr class='srow'
+            data-sym="OCCLLTD"
+            data-indgrp="Chemicals & Petrochemicals"
+            data-ind="Commodity Chemicals"
+            data-close="116.45"
+            data-relvol="590.69"
+            data-rs="86.83">
+
+            <td>
+                <a class='sym-tag'
+                   style="background:var(--blue-bg);border-color:#bfdbfe;color:#1d4ed8"
+                   href='https://www.tradingview.com/chart/?symbol=NSE%3AOCCLLTD'
+                   target='_blank'
+                   rel='noopener'>
+                   OCCLLTD
+                </a>
+            </td>
+
+            <td class='r'>
+                ₹116.45
+            </td>
+
+            <td class='r'>
+                590.7%
+            </td>
+
+            <td class='c'>
+                <span class='badge'
+                    style='background:var(--blue-bg);
+                           color:var(--blue);
+                           border-color:var(--blue-mid);'>
+                    BLUE PPV
+                </span>
+            </td>
+
+            <td class='c'>
+                -
+            </td>
+
+            <td class='r'>
+                <span class='rs-tag'>
+                    86.8
+                </span>
+            </td>
+
+            <td>Chemicals & Petrochemicals</td>
+            <td>Commodity Chemicals</td>
+            <td class='r'>—</td>
+            <td class="c">—</td>
+        </tr>
+        
+        <tr class='srow'
+            data-sym="VIKRAN"
+            data-indgrp="Construction"
+            data-ind="Civil Construction"
+            data-close="null"
+            data-relvol="590.05"
+            data-rs="null">
+
+            <td>
+                <a class='sym-tag'
+                   style="background:var(--blue-bg);border-color:#bfdbfe;color:#1d4ed8"
+                   href='https://www.tradingview.com/chart/?symbol=NSE%3AVIKRAN'
+                   target='_blank'
+                   rel='noopener'>
+                   VIKRAN
+                </a>
+            </td>
+
+            <td class='r'>
+                N/A
+            </td>
+
+            <td class='r'>
+                590.0%
+            </td>
+
+            <td class='c'>
+                <span class='badge'
+                    style='background:var(--blue-bg);
+                           color:var(--blue);
+                           border-color:var(--blue-mid);'>
+                    BLUE PPV
+                </span>
+            </td>
+
+            <td class='c'>
+                -
+            </td>
+
+            <td class='r'>
+                <span class='rs-tag'>
+                    N/A
+                </span>
+            </td>
+
+            <td>Construction</td>
+            <td>Civil Construction</td>
+            <td class='r'>—</td>
+            <td class="c">—</td>
+        </tr>
+        
+        <tr class='srow'
+            data-sym="NGLFINE"
+            data-indgrp="Pharmaceuticals & Biotechnology"
+            data-ind="Pharmaceuticals"
+            data-close="2986.9"
+            data-relvol="577.21"
+            data-rs="97.46">
+
+            <td>
+                <a class='sym-tag'
+                   style="background:var(--blue-bg);border-color:#bfdbfe;color:#1d4ed8"
+                   href='https://www.tradingview.com/chart/?symbol=NSE%3ANGLFINE'
+                   target='_blank'
+                   rel='noopener'>
+                   NGLFINE
+                </a>
+            </td>
+
+            <td class='r'>
+                ₹2,986.90
+            </td>
+
+            <td class='r'>
+                577.2%
+            </td>
+
+            <td class='c'>
+                <span class='badge'
+                    style='background:var(--blue-bg);
+                           color:var(--blue);
+                           border-color:var(--blue-mid);'>
+                    BLUE PPV
+                </span>
+            </td>
+
+            <td class='c'>
+                🔥
+            </td>
+
+            <td class='r'>
+                <span class='rs-tag'>
+                    97.5
+                </span>
+            </td>
+
+            <td>Pharmaceuticals & Biotechnology</td>
+            <td>Pharmaceuticals</td>
+            <td class='r'>—</td>
+            <td class="c">—</td>
+        </tr>
+        
+        <tr class='srow'
+            data-sym="PRECWIRE"
+            data-indgrp="Industrial Products"
+            data-ind="Aluminium, Copper & Zinc Products"
+            data-close="439.65"
+            data-relvol="487.46"
+            data-rs="98.06">
+
+            <td>
+                <a class='sym-tag'
+                   style="background:var(--blue-bg);border-color:#bfdbfe;color:#1d4ed8"
+                   href='https://www.tradingview.com/chart/?symbol=NSE%3APRECWIRE'
+                   target='_blank'
+                   rel='noopener'>
+                   PRECWIRE
+                </a>
+            </td>
+
+            <td class='r'>
+                ₹439.65
+            </td>
+
+            <td class='r'>
+                487.5%
+            </td>
+
+            <td class='c'>
+                <span class='badge'
+                    style='background:var(--blue-bg);
+                           color:var(--blue);
+                           border-color:var(--blue-mid);'>
+                    BLUE PPV
+                </span>
+            </td>
+
+            <td class='c'>
+                -
+            </td>
+
+            <td class='r'>
+                <span class='rs-tag'>
+                    98.1
+                </span>
+            </td>
+
+            <td>Industrial Products</td>
+            <td>Aluminium, Copper & Zinc Products</td>
+            <td class='r'>—</td>
+            <td class="c">—</td>
+        </tr>
+        
+        <tr class='srow'
+            data-sym="GPECO"
+            data-indgrp="Electrical Equipment"
+            data-ind="Other Electrical Equipment"
+            data-close="419.1"
+            data-relvol="485.48"
+            data-rs="85.91">
+
+            <td>
+                <a class='sym-tag'
+                   style="background:var(--blue-bg);border-color:#bfdbfe;color:#1d4ed8"
+                   href='https://www.tradingview.com/chart/?symbol=NSE%3AGPECO'
+                   target='_blank'
+                   rel='noopener'>
+                   GPECO
+                </a>
+            </td>
+
+            <td class='r'>
+                ₹419.10
+            </td>
+
+            <td class='r'>
+                485.5%
+            </td>
+
+            <td class='c'>
+                <span class='badge'
+                    style='background:var(--blue-bg);
+                           color:var(--blue);
+                           border-color:var(--blue-mid);'>
+                    BLUE PPV
+                </span>
+            </td>
+
+            <td class='c'>
+                🔥
+            </td>
+
+            <td class='r'>
+                <span class='rs-tag'>
+                    85.9
+                </span>
+            </td>
+
+            <td>Electrical Equipment</td>
+            <td>Other Electrical Equipment</td>
+            <td class='r'>—</td>
+            <td class="c">—</td>
+        </tr>
+        
+        <tr class='srow'
+            data-sym="PRECOT"
+            data-indgrp="Textiles & Apparels"
+            data-ind="Other Textile Products"
+            data-close="791.4"
+            data-relvol="481.45"
+            data-rs="89.37">
+
+            <td>
+                <a class='sym-tag'
+                   style="background:var(--blue-bg);border-color:#bfdbfe;color:#1d4ed8"
+                   href='https://www.tradingview.com/chart/?symbol=NSE%3APRECOT'
+                   target='_blank'
+                   rel='noopener'>
+                   PRECOT
+                </a>
+            </td>
+
+            <td class='r'>
+                ₹791.40
+            </td>
+
+            <td class='r'>
+                481.5%
+            </td>
+
+            <td class='c'>
+                <span class='badge'
+                    style='background:var(--blue-bg);
+                           color:var(--blue);
+                           border-color:var(--blue-mid);'>
+                    BLUE PPV
+                </span>
+            </td>
+
+            <td class='c'>
+                🔥
+            </td>
+
+            <td class='r'>
+                <span class='rs-tag'>
+                    89.4
+                </span>
+            </td>
+
+            <td>Textiles & Apparels</td>
+            <td>Other Textile Products</td>
+            <td class='r'>—</td>
+            <td class="c">—</td>
+        </tr>
+        
+        <tr class='srow'
+            data-sym="FCL"
+            data-indgrp="Chemicals & Petrochemicals"
+            data-ind="Specialty Chemicals"
+            data-close="36.84"
+            data-relvol="479.84"
+            data-rs="92.23">
+
+            <td>
+                <a class='sym-tag'
+                   style="background:var(--blue-bg);border-color:#bfdbfe;color:#1d4ed8"
+                   href='https://www.tradingview.com/chart/?symbol=NSE%3AFCL'
+                   target='_blank'
+                   rel='noopener'>
+                   FCL
+                </a>
+            </td>
+
+            <td class='r'>
+                ₹36.84
+            </td>
+
+            <td class='r'>
+                479.8%
+            </td>
+
+            <td class='c'>
+                <span class='badge'
+                    style='background:var(--blue-bg);
+                           color:var(--blue);
+                           border-color:var(--blue-mid);'>
+                    BLUE PPV
+                </span>
+            </td>
+
+            <td class='c'>
+                🔥
+            </td>
+
+            <td class='r'>
+                <span class='rs-tag'>
+                    92.2
+                </span>
+            </td>
+
+            <td>Chemicals & Petrochemicals</td>
+            <td>Specialty Chemicals</td>
+            <td class='r'>—</td>
+            <td class="c">—</td>
+        </tr>
+        
+        <tr class='srow'
+            data-sym="MINDACORP"
+            data-indgrp="Auto Components"
+            data-ind="Auto Components & Equipments"
+            data-close="583.5"
+            data-relvol="475.11"
+            data-rs="76.36">
+
+            <td>
+                <a class='sym-tag'
+                   style="background:var(--blue-bg);border-color:#bfdbfe;color:#1d4ed8"
+                   href='https://www.tradingview.com/chart/?symbol=NSE%3AMINDACORP'
+                   target='_blank'
+                   rel='noopener'>
+                   MINDACORP
+                </a>
+            </td>
+
+            <td class='r'>
+                ₹583.50
+            </td>
+
+            <td class='r'>
+                475.1%
+            </td>
+
+            <td class='c'>
+                <span class='badge'
+                    style='background:var(--blue-bg);
+                           color:var(--blue);
+                           border-color:var(--blue-mid);'>
+                    BLUE PPV
+                </span>
+            </td>
+
+            <td class='c'>
+                -
+            </td>
+
+            <td class='r'>
+                <span class='rs-tag'>
+                    76.4
+                </span>
+            </td>
+
+            <td>Auto Components</td>
+            <td>Auto Components & Equipments</td>
+            <td class='r'>—</td>
+            <td class="c">—</td>
+        </tr>
+        
+        <tr class='srow'
+            data-sym="ROSSTECH"
+            data-indgrp="Aerospace & Defense"
+            data-ind="Aerospace & Defense"
+            data-close="1052.55"
+            data-relvol="464.94"
+            data-rs="99.14">
+
+            <td>
+                <a class='sym-tag'
+                   style="background:var(--blue-bg);border-color:#bfdbfe;color:#1d4ed8"
+                   href='https://www.tradingview.com/chart/?symbol=NSE%3AROSSTECH'
+                   target='_blank'
+                   rel='noopener'>
+                   ROSSTECH
+                </a>
+            </td>
+
+            <td class='r'>
+                ₹1,052.55
+            </td>
+
+            <td class='r'>
+                464.9%
+            </td>
+
+            <td class='c'>
+                <span class='badge'
+                    style='background:var(--blue-bg);
+                           color:var(--blue);
+                           border-color:var(--blue-mid);'>
+                    BLUE PPV
+                </span>
+            </td>
+
+            <td class='c'>
+                🔥
+            </td>
+
+            <td class='r'>
+                <span class='rs-tag'>
+                    99.1
+                </span>
+            </td>
+
+            <td>Aerospace & Defense</td>
+            <td>Aerospace & Defense</td>
+            <td class='r'>—</td>
+            <td class="c">—</td>
+        </tr>
+        
+        <tr class='srow'
+            data-sym="CORDSCABLE"
+            data-indgrp="Industrial Products"
+            data-ind="Cables - Electricals"
+            data-close="223.22"
+            data-relvol="455.36"
+            data-rs="73.93">
+
+            <td>
+                <a class='sym-tag'
+                   style="background:var(--blue-bg);border-color:#bfdbfe;color:#1d4ed8"
+                   href='https://www.tradingview.com/chart/?symbol=NSE%3ACORDSCABLE'
+                   target='_blank'
+                   rel='noopener'>
+                   CORDSCABLE
+                </a>
+            </td>
+
+            <td class='r'>
+                ₹223.22
+            </td>
+
+            <td class='r'>
+                455.4%
+            </td>
+
+            <td class='c'>
+                <span class='badge'
+                    style='background:var(--blue-bg);
+                           color:var(--blue);
+                           border-color:var(--blue-mid);'>
+                    BLUE PPV
+                </span>
+            </td>
+
+            <td class='c'>
+                🔥
+            </td>
+
+            <td class='r'>
+                <span class='rs-tag'>
+                    73.9
+                </span>
+            </td>
+
+            <td>Industrial Products</td>
+            <td>Cables - Electricals</td>
+            <td class='r'>—</td>
+            <td class="c">—</td>
+        </tr>
+        
+        <tr class='srow'
+            data-sym="PANSARI"
+            data-indgrp="Realty"
+            data-ind="Residential, Commercial Projects"
+            data-close="274.95"
+            data-relvol="446.42"
+            data-rs="82.14">
+
+            <td>
+                <a class='sym-tag'
+                   style="background:var(--blue-bg);border-color:#bfdbfe;color:#1d4ed8"
+                   href='https://www.tradingview.com/chart/?symbol=NSE%3APANSARI'
+                   target='_blank'
+                   rel='noopener'>
+                   PANSARI
+                </a>
+            </td>
+
+            <td class='r'>
+                ₹274.95
+            </td>
+
+            <td class='r'>
+                446.4%
+            </td>
+
+            <td class='c'>
+                <span class='badge'
+                    style='background:var(--blue-bg);
+                           color:var(--blue);
+                           border-color:var(--blue-mid);'>
+                    BLUE PPV
+                </span>
+            </td>
+
+            <td class='c'>
+                -
+            </td>
+
+            <td class='r'>
+                <span class='rs-tag'>
+                    82.1
+                </span>
+            </td>
+
+            <td>Realty</td>
+            <td>Residential, Commercial Projects</td>
+            <td class='r'>—</td>
+            <td class="c">—</td>
+        </tr>
+        
+        <tr class='srow'
+            data-sym="MODISONLTD"
+            data-indgrp="Electrical Equipment"
+            data-ind="Other Electrical Equipment"
+            data-close="209.28"
+            data-relvol="429.78"
+            data-rs="92.61">
+
+            <td>
+                <a class='sym-tag'
+                   style="background:var(--blue-bg);border-color:#bfdbfe;color:#1d4ed8"
+                   href='https://www.tradingview.com/chart/?symbol=NSE%3AMODISONLTD'
+                   target='_blank'
+                   rel='noopener'>
+                   MODISONLTD
+                </a>
+            </td>
+
+            <td class='r'>
+                ₹209.28
+            </td>
+
+            <td class='r'>
+                429.8%
+            </td>
+
+            <td class='c'>
+                <span class='badge'
+                    style='background:var(--blue-bg);
+                           color:var(--blue);
+                           border-color:var(--blue-mid);'>
+                    BLUE PPV
+                </span>
+            </td>
+
+            <td class='c'>
+                -
+            </td>
+
+            <td class='r'>
+                <span class='rs-tag'>
+                    92.6
+                </span>
+            </td>
+
+            <td>Electrical Equipment</td>
+            <td>Other Electrical Equipment</td>
+            <td class='r'>—</td>
+            <td class="c">—</td>
+        </tr>
+        
+        <tr class='srow'
+            data-sym="BLISSGVS"
+            data-indgrp="Pharmaceuticals & Biotechnology"
+            data-ind="Pharmaceuticals"
+            data-close="317.0"
+            data-relvol="403.58"
+            data-rs="98.38">
+
+            <td>
+                <a class='sym-tag'
+                   style="background:var(--blue-bg);border-color:#bfdbfe;color:#1d4ed8"
+                   href='https://www.tradingview.com/chart/?symbol=NSE%3ABLISSGVS'
+                   target='_blank'
+                   rel='noopener'>
+                   BLISSGVS
+                </a>
+            </td>
+
+            <td class='r'>
+                ₹317.00
+            </td>
+
+            <td class='r'>
+                403.6%
+            </td>
+
+            <td class='c'>
+                <span class='badge'
+                    style='background:var(--blue-bg);
+                           color:var(--blue);
+                           border-color:var(--blue-mid);'>
+                    BLUE PPV
+                </span>
+            </td>
+
+            <td class='c'>
+                -
+            </td>
+
+            <td class='r'>
+                <span class='rs-tag'>
+                    98.4
+                </span>
+            </td>
+
+            <td>Pharmaceuticals & Biotechnology</td>
+            <td>Pharmaceuticals</td>
+            <td class='r'>—</td>
+            <td class="c">—</td>
+        </tr>
+        
+        <tr class='srow'
+            data-sym="MUKTAARTS"
+            data-indgrp="Entertainment"
+            data-ind="Film Production, Distribution & Exhibition"
+            data-close="64.5"
+            data-relvol="392.05"
+            data-rs="28.22">
+
+            <td>
+                <a class='sym-tag'
+                   style="background:var(--blue-bg);border-color:#bfdbfe;color:#1d4ed8"
+                   href='https://www.tradingview.com/chart/?symbol=NSE%3AMUKTAARTS'
+                   target='_blank'
+                   rel='noopener'>
+                   MUKTAARTS
+                </a>
+            </td>
+
+            <td class='r'>
+                ₹64.50
+            </td>
+
+            <td class='r'>
+                392.1%
+            </td>
+
+            <td class='c'>
+                <span class='badge'
+                    style='background:var(--blue-bg);
+                           color:var(--blue);
+                           border-color:var(--blue-mid);'>
+                    BLUE PPV
+                </span>
+            </td>
+
+            <td class='c'>
+                -
+            </td>
+
+            <td class='r'>
+                <span class='rs-tag'>
+                    28.2
+                </span>
+            </td>
+
+            <td>Entertainment</td>
+            <td>Film Production, Distribution & Exhibition</td>
+            <td class='r'>—</td>
+            <td class="c">—</td>
+        </tr>
+        
+        <tr class='srow'
+            data-sym="MOTOGENFIN"
+            data-indgrp="Commercial Services & Supplies"
+            data-ind="Diversified Commercial Services"
+            data-close="28.4"
+            data-relvol="384.18"
+            data-rs="62.22">
+
+            <td>
+                <a class='sym-tag'
+                   style="background:var(--blue-bg);border-color:#bfdbfe;color:#1d4ed8"
+                   href='https://www.tradingview.com/chart/?symbol=NSE%3AMOTOGENFIN'
+                   target='_blank'
+                   rel='noopener'>
+                   MOTOGENFIN
+                </a>
+            </td>
+
+            <td class='r'>
+                ₹28.40
+            </td>
+
+            <td class='r'>
+                384.2%
+            </td>
+
+            <td class='c'>
+                <span class='badge'
+                    style='background:var(--blue-bg);
+                           color:var(--blue);
+                           border-color:var(--blue-mid);'>
+                    BLUE PPV
+                </span>
+            </td>
+
+            <td class='c'>
+                -
+            </td>
+
+            <td class='r'>
+                <span class='rs-tag'>
+                    62.2
+                </span>
+            </td>
+
+            <td>Commercial Services & Supplies</td>
+            <td>Diversified Commercial Services</td>
+            <td class='r'>—</td>
+            <td class="c">—</td>
+        </tr>
+        
+        <tr class='srow'
+            data-sym="TEMBO"
+            data-indgrp="Industrial Products"
+            data-ind="Iron & Steel Products"
+            data-close="641.3"
+            data-relvol="376.2"
+            data-rs="84.13">
+
+            <td>
+                <a class='sym-tag'
+                   style="background:var(--blue-bg);border-color:#bfdbfe;color:#1d4ed8"
+                   href='https://www.tradingview.com/chart/?symbol=NSE%3ATEMBO'
+                   target='_blank'
+                   rel='noopener'>
+                   TEMBO
+                </a>
+            </td>
+
+            <td class='r'>
+                ₹641.30
+            </td>
+
+            <td class='r'>
+                376.2%
+            </td>
+
+            <td class='c'>
+                <span class='badge'
+                    style='background:var(--blue-bg);
+                           color:var(--blue);
+                           border-color:var(--blue-mid);'>
+                    BLUE PPV
+                </span>
+            </td>
+
+            <td class='c'>
+                -
+            </td>
+
+            <td class='r'>
+                <span class='rs-tag'>
+                    84.1
+                </span>
+            </td>
+
+            <td>Industrial Products</td>
+            <td>Iron & Steel Products</td>
+            <td class='r'>—</td>
+            <td class="c">—</td>
+        </tr>
+        
+        <tr class='srow'
+            data-sym="NH"
+            data-indgrp="Healthcare Services"
+            data-ind="Hospital"
+            data-close="1941.6"
+            data-relvol="363.24"
+            data-rs="71.94">
+
+            <td>
+                <a class='sym-tag'
+                   style="background:var(--blue-bg);border-color:#bfdbfe;color:#1d4ed8"
+                   href='https://www.tradingview.com/chart/?symbol=NSE%3ANH'
+                   target='_blank'
+                   rel='noopener'>
+                   NH
+                </a>
+            </td>
+
+            <td class='r'>
+                ₹1,941.60
+            </td>
+
+            <td class='r'>
+                363.2%
+            </td>
+
+            <td class='c'>
+                <span class='badge'
+                    style='background:var(--blue-bg);
+                           color:var(--blue);
+                           border-color:var(--blue-mid);'>
+                    BLUE PPV
+                </span>
+            </td>
+
+            <td class='c'>
+                -
+            </td>
+
+            <td class='r'>
+                <span class='rs-tag'>
+                    71.9
+                </span>
+            </td>
+
+            <td>Healthcare Services</td>
+            <td>Hospital</td>
+            <td class='r'>—</td>
+            <td class="c">—</td>
+        </tr>
+        
+        <tr class='srow'
+            data-sym="SHILPAMED"
+            data-indgrp="Pharmaceuticals & Biotechnology"
+            data-ind="Pharmaceuticals"
+            data-close="507.25"
+            data-relvol="351.32"
+            data-rs="88.77">
+
+            <td>
+                <a class='sym-tag'
+                   style="background:var(--blue-bg);border-color:#bfdbfe;color:#1d4ed8"
+                   href='https://www.tradingview.com/chart/?symbol=NSE%3ASHILPAMED'
+                   target='_blank'
+                   rel='noopener'>
+                   SHILPAMED
+                </a>
+            </td>
+
+            <td class='r'>
+                ₹507.25
+            </td>
+
+            <td class='r'>
+                351.3%
+            </td>
+
+            <td class='c'>
+                <span class='badge'
+                    style='background:var(--blue-bg);
+                           color:var(--blue);
+                           border-color:var(--blue-mid);'>
+                    BLUE PPV
+                </span>
+            </td>
+
+            <td class='c'>
+                -
+            </td>
+
+            <td class='r'>
+                <span class='rs-tag'>
+                    88.8
+                </span>
+            </td>
+
+            <td>Pharmaceuticals & Biotechnology</td>
+            <td>Pharmaceuticals</td>
+            <td class='r'>—</td>
+            <td class="c">—</td>
+        </tr>
+        
+        <tr class='srow'
+            data-sym="IPL"
+            data-indgrp="Fertilizers & Agrochemicals"
+            data-ind="Pesticides & Agrochemicals"
+            data-close="176.22"
+            data-relvol="347.67"
+            data-rs="64.6">
+
+            <td>
+                <a class='sym-tag'
+                   style="background:var(--blue-bg);border-color:#bfdbfe;color:#1d4ed8"
+                   href='https://www.tradingview.com/chart/?symbol=NSE%3AIPL'
+                   target='_blank'
+                   rel='noopener'>
+                   IPL
+                </a>
+            </td>
+
+            <td class='r'>
+                ₹176.22
+            </td>
+
+            <td class='r'>
+                347.7%
+            </td>
+
+            <td class='c'>
+                <span class='badge'
+                    style='background:var(--blue-bg);
+                           color:var(--blue);
+                           border-color:var(--blue-mid);'>
+                    BLUE PPV
+                </span>
+            </td>
+
+            <td class='c'>
+                -
+            </td>
+
+            <td class='r'>
+                <span class='rs-tag'>
+                    64.6
+                </span>
+            </td>
+
+            <td>Fertilizers & Agrochemicals</td>
+            <td>Pesticides & Agrochemicals</td>
+            <td class='r'>—</td>
+            <td class="c">—</td>
+        </tr>
+        
+        <tr class='srow'
+            data-sym="GANDHITUBE"
+            data-indgrp="Industrial Products"
+            data-ind="Iron & Steel Products"
+            data-close="945.5"
+            data-relvol="326.5"
+            data-rs="87.1">
+
+            <td>
+                <a class='sym-tag'
+                   style="background:var(--blue-bg);border-color:#bfdbfe;color:#1d4ed8"
+                   href='https://www.tradingview.com/chart/?symbol=NSE%3AGANDHITUBE'
+                   target='_blank'
+                   rel='noopener'>
+                   GANDHITUBE
+                </a>
+            </td>
+
+            <td class='r'>
+                ₹945.50
+            </td>
+
+            <td class='r'>
+                326.5%
+            </td>
+
+            <td class='c'>
+                <span class='badge'
+                    style='background:var(--blue-bg);
+                           color:var(--blue);
+                           border-color:var(--blue-mid);'>
+                    BLUE PPV
+                </span>
+            </td>
+
+            <td class='c'>
+                -
+            </td>
+
+            <td class='r'>
+                <span class='rs-tag'>
+                    87.1
+                </span>
+            </td>
+
+            <td>Industrial Products</td>
+            <td>Iron & Steel Products</td>
+            <td class='r'>—</td>
+            <td class="c">—</td>
+        </tr>
+        
+        <tr class='srow'
+            data-sym="IVP"
+            data-indgrp="Chemicals & Petrochemicals"
+            data-ind="Specialty Chemicals"
+            data-close="176.58"
+            data-relvol="322.42"
+            data-rs="56.02">
+
+            <td>
+                <a class='sym-tag'
+                   style="background:var(--blue-bg);border-color:#bfdbfe;color:#1d4ed8"
+                   href='https://www.tradingview.com/chart/?symbol=NSE%3AIVP'
+                   target='_blank'
+                   rel='noopener'>
+                   IVP
+                </a>
+            </td>
+
+            <td class='r'>
+                ₹176.58
+            </td>
+
+            <td class='r'>
+                322.4%
+            </td>
+
+            <td class='c'>
+                <span class='badge'
+                    style='background:var(--blue-bg);
+                           color:var(--blue);
+                           border-color:var(--blue-mid);'>
+                    BLUE PPV
+                </span>
+            </td>
+
+            <td class='c'>
+                -
+            </td>
+
+            <td class='r'>
+                <span class='rs-tag'>
+                    56.0
+                </span>
+            </td>
+
+            <td>Chemicals & Petrochemicals</td>
+            <td>Specialty Chemicals</td>
+            <td class='r'>—</td>
+            <td class="c">—</td>
+        </tr>
+        
+        <tr class='srow'
+            data-sym="APOLLO"
+            data-indgrp="Aerospace & Defense"
+            data-ind="Aerospace & Defense"
+            data-close="395.9"
+            data-relvol="321.5"
+            data-rs="98.76">
+
+            <td>
+                <a class='sym-tag'
+                   style="background:var(--blue-bg);border-color:#bfdbfe;color:#1d4ed8"
+                   href='https://www.tradingview.com/chart/?symbol=NSE%3AAPOLLO'
+                   target='_blank'
+                   rel='noopener'>
+                   APOLLO
+                </a>
+            </td>
+
+            <td class='r'>
+                ₹395.90
+            </td>
+
+            <td class='r'>
+                321.5%
+            </td>
+
+            <td class='c'>
+                <span class='badge'
+                    style='background:var(--blue-bg);
+                           color:var(--blue);
+                           border-color:var(--blue-mid);'>
+                    BLUE PPV
+                </span>
+            </td>
+
+            <td class='c'>
+                🔥
+            </td>
+
+            <td class='r'>
+                <span class='rs-tag'>
+                    98.8
+                </span>
+            </td>
+
+            <td>Aerospace & Defense</td>
+            <td>Aerospace & Defense</td>
+            <td class='r'>—</td>
+            <td class="c">—</td>
+        </tr>
+        
+        <tr class='srow'
+            data-sym="ASTRAMICRO"
+            data-indgrp="Aerospace & Defense"
+            data-ind="Aerospace & Defense"
+            data-close="1253.2"
+            data-relvol="318.89"
+            data-rs="74.1">
+
+            <td>
+                <a class='sym-tag'
+                   style="background:var(--blue-bg);border-color:#bfdbfe;color:#1d4ed8"
+                   href='https://www.tradingview.com/chart/?symbol=NSE%3AASTRAMICRO'
+                   target='_blank'
+                   rel='noopener'>
+                   ASTRAMICRO
+                </a>
+            </td>
+
+            <td class='r'>
+                ₹1,253.20
+            </td>
+
+            <td class='r'>
+                318.9%
+            </td>
+
+            <td class='c'>
+                <span class='badge'
+                    style='background:var(--blue-bg);
+                           color:var(--blue);
+                           border-color:var(--blue-mid);'>
+                    BLUE PPV
+                </span>
+            </td>
+
+            <td class='c'>
+                🔥
+            </td>
+
+            <td class='r'>
+                <span class='rs-tag'>
+                    74.1
+                </span>
+            </td>
+
+            <td>Aerospace & Defense</td>
+            <td>Aerospace & Defense</td>
+            <td class='r'>—</td>
+            <td class="c">—</td>
+        </tr>
+        
+        <tr class='srow'
+            data-sym="ZEELEARN"
+            data-indgrp="Other Consumer Services"
+            data-ind="Education"
+            data-close="6.25"
+            data-relvol="305.93"
+            data-rs="26.23">
+
+            <td>
+                <a class='sym-tag'
+                   style="background:var(--blue-bg);border-color:#bfdbfe;color:#1d4ed8"
+                   href='https://www.tradingview.com/chart/?symbol=NSE%3AZEELEARN'
+                   target='_blank'
+                   rel='noopener'>
+                   ZEELEARN
+                </a>
+            </td>
+
+            <td class='r'>
+                ₹6.25
+            </td>
+
+            <td class='r'>
+                305.9%
+            </td>
+
+            <td class='c'>
+                <span class='badge'
+                    style='background:var(--blue-bg);
+                           color:var(--blue);
+                           border-color:var(--blue-mid);'>
+                    BLUE PPV
+                </span>
+            </td>
+
+            <td class='c'>
+                🔥
+            </td>
+
+            <td class='r'>
+                <span class='rs-tag'>
+                    26.2
+                </span>
+            </td>
+
+            <td>Other Consumer Services</td>
+            <td>Education</td>
+            <td class='r'>—</td>
+            <td class="c">—</td>
+        </tr>
+        
+        <tr class='srow'
+            data-sym="ASALCBR"
+            data-indgrp="Beverages"
+            data-ind="Breweries & Distilleries"
+            data-close="886.25"
+            data-relvol="299.69"
+            data-rs="33.08">
+
+            <td>
+                <a class='sym-tag'
+                   style="background:var(--blue-bg);border-color:#bfdbfe;color:#1d4ed8"
+                   href='https://www.tradingview.com/chart/?symbol=NSE%3AASALCBR'
+                   target='_blank'
+                   rel='noopener'>
+                   ASALCBR
+                </a>
+            </td>
+
+            <td class='r'>
+                ₹886.25
+            </td>
+
+            <td class='r'>
+                299.7%
+            </td>
+
+            <td class='c'>
+                <span class='badge'
+                    style='background:var(--blue-bg);
+                           color:var(--blue);
+                           border-color:var(--blue-mid);'>
+                    BLUE PPV
+                </span>
+            </td>
+
+            <td class='c'>
+                -
+            </td>
+
+            <td class='r'>
+                <span class='rs-tag'>
+                    33.1
+                </span>
+            </td>
+
+            <td>Beverages</td>
+            <td>Breweries & Distilleries</td>
+            <td class='r'>—</td>
+            <td class="c">—</td>
+        </tr>
+        
+        <tr class='srow'
+            data-sym="SWARAJ"
+            data-indgrp="Textiles & Apparels"
+            data-ind="Other Textile Products"
+            data-close="263.45"
+            data-relvol="293.89"
+            data-rs="80.9">
+
+            <td>
+                <a class='sym-tag'
+                   style="background:var(--blue-bg);border-color:#bfdbfe;color:#1d4ed8"
+                   href='https://www.tradingview.com/chart/?symbol=NSE%3ASWARAJ'
+                   target='_blank'
+                   rel='noopener'>
+                   SWARAJ
+                </a>
+            </td>
+
+            <td class='r'>
+                ₹263.45
+            </td>
+
+            <td class='r'>
+                293.9%
+            </td>
+
+            <td class='c'>
+                <span class='badge'
+                    style='background:var(--blue-bg);
+                           color:var(--blue);
+                           border-color:var(--blue-mid);'>
+                    BLUE PPV
+                </span>
+            </td>
+
+            <td class='c'>
+                -
+            </td>
+
+            <td class='r'>
+                <span class='rs-tag'>
+                    80.9
+                </span>
+            </td>
+
+            <td>Textiles & Apparels</td>
+            <td>Other Textile Products</td>
+            <td class='r'>—</td>
+            <td class="c">—</td>
+        </tr>
+        
+        <tr class='srow'
+            data-sym="MANAKSIA"
+            data-indgrp="Industrial Products"
+            data-ind="Iron & Steel Products"
+            data-close="62.56"
+            data-relvol="281.89"
+            data-rs="38.96">
+
+            <td>
+                <a class='sym-tag'
+                   style="background:var(--blue-bg);border-color:#bfdbfe;color:#1d4ed8"
+                   href='https://www.tradingview.com/chart/?symbol=NSE%3AMANAKSIA'
+                   target='_blank'
+                   rel='noopener'>
+                   MANAKSIA
+                </a>
+            </td>
+
+            <td class='r'>
+                ₹62.56
+            </td>
+
+            <td class='r'>
+                281.9%
+            </td>
+
+            <td class='c'>
+                <span class='badge'
+                    style='background:var(--blue-bg);
+                           color:var(--blue);
+                           border-color:var(--blue-mid);'>
+                    BLUE PPV
+                </span>
+            </td>
+
+            <td class='c'>
+                -
+            </td>
+
+            <td class='r'>
+                <span class='rs-tag'>
+                    39.0
+                </span>
+            </td>
+
+            <td>Industrial Products</td>
+            <td>Iron & Steel Products</td>
+            <td class='r'>—</td>
+            <td class="c">—</td>
+        </tr>
+        
+        <tr class='srow'
+            data-sym="VINDHYATEL"
+            data-indgrp="Telecom - Services"
+            data-ind="Telecom - Infrastructure"
+            data-close="1750.2"
+            data-relvol="279.16"
+            data-rs="74.69">
+
+            <td>
+                <a class='sym-tag'
+                   style="background:var(--blue-bg);border-color:#bfdbfe;color:#1d4ed8"
+                   href='https://www.tradingview.com/chart/?symbol=NSE%3AVINDHYATEL'
+                   target='_blank'
+                   rel='noopener'>
+                   VINDHYATEL
+                </a>
+            </td>
+
+            <td class='r'>
+                ₹1,750.20
+            </td>
+
+            <td class='r'>
+                279.2%
+            </td>
+
+            <td class='c'>
+                <span class='badge'
+                    style='background:var(--blue-bg);
+                           color:var(--blue);
+                           border-color:var(--blue-mid);'>
+                    BLUE PPV
+                </span>
+            </td>
+
+            <td class='c'>
+                -
+            </td>
+
+            <td class='r'>
+                <span class='rs-tag'>
+                    74.7
+                </span>
+            </td>
+
+            <td>Telecom - Services</td>
+            <td>Telecom - Infrastructure</td>
+            <td class='r'>—</td>
+            <td class="c">—</td>
+        </tr>
+        
+        <tr class='srow'
+            data-sym="DCM"
+            data-indgrp="IT - Services"
+            data-ind="IT Enabled Services"
+            data-close="88.81"
+            data-relvol="277.68"
+            data-rs="30.65">
+
+            <td>
+                <a class='sym-tag'
+                   style="background:var(--blue-bg);border-color:#bfdbfe;color:#1d4ed8"
+                   href='https://www.tradingview.com/chart/?symbol=NSE%3ADCM'
+                   target='_blank'
+                   rel='noopener'>
+                   DCM
+                </a>
+            </td>
+
+            <td class='r'>
+                ₹88.81
+            </td>
+
+            <td class='r'>
+                277.7%
+            </td>
+
+            <td class='c'>
+                <span class='badge'
+                    style='background:var(--blue-bg);
+                           color:var(--blue);
+                           border-color:var(--blue-mid);'>
+                    BLUE PPV
+                </span>
+            </td>
+
+            <td class='c'>
+                -
+            </td>
+
+            <td class='r'>
+                <span class='rs-tag'>
+                    30.7
+                </span>
+            </td>
+
+            <td>IT - Services</td>
+            <td>IT Enabled Services</td>
+            <td class='r'>—</td>
+            <td class="c">—</td>
+        </tr>
+        
+        <tr class='srow'
+            data-sym="SANDHAR"
+            data-indgrp="Auto Components"
+            data-ind="Auto Components & Equipments"
+            data-close="654.5"
+            data-relvol="274.21"
+            data-rs="90.66">
+
+            <td>
+                <a class='sym-tag'
+                   style="background:var(--blue-bg);border-color:#bfdbfe;color:#1d4ed8"
+                   href='https://www.tradingview.com/chart/?symbol=NSE%3ASANDHAR'
+                   target='_blank'
+                   rel='noopener'>
+                   SANDHAR
+                </a>
+            </td>
+
+            <td class='r'>
+                ₹654.50
+            </td>
+
+            <td class='r'>
+                274.2%
+            </td>
+
+            <td class='c'>
+                <span class='badge'
+                    style='background:var(--blue-bg);
+                           color:var(--blue);
+                           border-color:var(--blue-mid);'>
+                    BLUE PPV
+                </span>
+            </td>
+
+            <td class='c'>
+                -
+            </td>
+
+            <td class='r'>
+                <span class='rs-tag'>
+                    90.7
+                </span>
+            </td>
+
+            <td>Auto Components</td>
+            <td>Auto Components & Equipments</td>
+            <td class='r'>—</td>
+            <td class="c">—</td>
+        </tr>
+        
+        <tr class='srow'
+            data-sym="E2E"
+            data-indgrp="IT - Services"
+            data-ind="IT Enabled Services"
+            data-close="3684.9"
+            data-relvol="268.35"
+            data-rs="83.22">
+
+            <td>
+                <a class='sym-tag'
+                   style="background:var(--blue-bg);border-color:#bfdbfe;color:#1d4ed8"
+                   href='https://www.tradingview.com/chart/?symbol=NSE%3AE2E'
+                   target='_blank'
+                   rel='noopener'>
+                   E2E
+                </a>
+            </td>
+
+            <td class='r'>
+                ₹3,684.90
+            </td>
+
+            <td class='r'>
+                268.3%
+            </td>
+
+            <td class='c'>
+                <span class='badge'
+                    style='background:var(--blue-bg);
+                           color:var(--blue);
+                           border-color:var(--blue-mid);'>
+                    BLUE PPV
+                </span>
+            </td>
+
+            <td class='c'>
+                -
+            </td>
+
+            <td class='r'>
+                <span class='rs-tag'>
+                    83.2
+                </span>
+            </td>
+
+            <td>IT - Services</td>
+            <td>IT Enabled Services</td>
+            <td class='r'>—</td>
+            <td class="c">—</td>
+        </tr>
+        
+        <tr class='srow'
+            data-sym="MCLOUD"
+            data-indgrp="IT - Software"
+            data-ind="Computers - Software & Consulting"
+            data-close="27.21"
+            data-relvol="266.31"
+            data-rs="1.13">
+
+            <td>
+                <a class='sym-tag'
+                   style="background:var(--blue-bg);border-color:#bfdbfe;color:#1d4ed8"
+                   href='https://www.tradingview.com/chart/?symbol=NSE%3AMCLOUD'
+                   target='_blank'
+                   rel='noopener'>
+                   MCLOUD
+                </a>
+            </td>
+
+            <td class='r'>
+                ₹27.21
+            </td>
+
+            <td class='r'>
+                266.3%
+            </td>
+
+            <td class='c'>
+                <span class='badge'
+                    style='background:var(--blue-bg);
+                           color:var(--blue);
+                           border-color:var(--blue-mid);'>
+                    BLUE PPV
+                </span>
+            </td>
+
+            <td class='c'>
+                -
+            </td>
+
+            <td class='r'>
+                <span class='rs-tag'>
+                    1.1
+                </span>
+            </td>
+
+            <td>IT - Software</td>
+            <td>Computers - Software & Consulting</td>
+            <td class='r'>—</td>
+            <td class="c">—</td>
+        </tr>
+        
+        <tr class='srow'
+            data-sym="DSSL"
+            data-indgrp="IT - Services"
+            data-ind="IT Enabled Services"
+            data-close="1881.0"
+            data-relvol="265.66"
+            data-rs="91.69">
+
+            <td>
+                <a class='sym-tag'
+                   style="background:var(--blue-bg);border-color:#bfdbfe;color:#1d4ed8"
+                   href='https://www.tradingview.com/chart/?symbol=NSE%3ADSSL'
+                   target='_blank'
+                   rel='noopener'>
+                   DSSL
+                </a>
+            </td>
+
+            <td class='r'>
+                ₹1,881.00
+            </td>
+
+            <td class='r'>
+                265.7%
+            </td>
+
+            <td class='c'>
+                <span class='badge'
+                    style='background:var(--blue-bg);
+                           color:var(--blue);
+                           border-color:var(--blue-mid);'>
+                    BLUE PPV
+                </span>
+            </td>
+
+            <td class='c'>
+                -
+            </td>
+
+            <td class='r'>
+                <span class='rs-tag'>
+                    91.7
+                </span>
+            </td>
+
+            <td>IT - Services</td>
+            <td>IT Enabled Services</td>
+            <td class='r'>—</td>
+            <td class="c">—</td>
+        </tr>
+        
+        <tr class='srow'
+            data-sym="SSFL"
+            data-indgrp="Food Products"
+            data-ind="Other Food Products"
+            data-close="124.1"
+            data-relvol="252.78"
+            data-rs="9.71">
+
+            <td>
+                <a class='sym-tag'
+                   style="background:var(--blue-bg);border-color:#bfdbfe;color:#1d4ed8"
+                   href='https://www.tradingview.com/chart/?symbol=NSE%3ASSFL'
+                   target='_blank'
+                   rel='noopener'>
+                   SSFL
+                </a>
+            </td>
+
+            <td class='r'>
+                ₹124.10
+            </td>
+
+            <td class='r'>
+                252.8%
+            </td>
+
+            <td class='c'>
+                <span class='badge'
+                    style='background:var(--blue-bg);
+                           color:var(--blue);
+                           border-color:var(--blue-mid);'>
+                    BLUE PPV
+                </span>
+            </td>
+
+            <td class='c'>
+                -
+            </td>
+
+            <td class='r'>
+                <span class='rs-tag'>
+                    9.7
+                </span>
+            </td>
+
+            <td>Food Products</td>
+            <td>Other Food Products</td>
+            <td class='r'>—</td>
+            <td class="c">—</td>
+        </tr>
+        
+        <tr class='srow'
+            data-sym="TITAGARH"
+            data-indgrp="Industrial Manufacturing"
+            data-ind="Railway Wagons"
+            data-close="825.5"
+            data-relvol="249.77"
+            data-rs="48.41">
+
+            <td>
+                <a class='sym-tag'
+                   style="background:var(--blue-bg);border-color:#bfdbfe;color:#1d4ed8"
+                   href='https://www.tradingview.com/chart/?symbol=NSE%3ATITAGARH'
+                   target='_blank'
+                   rel='noopener'>
+                   TITAGARH
+                </a>
+            </td>
+
+            <td class='r'>
+                ₹825.50
+            </td>
+
+            <td class='r'>
+                249.8%
+            </td>
+
+            <td class='c'>
+                <span class='badge'
+                    style='background:var(--blue-bg);
+                           color:var(--blue);
+                           border-color:var(--blue-mid);'>
+                    BLUE PPV
+                </span>
+            </td>
+
+            <td class='c'>
+                -
+            </td>
+
+            <td class='r'>
+                <span class='rs-tag'>
+                    48.4
+                </span>
+            </td>
+
+            <td>Industrial Manufacturing</td>
+            <td>Railway Wagons</td>
+            <td class='r'>—</td>
+            <td class="c">—</td>
+        </tr>
+        
+        <tr class='srow'
+            data-sym="CARYSIL"
+            data-indgrp="Consumer Durables"
+            data-ind="Household Appliances"
+            data-close="1124.45"
+            data-relvol="229.03"
+            data-rs="93.15">
+
+            <td>
+                <a class='sym-tag'
+                   style="background:var(--blue-bg);border-color:#bfdbfe;color:#1d4ed8"
+                   href='https://www.tradingview.com/chart/?symbol=NSE%3ACARYSIL'
+                   target='_blank'
+                   rel='noopener'>
+                   CARYSIL
+                </a>
+            </td>
+
+            <td class='r'>
+                ₹1,124.45
+            </td>
+
+            <td class='r'>
+                229.0%
+            </td>
+
+            <td class='c'>
+                <span class='badge'
+                    style='background:var(--blue-bg);
+                           color:var(--blue);
+                           border-color:var(--blue-mid);'>
+                    BLUE PPV
+                </span>
+            </td>
+
+            <td class='c'>
+                -
+            </td>
+
+            <td class='r'>
+                <span class='rs-tag'>
+                    93.1
+                </span>
+            </td>
+
+            <td>Consumer Durables</td>
+            <td>Household Appliances</td>
+            <td class='r'>—</td>
+            <td class="c">—</td>
+        </tr>
+        
+        <tr class='srow'
+            data-sym="KOTHARIPET"
+            data-indgrp="Chemicals & Petrochemicals"
+            data-ind="Petrochemicals"
+            data-close="128.6"
+            data-relvol="223.9"
+            data-rs="29.9">
+
+            <td>
+                <a class='sym-tag'
+                   style="background:var(--blue-bg);border-color:#bfdbfe;color:#1d4ed8"
+                   href='https://www.tradingview.com/chart/?symbol=NSE%3AKOTHARIPET'
+                   target='_blank'
+                   rel='noopener'>
+                   KOTHARIPET
+                </a>
+            </td>
+
+            <td class='r'>
+                ₹128.60
+            </td>
+
+            <td class='r'>
+                223.9%
+            </td>
+
+            <td class='c'>
+                <span class='badge'
+                    style='background:var(--blue-bg);
+                           color:var(--blue);
+                           border-color:var(--blue-mid);'>
+                    BLUE PPV
+                </span>
+            </td>
+
+            <td class='c'>
+                -
+            </td>
+
+            <td class='r'>
+                <span class='rs-tag'>
+                    29.9
+                </span>
+            </td>
+
+            <td>Chemicals & Petrochemicals</td>
+            <td>Petrochemicals</td>
+            <td class='r'>—</td>
+            <td class="c">—</td>
+        </tr>
+        
+        <tr class='srow'
+            data-sym="SUDEEPPHRM"
+            data-indgrp="Pharmaceuticals & Biotechnology"
+            data-ind="Pharmaceuticals"
+            data-close="null"
+            data-relvol="220.1"
+            data-rs="null">
+
+            <td>
+                <a class='sym-tag'
+                   style="background:var(--blue-bg);border-color:#bfdbfe;color:#1d4ed8"
+                   href='https://www.tradingview.com/chart/?symbol=NSE%3ASUDEEPPHRM'
+                   target='_blank'
+                   rel='noopener'>
+                   SUDEEPPHRM
+                </a>
+            </td>
+
+            <td class='r'>
+                N/A
+            </td>
+
+            <td class='r'>
+                220.1%
+            </td>
+
+            <td class='c'>
+                <span class='badge'
+                    style='background:var(--blue-bg);
+                           color:var(--blue);
+                           border-color:var(--blue-mid);'>
+                    BLUE PPV
+                </span>
+            </td>
+
+            <td class='c'>
+                -
+            </td>
+
+            <td class='r'>
+                <span class='rs-tag'>
+                    N/A
+                </span>
+            </td>
+
+            <td>Pharmaceuticals & Biotechnology</td>
+            <td>Pharmaceuticals</td>
+            <td class='r'>—</td>
+            <td class="c">—</td>
+        </tr>
+        
+        <tr class='srow'
+            data-sym="SCHAND"
+            data-indgrp="Printing & Publication"
+            data-ind="Printing & Publication"
+            data-close="172.0"
+            data-relvol="218.1"
+            data-rs="24.34">
+
+            <td>
+                <a class='sym-tag'
+                   style="background:var(--blue-bg);border-color:#bfdbfe;color:#1d4ed8"
+                   href='https://www.tradingview.com/chart/?symbol=NSE%3ASCHAND'
+                   target='_blank'
+                   rel='noopener'>
+                   SCHAND
+                </a>
+            </td>
+
+            <td class='r'>
+                ₹172.00
+            </td>
+
+            <td class='r'>
+                218.1%
+            </td>
+
+            <td class='c'>
+                <span class='badge'
+                    style='background:var(--blue-bg);
+                           color:var(--blue);
+                           border-color:var(--blue-mid);'>
+                    BLUE PPV
+                </span>
+            </td>
+
+            <td class='c'>
+                -
+            </td>
+
+            <td class='r'>
+                <span class='rs-tag'>
+                    24.3
+                </span>
+            </td>
+
+            <td>Printing & Publication</td>
+            <td>Printing & Publication</td>
+            <td class='r'>—</td>
+            <td class="c">—</td>
+        </tr>
+        
+        <tr class='srow'
+            data-sym="SAMHI"
+            data-indgrp="Leisure Services"
+            data-ind="Hotels & Resorts"
+            data-close="159.72"
+            data-relvol="204.53"
+            data-rs="41.23">
+
+            <td>
+                <a class='sym-tag'
+                   style="background:var(--blue-bg);border-color:#bfdbfe;color:#1d4ed8"
+                   href='https://www.tradingview.com/chart/?symbol=NSE%3ASAMHI'
+                   target='_blank'
+                   rel='noopener'>
+                   SAMHI
+                </a>
+            </td>
+
+            <td class='r'>
+                ₹159.72
+            </td>
+
+            <td class='r'>
+                204.5%
+            </td>
+
+            <td class='c'>
+                <span class='badge'
+                    style='background:var(--blue-bg);
+                           color:var(--blue);
+                           border-color:var(--blue-mid);'>
+                    BLUE PPV
+                </span>
+            </td>
+
+            <td class='c'>
+                -
+            </td>
+
+            <td class='r'>
+                <span class='rs-tag'>
+                    41.2
+                </span>
+            </td>
+
+            <td>Leisure Services</td>
+            <td>Hotels & Resorts</td>
+            <td class='r'>—</td>
+            <td class="c">—</td>
+        </tr>
+        
+        <tr class='srow'
+            data-sym="GUFICBIO"
+            data-indgrp="Pharmaceuticals & Biotechnology"
+            data-ind="Pharmaceuticals"
+            data-close="311.0"
+            data-relvol="204.41"
+            data-rs="35.73">
+
+            <td>
+                <a class='sym-tag'
+                   style="background:var(--blue-bg);border-color:#bfdbfe;color:#1d4ed8"
+                   href='https://www.tradingview.com/chart/?symbol=NSE%3AGUFICBIO'
+                   target='_blank'
+                   rel='noopener'>
+                   GUFICBIO
+                </a>
+            </td>
+
+            <td class='r'>
+                ₹311.00
+            </td>
+
+            <td class='r'>
+                204.4%
+            </td>
+
+            <td class='c'>
+                <span class='badge'
+                    style='background:var(--blue-bg);
+                           color:var(--blue);
+                           border-color:var(--blue-mid);'>
+                    BLUE PPV
+                </span>
+            </td>
+
+            <td class='c'>
+                -
+            </td>
+
+            <td class='r'>
+                <span class='rs-tag'>
+                    35.7
+                </span>
+            </td>
+
+            <td>Pharmaceuticals & Biotechnology</td>
+            <td>Pharmaceuticals</td>
+            <td class='r'>—</td>
+            <td class="c">—</td>
+        </tr>
+        
+        <tr class='srow'
+            data-sym="MAZDA"
+            data-indgrp="Industrial Manufacturing"
+            data-ind="Industrial Products"
+            data-close="208.39"
+            data-relvol="201.91"
+            data-rs="29.36">
+
+            <td>
+                <a class='sym-tag'
+                   style="background:var(--blue-bg);border-color:#bfdbfe;color:#1d4ed8"
+                   href='https://www.tradingview.com/chart/?symbol=NSE%3AMAZDA'
+                   target='_blank'
+                   rel='noopener'>
+                   MAZDA
+                </a>
+            </td>
+
+            <td class='r'>
+                ₹208.39
+            </td>
+
+            <td class='r'>
+                201.9%
+            </td>
+
+            <td class='c'>
+                <span class='badge'
+                    style='background:var(--blue-bg);
+                           color:var(--blue);
+                           border-color:var(--blue-mid);'>
+                    BLUE PPV
+                </span>
+            </td>
+
+            <td class='c'>
+                -
+            </td>
+
+            <td class='r'>
+                <span class='rs-tag'>
+                    29.4
+                </span>
+            </td>
+
+            <td>Industrial Manufacturing</td>
+            <td>Industrial Products</td>
+            <td class='r'>—</td>
+            <td class="c">—</td>
+        </tr>
+        
+        <tr class='srow'
+            data-sym="BCG"
+            data-indgrp="IT - Services"
+            data-ind="IT Enabled Services"
+            data-close="10.92"
+            data-relvol="200.16"
+            data-rs="67.08">
+
+            <td>
+                <a class='sym-tag'
+                   style="background:var(--blue-bg);border-color:#bfdbfe;color:#1d4ed8"
+                   href='https://www.tradingview.com/chart/?symbol=NSE%3ABCG'
+                   target='_blank'
+                   rel='noopener'>
+                   BCG
+                </a>
+            </td>
+
+            <td class='r'>
+                ₹10.92
+            </td>
+
+            <td class='r'>
+                200.2%
+            </td>
+
+            <td class='c'>
+                <span class='badge'
+                    style='background:var(--blue-bg);
+                           color:var(--blue);
+                           border-color:var(--blue-mid);'>
+                    BLUE PPV
+                </span>
+            </td>
+
+            <td class='c'>
+                -
+            </td>
+
+            <td class='r'>
+                <span class='rs-tag'>
+                    67.1
+                </span>
+            </td>
+
+            <td>IT - Services</td>
+            <td>IT Enabled Services</td>
+            <td class='r'>—</td>
+            <td class="c">—</td>
+        </tr>
+        
+        <tr class='srow'
+            data-sym="HONASA"
+            data-indgrp="Personal Products"
+            data-ind="Personal Care"
+            data-close="386.35"
+            data-relvol="196.39"
+            data-rs="88.02">
+
+            <td>
+                <a class='sym-tag'
+                   style="background:var(--blue-bg);border-color:#bfdbfe;color:#1d4ed8"
+                   href='https://www.tradingview.com/chart/?symbol=NSE%3AHONASA'
+                   target='_blank'
+                   rel='noopener'>
+                   HONASA
+                </a>
+            </td>
+
+            <td class='r'>
+                ₹386.35
+            </td>
+
+            <td class='r'>
+                196.4%
+            </td>
+
+            <td class='c'>
+                <span class='badge'
+                    style='background:var(--blue-bg);
+                           color:var(--blue);
+                           border-color:var(--blue-mid);'>
+                    BLUE PPV
+                </span>
+            </td>
+
+            <td class='c'>
+                -
+            </td>
+
+            <td class='r'>
+                <span class='rs-tag'>
+                    88.0
+                </span>
+            </td>
+
+            <td>Personal Products</td>
+            <td>Personal Care</td>
+            <td class='r'>—</td>
+            <td class="c">—</td>
+        </tr>
+        
+        <tr class='srow'
+            data-sym="GAIL"
+            data-indgrp="Gas"
+            data-ind="Gas Transmission/Marketing"
+            data-close="168.77"
+            data-relvol="195.12"
+            data-rs="49.22">
+
+            <td>
+                <a class='sym-tag'
+                   style="background:var(--blue-bg);border-color:#bfdbfe;color:#1d4ed8"
+                   href='https://www.tradingview.com/chart/?symbol=NSE%3AGAIL'
+                   target='_blank'
+                   rel='noopener'>
+                   GAIL
+                </a>
+            </td>
+
+            <td class='r'>
+                ₹168.77
+            </td>
+
+            <td class='r'>
+                195.1%
+            </td>
+
+            <td class='c'>
+                <span class='badge'
+                    style='background:var(--blue-bg);
+                           color:var(--blue);
+                           border-color:var(--blue-mid);'>
+                    BLUE PPV
+                </span>
+            </td>
+
+            <td class='c'>
+                -
+            </td>
+
+            <td class='r'>
+                <span class='rs-tag'>
+                    49.2
+                </span>
+            </td>
+
+            <td>Gas</td>
+            <td>Gas Transmission/Marketing</td>
+            <td class='r'>—</td>
+            <td class="c">—</td>
+        </tr>
+        
+        <tr class='srow'
+            data-sym="VIVIANA"
+            data-indgrp="Construction"
+            data-ind="Civil Construction"
+            data-close="876.0"
+            data-relvol="190.39"
+            data-rs="59.31">
+
+            <td>
+                <a class='sym-tag'
+                   style="background:var(--blue-bg);border-color:#bfdbfe;color:#1d4ed8"
+                   href='https://www.tradingview.com/chart/?symbol=NSE%3AVIVIANA'
+                   target='_blank'
+                   rel='noopener'>
+                   VIVIANA
+                </a>
+            </td>
+
+            <td class='r'>
+                ₹876.00
+            </td>
+
+            <td class='r'>
+                190.4%
+            </td>
+
+            <td class='c'>
+                <span class='badge'
+                    style='background:var(--blue-bg);
+                           color:var(--blue);
+                           border-color:var(--blue-mid);'>
+                    BLUE PPV
+                </span>
+            </td>
+
+            <td class='c'>
+                -
+            </td>
+
+            <td class='r'>
+                <span class='rs-tag'>
+                    59.3
+                </span>
+            </td>
+
+            <td>Construction</td>
+            <td>Civil Construction</td>
+            <td class='r'>—</td>
+            <td class="c">—</td>
+        </tr>
+        
+        <tr class='srow'
+            data-sym="SSWL"
+            data-indgrp="Auto Components"
+            data-ind="Auto Components & Equipments"
+            data-close="213.03"
+            data-relvol="187.91"
+            data-rs="47.33">
+
+            <td>
+                <a class='sym-tag'
+                   style="background:var(--blue-bg);border-color:#bfdbfe;color:#1d4ed8"
+                   href='https://www.tradingview.com/chart/?symbol=NSE%3ASSWL'
+                   target='_blank'
+                   rel='noopener'>
+                   SSWL
+                </a>
+            </td>
+
+            <td class='r'>
+                ₹213.03
+            </td>
+
+            <td class='r'>
+                187.9%
+            </td>
+
+            <td class='c'>
+                <span class='badge'
+                    style='background:var(--blue-bg);
+                           color:var(--blue);
+                           border-color:var(--blue-mid);'>
+                    BLUE PPV
+                </span>
+            </td>
+
+            <td class='c'>
+                -
+            </td>
+
+            <td class='r'>
+                <span class='rs-tag'>
+                    47.3
+                </span>
+            </td>
+
+            <td>Auto Components</td>
+            <td>Auto Components & Equipments</td>
+            <td class='r'>—</td>
+            <td class="c">—</td>
+        </tr>
+        
+        <tr class='srow'
+            data-sym="KRISHIVAL"
+            data-indgrp="Food Products"
+            data-ind="Other Food Products"
+            data-close="397.0"
+            data-relvol="183.67"
+            data-rs="91.91">
+
+            <td>
+                <a class='sym-tag'
+                   style="background:var(--blue-bg);border-color:#bfdbfe;color:#1d4ed8"
+                   href='https://www.tradingview.com/chart/?symbol=NSE%3AKRISHIVAL'
+                   target='_blank'
+                   rel='noopener'>
+                   KRISHIVAL
+                </a>
+            </td>
+
+            <td class='r'>
+                ₹397.00
+            </td>
+
+            <td class='r'>
+                183.7%
+            </td>
+
+            <td class='c'>
+                <span class='badge'
+                    style='background:var(--blue-bg);
+                           color:var(--blue);
+                           border-color:var(--blue-mid);'>
+                    BLUE PPV
+                </span>
+            </td>
+
+            <td class='c'>
+                -
+            </td>
+
+            <td class='r'>
+                <span class='rs-tag'>
+                    91.9
+                </span>
+            </td>
+
+            <td>Food Products</td>
+            <td>Other Food Products</td>
+            <td class='r'>—</td>
+            <td class="c">—</td>
+        </tr>
+        
+        <tr class='srow'
+            data-sym="RAMCOIND"
+            data-indgrp="Other Construction Materials"
+            data-ind="Other Construction Materials"
+            data-close="293.2"
+            data-relvol="180.23"
+            data-rs="73.5">
+
+            <td>
+                <a class='sym-tag'
+                   style="background:var(--blue-bg);border-color:#bfdbfe;color:#1d4ed8"
+                   href='https://www.tradingview.com/chart/?symbol=NSE%3ARAMCOIND'
+                   target='_blank'
+                   rel='noopener'>
+                   RAMCOIND
+                </a>
+            </td>
+
+            <td class='r'>
+                ₹293.20
+            </td>
+
+            <td class='r'>
+                180.2%
+            </td>
+
+            <td class='c'>
+                <span class='badge'
+                    style='background:var(--blue-bg);
+                           color:var(--blue);
+                           border-color:var(--blue-mid);'>
+                    BLUE PPV
+                </span>
+            </td>
+
+            <td class='c'>
+                -
+            </td>
+
+            <td class='r'>
+                <span class='rs-tag'>
+                    73.5
+                </span>
+            </td>
+
+            <td>Other Construction Materials</td>
+            <td>Other Construction Materials</td>
+            <td class='r'>—</td>
+            <td class="c">—</td>
+        </tr>
+        
+        <tr class='srow'
+            data-sym="CHEMCON"
+            data-indgrp="Chemicals & Petrochemicals"
+            data-ind="Specialty Chemicals"
+            data-close="192.72"
+            data-relvol="179.89"
+            data-rs="51.65">
+
+            <td>
+                <a class='sym-tag'
+                   style="background:var(--blue-bg);border-color:#bfdbfe;color:#1d4ed8"
+                   href='https://www.tradingview.com/chart/?symbol=NSE%3ACHEMCON'
+                   target='_blank'
+                   rel='noopener'>
+                   CHEMCON
+                </a>
+            </td>
+
+            <td class='r'>
+                ₹192.72
+            </td>
+
+            <td class='r'>
+                179.9%
+            </td>
+
+            <td class='c'>
+                <span class='badge'
+                    style='background:var(--blue-bg);
+                           color:var(--blue);
+                           border-color:var(--blue-mid);'>
+                    BLUE PPV
+                </span>
+            </td>
+
+            <td class='c'>
+                -
+            </td>
+
+            <td class='r'>
+                <span class='rs-tag'>
+                    51.6
+                </span>
+            </td>
+
+            <td>Chemicals & Petrochemicals</td>
+            <td>Specialty Chemicals</td>
+            <td class='r'>—</td>
+            <td class="c">—</td>
+        </tr>
+        
+        <tr class='srow'
+            data-sym="INDNIPPON"
+            data-indgrp="Auto Components"
+            data-ind="Auto Components & Equipments"
+            data-close="814.1"
+            data-relvol="178.7"
+            data-rs="78.31">
+
+            <td>
+                <a class='sym-tag'
+                   style="background:var(--blue-bg);border-color:#bfdbfe;color:#1d4ed8"
+                   href='https://www.tradingview.com/chart/?symbol=NSE%3AINDNIPPON'
+                   target='_blank'
+                   rel='noopener'>
+                   INDNIPPON
+                </a>
+            </td>
+
+            <td class='r'>
+                ₹814.10
+            </td>
+
+            <td class='r'>
+                178.7%
+            </td>
+
+            <td class='c'>
+                <span class='badge'
+                    style='background:var(--blue-bg);
+                           color:var(--blue);
+                           border-color:var(--blue-mid);'>
+                    BLUE PPV
+                </span>
+            </td>
+
+            <td class='c'>
+                -
+            </td>
+
+            <td class='r'>
+                <span class='rs-tag'>
+                    78.3
+                </span>
+            </td>
+
+            <td>Auto Components</td>
+            <td>Auto Components & Equipments</td>
+            <td class='r'>—</td>
+            <td class="c">—</td>
+        </tr>
+        
+        <tr class='srow'
+            data-sym="TORNTPHARM"
+            data-indgrp="Pharmaceuticals & Biotechnology"
+            data-ind="Pharmaceuticals"
+            data-close="4642.9"
+            data-relvol="178.36"
+            data-rs="88.18">
+
+            <td>
+                <a class='sym-tag'
+                   style="background:var(--blue-bg);border-color:#bfdbfe;color:#1d4ed8"
+                   href='https://www.tradingview.com/chart/?symbol=NSE%3ATORNTPHARM'
+                   target='_blank'
+                   rel='noopener'>
+                   TORNTPHARM
+                </a>
+            </td>
+
+            <td class='r'>
+                ₹4,642.90
+            </td>
+
+            <td class='r'>
+                178.4%
+            </td>
+
+            <td class='c'>
+                <span class='badge'
+                    style='background:var(--blue-bg);
+                           color:var(--blue);
+                           border-color:var(--blue-mid);'>
+                    BLUE PPV
+                </span>
+            </td>
+
+            <td class='c'>
+                -
+            </td>
+
+            <td class='r'>
+                <span class='rs-tag'>
+                    88.2
+                </span>
+            </td>
+
+            <td>Pharmaceuticals & Biotechnology</td>
+            <td>Pharmaceuticals</td>
+            <td class='r'>—</td>
+            <td class="c">—</td>
+        </tr>
+        
+        <tr class='srow'
+            data-sym="3MINDIA"
+            data-indgrp="Diversified"
+            data-ind="Diversified"
+            data-close="33605.0"
+            data-relvol="171.09"
+            data-rs="75.23">
+
+            <td>
+                <a class='sym-tag'
+                   style="background:var(--blue-bg);border-color:#bfdbfe;color:#1d4ed8"
+                   href='https://www.tradingview.com/chart/?symbol=NSE%3A3MINDIA'
+                   target='_blank'
+                   rel='noopener'>
+                   3MINDIA
+                </a>
+            </td>
+
+            <td class='r'>
+                ₹33,605.00
+            </td>
+
+            <td class='r'>
+                171.1%
+            </td>
+
+            <td class='c'>
+                <span class='badge'
+                    style='background:var(--blue-bg);
+                           color:var(--blue);
+                           border-color:var(--blue-mid);'>
+                    BLUE PPV
+                </span>
+            </td>
+
+            <td class='c'>
+                -
+            </td>
+
+            <td class='r'>
+                <span class='rs-tag'>
+                    75.2
+                </span>
+            </td>
+
+            <td>Diversified</td>
+            <td>Diversified</td>
+            <td class='r'>—</td>
+            <td class="c">—</td>
+        </tr>
+        
+        <tr class='srow'
+            data-sym="WIPRO"
+            data-indgrp="IT - Software"
+            data-ind="Computers - Software & Consulting"
+            data-close="209.08"
+            data-relvol="167.64"
+            data-rs="41.88">
+
+            <td>
+                <a class='sym-tag'
+                   style="background:var(--blue-bg);border-color:#bfdbfe;color:#1d4ed8"
+                   href='https://www.tradingview.com/chart/?symbol=NSE%3AWIPRO'
+                   target='_blank'
+                   rel='noopener'>
+                   WIPRO
+                </a>
+            </td>
+
+            <td class='r'>
+                ₹209.08
+            </td>
+
+            <td class='r'>
+                167.6%
+            </td>
+
+            <td class='c'>
+                <span class='badge'
+                    style='background:var(--blue-bg);
+                           color:var(--blue);
+                           border-color:var(--blue-mid);'>
+                    BLUE PPV
+                </span>
+            </td>
+
+            <td class='c'>
+                -
+            </td>
+
+            <td class='r'>
+                <span class='rs-tag'>
+                    41.9
+                </span>
+            </td>
+
+            <td>IT - Software</td>
+            <td>Computers - Software & Consulting</td>
+            <td class='r'>—</td>
+            <td class="c">—</td>
+        </tr>
+        
+        <tr class='srow'
+            data-sym="VISHNUINFR"
+            data-indgrp="Other Construction Materials"
+            data-ind="Other Construction Materials"
+            data-close="169.45"
+            data-relvol="167.34"
+            data-rs="41.55">
+
+            <td>
+                <a class='sym-tag'
+                   style="background:var(--blue-bg);border-color:#bfdbfe;color:#1d4ed8"
+                   href='https://www.tradingview.com/chart/?symbol=NSE%3AVISHNUINFR'
+                   target='_blank'
+                   rel='noopener'>
+                   VISHNUINFR
+                </a>
+            </td>
+
+            <td class='r'>
+                ₹169.45
+            </td>
+
+            <td class='r'>
+                167.3%
+            </td>
+
+            <td class='c'>
+                <span class='badge'
+                    style='background:var(--blue-bg);
+                           color:var(--blue);
+                           border-color:var(--blue-mid);'>
+                    BLUE PPV
+                </span>
+            </td>
+
+            <td class='c'>
+                -
+            </td>
+
+            <td class='r'>
+                <span class='rs-tag'>
+                    41.6
+                </span>
+            </td>
+
+            <td>Other Construction Materials</td>
+            <td>Other Construction Materials</td>
+            <td class='r'>—</td>
+            <td class="c">—</td>
+        </tr>
+        
+        <tr class='srow'
+            data-sym="MAMATA"
+            data-indgrp="Industrial Manufacturing"
+            data-ind="Industrial Products"
+            data-close="422.6"
+            data-relvol="163.84"
+            data-rs="75.01">
+
+            <td>
+                <a class='sym-tag'
+                   style="background:var(--blue-bg);border-color:#bfdbfe;color:#1d4ed8"
+                   href='https://www.tradingview.com/chart/?symbol=NSE%3AMAMATA'
+                   target='_blank'
+                   rel='noopener'>
+                   MAMATA
+                </a>
+            </td>
+
+            <td class='r'>
+                ₹422.60
+            </td>
+
+            <td class='r'>
+                163.8%
+            </td>
+
+            <td class='c'>
+                <span class='badge'
+                    style='background:var(--blue-bg);
+                           color:var(--blue);
+                           border-color:var(--blue-mid);'>
+                    BLUE PPV
+                </span>
+            </td>
+
+            <td class='c'>
+                -
+            </td>
+
+            <td class='r'>
+                <span class='rs-tag'>
+                    75.0
+                </span>
+            </td>
+
+            <td>Industrial Manufacturing</td>
+            <td>Industrial Products</td>
+            <td class='r'>—</td>
+            <td class="c">—</td>
+        </tr>
+        
+        <tr class='srow'
+            data-sym="TENNIND"
+            data-indgrp="Auto Components"
+            data-ind="Auto Components & Equipments"
+            data-close="null"
+            data-relvol="162.9"
+            data-rs="null">
+
+            <td>
+                <a class='sym-tag'
+                   style="background:var(--blue-bg);border-color:#bfdbfe;color:#1d4ed8"
+                   href='https://www.tradingview.com/chart/?symbol=NSE%3ATENNIND'
+                   target='_blank'
+                   rel='noopener'>
+                   TENNIND
+                </a>
+            </td>
+
+            <td class='r'>
+                N/A
+            </td>
+
+            <td class='r'>
+                162.9%
+            </td>
+
+            <td class='c'>
+                <span class='badge'
+                    style='background:var(--blue-bg);
+                           color:var(--blue);
+                           border-color:var(--blue-mid);'>
+                    BLUE PPV
+                </span>
+            </td>
+
+            <td class='c'>
+                -
+            </td>
+
+            <td class='r'>
+                <span class='rs-tag'>
+                    N/A
+                </span>
+            </td>
+
+            <td>Auto Components</td>
+            <td>Auto Components & Equipments</td>
+            <td class='r'>—</td>
+            <td class="c">—</td>
+        </tr>
+        
+        <tr class='srow'
+            data-sym="JKTYRE"
+            data-indgrp="Auto Components"
+            data-ind="Tyres & Rubber Products"
+            data-close="381.65"
+            data-relvol="162.42"
+            data-rs="57.04">
+
+            <td>
+                <a class='sym-tag'
+                   style="background:var(--blue-bg);border-color:#bfdbfe;color:#1d4ed8"
+                   href='https://www.tradingview.com/chart/?symbol=NSE%3AJKTYRE'
+                   target='_blank'
+                   rel='noopener'>
+                   JKTYRE
+                </a>
+            </td>
+
+            <td class='r'>
+                ₹381.65
+            </td>
+
+            <td class='r'>
+                162.4%
+            </td>
+
+            <td class='c'>
+                <span class='badge'
+                    style='background:var(--blue-bg);
+                           color:var(--blue);
+                           border-color:var(--blue-mid);'>
+                    BLUE PPV
+                </span>
+            </td>
+
+            <td class='c'>
+                -
+            </td>
+
+            <td class='r'>
+                <span class='rs-tag'>
+                    57.0
+                </span>
+            </td>
+
+            <td>Auto Components</td>
+            <td>Tyres & Rubber Products</td>
+            <td class='r'>—</td>
+            <td class="c">—</td>
+        </tr>
+        
+        <tr class='srow'
+            data-sym="BESTAGRO"
+            data-indgrp="Fertilizers & Agrochemicals"
+            data-ind="Pesticides & Agrochemicals"
+            data-close="18.38"
+            data-relvol="156.69"
+            data-rs="52.19">
+
+            <td>
+                <a class='sym-tag'
+                   style="background:var(--blue-bg);border-color:#bfdbfe;color:#1d4ed8"
+                   href='https://www.tradingview.com/chart/?symbol=NSE%3ABESTAGRO'
+                   target='_blank'
+                   rel='noopener'>
+                   BESTAGRO
+                </a>
+            </td>
+
+            <td class='r'>
+                ₹18.38
+            </td>
+
+            <td class='r'>
+                156.7%
+            </td>
+
+            <td class='c'>
+                <span class='badge'
+                    style='background:var(--blue-bg);
+                           color:var(--blue);
+                           border-color:var(--blue-mid);'>
+                    BLUE PPV
+                </span>
+            </td>
+
+            <td class='c'>
+                -
+            </td>
+
+            <td class='r'>
+                <span class='rs-tag'>
+                    52.2
+                </span>
+            </td>
+
+            <td>Fertilizers & Agrochemicals</td>
+            <td>Pesticides & Agrochemicals</td>
+            <td class='r'>—</td>
+            <td class="c">—</td>
+        </tr>
+        
+        <tr class='srow'
+            data-sym="HITECH"
+            data-indgrp="Industrial Products"
+            data-ind="Iron & Steel Products"
+            data-close="90.86"
+            data-relvol="153.37"
+            data-rs="52.51">
+
+            <td>
+                <a class='sym-tag'
+                   style="background:var(--blue-bg);border-color:#bfdbfe;color:#1d4ed8"
+                   href='https://www.tradingview.com/chart/?symbol=NSE%3AHITECH'
+                   target='_blank'
+                   rel='noopener'>
+                   HITECH
+                </a>
+            </td>
+
+            <td class='r'>
+                ₹90.86
+            </td>
+
+            <td class='r'>
+                153.4%
+            </td>
+
+            <td class='c'>
+                <span class='badge'
+                    style='background:var(--blue-bg);
+                           color:var(--blue);
+                           border-color:var(--blue-mid);'>
+                    BLUE PPV
+                </span>
+            </td>
+
+            <td class='c'>
+                -
+            </td>
+
+            <td class='r'>
+                <span class='rs-tag'>
+                    52.5
+                </span>
+            </td>
+
+            <td>Industrial Products</td>
+            <td>Iron & Steel Products</td>
+            <td class='r'>—</td>
+            <td class="c">—</td>
+        </tr>
+        
+        <tr class='srow'
+            data-sym="LLOYDSENGG"
+            data-indgrp="Industrial Manufacturing"
+            data-ind="Industrial Products"
+            data-close="74.95"
+            data-relvol="152.94"
+            data-rs="89.04">
+
+            <td>
+                <a class='sym-tag'
+                   style="background:var(--blue-bg);border-color:#bfdbfe;color:#1d4ed8"
+                   href='https://www.tradingview.com/chart/?symbol=NSE%3ALLOYDSENGG'
+                   target='_blank'
+                   rel='noopener'>
+                   LLOYDSENGG
+                </a>
+            </td>
+
+            <td class='r'>
+                ₹74.95
+            </td>
+
+            <td class='r'>
+                152.9%
+            </td>
+
+            <td class='c'>
+                <span class='badge'
+                    style='background:var(--blue-bg);
+                           color:var(--blue);
+                           border-color:var(--blue-mid);'>
+                    BLUE PPV
+                </span>
+            </td>
+
+            <td class='c'>
+                -
+            </td>
+
+            <td class='r'>
+                <span class='rs-tag'>
+                    89.0
+                </span>
+            </td>
+
+            <td>Industrial Manufacturing</td>
+            <td>Industrial Products</td>
+            <td class='r'>—</td>
+            <td class="c">—</td>
+        </tr>
+        
+        <tr class='srow'
+            data-sym="UNITECH"
+            data-indgrp="Realty"
+            data-ind="Residential, Commercial Projects"
+            data-close="5.35"
+            data-relvol="149.18"
+            data-rs="34.54">
+
+            <td>
+                <a class='sym-tag'
+                   style="background:var(--blue-bg);border-color:#bfdbfe;color:#1d4ed8"
+                   href='https://www.tradingview.com/chart/?symbol=NSE%3AUNITECH'
+                   target='_blank'
+                   rel='noopener'>
+                   UNITECH
+                </a>
+            </td>
+
+            <td class='r'>
+                ₹5.35
+            </td>
+
+            <td class='r'>
+                149.2%
+            </td>
+
+            <td class='c'>
+                <span class='badge'
+                    style='background:var(--blue-bg);
+                           color:var(--blue);
+                           border-color:var(--blue-mid);'>
+                    BLUE PPV
+                </span>
+            </td>
+
+            <td class='c'>
+                -
+            </td>
+
+            <td class='r'>
+                <span class='rs-tag'>
+                    34.5
+                </span>
+            </td>
+
+            <td>Realty</td>
+            <td>Residential, Commercial Projects</td>
+            <td class='r'>—</td>
+            <td class="c">—</td>
+        </tr>
+        
+        <tr class='srow'
+            data-sym="SAMMAANCAP"
+            data-indgrp="Finance"
+            data-ind="Housing Finance Company"
+            data-close="168.85"
+            data-relvol="148.84"
+            data-rs="87.16">
+
+            <td>
+                <a class='sym-tag'
+                   style="background:var(--blue-bg);border-color:#bfdbfe;color:#1d4ed8"
+                   href='https://www.tradingview.com/chart/?symbol=NSE%3ASAMMAANCAP'
+                   target='_blank'
+                   rel='noopener'>
+                   SAMMAANCAP
+                </a>
+            </td>
+
+            <td class='r'>
+                ₹168.85
+            </td>
+
+            <td class='r'>
+                148.8%
+            </td>
+
+            <td class='c'>
+                <span class='badge'
+                    style='background:var(--blue-bg);
+                           color:var(--blue);
+                           border-color:var(--blue-mid);'>
+                    BLUE PPV
+                </span>
+            </td>
+
+            <td class='c'>
+                -
+            </td>
+
+            <td class='r'>
+                <span class='rs-tag'>
+                    87.2
+                </span>
+            </td>
+
+            <td>Finance</td>
+            <td>Housing Finance Company</td>
+            <td class='r'>—</td>
+            <td class="c">—</td>
+        </tr>
+        
+        <tr class='srow'
+            data-sym="EICHERMOT"
+            data-indgrp="Automobiles"
+            data-ind="2/3 Wheelers"
+            data-close="7358.0"
+            data-relvol="147.47"
+            data-rs="86.62">
+
+            <td>
+                <a class='sym-tag'
+                   style="background:var(--blue-bg);border-color:#bfdbfe;color:#1d4ed8"
+                   href='https://www.tradingview.com/chart/?symbol=NSE%3AEICHERMOT'
+                   target='_blank'
+                   rel='noopener'>
+                   EICHERMOT
+                </a>
+            </td>
+
+            <td class='r'>
+                ₹7,358.00
+            </td>
+
+            <td class='r'>
+                147.5%
+            </td>
+
+            <td class='c'>
+                <span class='badge'
+                    style='background:var(--blue-bg);
+                           color:var(--blue);
+                           border-color:var(--blue-mid);'>
+                    BLUE PPV
+                </span>
+            </td>
+
+            <td class='c'>
+                -
+            </td>
+
+            <td class='r'>
+                <span class='rs-tag'>
+                    86.6
+                </span>
+            </td>
+
+            <td>Automobiles</td>
+            <td>2/3 Wheelers</td>
+            <td class='r'>—</td>
+            <td class="c">—</td>
+        </tr>
+        
+        <tr class='srow'
+            data-sym="WALCHANNAG"
+            data-indgrp="Industrial Manufacturing"
+            data-ind="Industrial Products"
+            data-close="246.9"
+            data-relvol="139.73"
+            data-rs="76.25">
+
+            <td>
+                <a class='sym-tag'
+                   style="background:var(--blue-bg);border-color:#bfdbfe;color:#1d4ed8"
+                   href='https://www.tradingview.com/chart/?symbol=NSE%3AWALCHANNAG'
+                   target='_blank'
+                   rel='noopener'>
+                   WALCHANNAG
+                </a>
+            </td>
+
+            <td class='r'>
+                ₹246.90
+            </td>
+
+            <td class='r'>
+                139.7%
+            </td>
+
+            <td class='c'>
+                <span class='badge'
+                    style='background:var(--blue-bg);
+                           color:var(--blue);
+                           border-color:var(--blue-mid);'>
+                    BLUE PPV
+                </span>
+            </td>
+
+            <td class='c'>
+                -
+            </td>
+
+            <td class='r'>
+                <span class='rs-tag'>
+                    76.3
+                </span>
+            </td>
+
+            <td>Industrial Manufacturing</td>
+            <td>Industrial Products</td>
+            <td class='r'>—</td>
+            <td class="c">—</td>
+        </tr>
+        
+        <tr class='srow'
+            data-sym="APOLSINHOT"
+            data-indgrp="Leisure Services"
+            data-ind="Hotels & Resorts"
+            data-close="1186.1"
+            data-relvol="129.82"
+            data-rs="47.6">
+
+            <td>
+                <a class='sym-tag'
+                   style="background:var(--blue-bg);border-color:#bfdbfe;color:#1d4ed8"
+                   href='https://www.tradingview.com/chart/?symbol=NSE%3AAPOLSINHOT'
+                   target='_blank'
+                   rel='noopener'>
+                   APOLSINHOT
+                </a>
+            </td>
+
+            <td class='r'>
+                ₹1,186.10
+            </td>
+
+            <td class='r'>
+                129.8%
+            </td>
+
+            <td class='c'>
+                <span class='badge'
+                    style='background:var(--blue-bg);
+                           color:var(--blue);
+                           border-color:var(--blue-mid);'>
+                    BLUE PPV
+                </span>
+            </td>
+
+            <td class='c'>
+                -
+            </td>
+
+            <td class='r'>
+                <span class='rs-tag'>
+                    47.6
+                </span>
+            </td>
+
+            <td>Leisure Services</td>
+            <td>Hotels & Resorts</td>
+            <td class='r'>—</td>
+            <td class="c">—</td>
+        </tr>
+        
+        <tr class='srow'
+            data-sym="RAMRAT"
+            data-indgrp="Electrical Equipment"
+            data-ind="Other Electrical Equipment"
+            data-close="465.4"
+            data-relvol="128.21"
+            data-rs="92.39">
+
+            <td>
+                <a class='sym-tag'
+                   style="background:var(--blue-bg);border-color:#bfdbfe;color:#1d4ed8"
+                   href='https://www.tradingview.com/chart/?symbol=NSE%3ARAMRAT'
+                   target='_blank'
+                   rel='noopener'>
+                   RAMRAT
+                </a>
+            </td>
+
+            <td class='r'>
+                ₹465.40
+            </td>
+
+            <td class='r'>
+                128.2%
+            </td>
+
+            <td class='c'>
+                <span class='badge'
+                    style='background:var(--blue-bg);
+                           color:var(--blue);
+                           border-color:var(--blue-mid);'>
+                    BLUE PPV
+                </span>
+            </td>
+
+            <td class='c'>
+                -
+            </td>
+
+            <td class='r'>
+                <span class='rs-tag'>
+                    92.4
+                </span>
+            </td>
+
+            <td>Electrical Equipment</td>
+            <td>Other Electrical Equipment</td>
+            <td class='r'>—</td>
+            <td class="c">—</td>
+        </tr>
+        
+        <tr class='srow'
+            data-sym="SEAMECLTD"
+            data-indgrp="Transport Services"
+            data-ind="Shipping"
+            data-close="1652.3"
+            data-relvol="117.65"
+            data-rs="96.01">
+
+            <td>
+                <a class='sym-tag'
+                   style="background:var(--blue-bg);border-color:#bfdbfe;color:#1d4ed8"
+                   href='https://www.tradingview.com/chart/?symbol=NSE%3ASEAMECLTD'
+                   target='_blank'
+                   rel='noopener'>
+                   SEAMECLTD
+                </a>
+            </td>
+
+            <td class='r'>
+                ₹1,652.30
+            </td>
+
+            <td class='r'>
+                117.7%
+            </td>
+
+            <td class='c'>
+                <span class='badge'
+                    style='background:var(--blue-bg);
+                           color:var(--blue);
+                           border-color:var(--blue-mid);'>
+                    BLUE PPV
+                </span>
+            </td>
+
+            <td class='c'>
+                -
+            </td>
+
+            <td class='r'>
+                <span class='rs-tag'>
+                    96.0
+                </span>
+            </td>
+
+            <td>Transport Services</td>
+            <td>Shipping</td>
+            <td class='r'>—</td>
+            <td class="c">—</td>
+        </tr>
+        
+        <tr class='srow'
+            data-sym="JAGRAN"
+            data-indgrp="Media"
+            data-ind="Print Media"
+            data-close="69.85"
+            data-relvol="117.15"
+            data-rs="60.55">
+
+            <td>
+                <a class='sym-tag'
+                   style="background:var(--blue-bg);border-color:#bfdbfe;color:#1d4ed8"
+                   href='https://www.tradingview.com/chart/?symbol=NSE%3AJAGRAN'
+                   target='_blank'
+                   rel='noopener'>
+                   JAGRAN
+                </a>
+            </td>
+
+            <td class='r'>
+                ₹69.85
+            </td>
+
+            <td class='r'>
+                117.2%
+            </td>
+
+            <td class='c'>
+                <span class='badge'
+                    style='background:var(--blue-bg);
+                           color:var(--blue);
+                           border-color:var(--blue-mid);'>
+                    BLUE PPV
+                </span>
+            </td>
+
+            <td class='c'>
+                -
+            </td>
+
+            <td class='r'>
+                <span class='rs-tag'>
+                    60.6
+                </span>
+            </td>
+
+            <td>Media</td>
+            <td>Print Media</td>
+            <td class='r'>—</td>
+            <td class="c">—</td>
+        </tr>
+        
+        <tr class='srow'
+            data-sym="JAYBARMARU"
+            data-indgrp="Auto Components"
+            data-ind="Auto Components & Equipments"
+            data-close="119.81"
+            data-relvol="110.9"
+            data-rs="94.17">
+
+            <td>
+                <a class='sym-tag'
+                   style="background:var(--blue-bg);border-color:#bfdbfe;color:#1d4ed8"
+                   href='https://www.tradingview.com/chart/?symbol=NSE%3AJAYBARMARU'
+                   target='_blank'
+                   rel='noopener'>
+                   JAYBARMARU
+                </a>
+            </td>
+
+            <td class='r'>
+                ₹119.81
+            </td>
+
+            <td class='r'>
+                110.9%
+            </td>
+
+            <td class='c'>
+                <span class='badge'
+                    style='background:var(--blue-bg);
+                           color:var(--blue);
+                           border-color:var(--blue-mid);'>
+                    BLUE PPV
+                </span>
+            </td>
+
+            <td class='c'>
+                -
+            </td>
+
+            <td class='r'>
+                <span class='rs-tag'>
+                    94.2
+                </span>
+            </td>
+
+            <td>Auto Components</td>
+            <td>Auto Components & Equipments</td>
+            <td class='r'>—</td>
+            <td class="c">—</td>
+        </tr>
+        
+        <tr class='srow'
+            data-sym="KITEX"
+            data-indgrp="Textiles & Apparels"
+            data-ind="Garments & Apparels"
+            data-close="163.07"
+            data-relvol="110.03"
+            data-rs="5.13">
+
+            <td>
+                <a class='sym-tag'
+                   style="background:var(--blue-bg);border-color:#bfdbfe;color:#1d4ed8"
+                   href='https://www.tradingview.com/chart/?symbol=NSE%3AKITEX'
+                   target='_blank'
+                   rel='noopener'>
+                   KITEX
+                </a>
+            </td>
+
+            <td class='r'>
+                ₹163.07
+            </td>
+
+            <td class='r'>
+                110.0%
+            </td>
+
+            <td class='c'>
+                <span class='badge'
+                    style='background:var(--blue-bg);
+                           color:var(--blue);
+                           border-color:var(--blue-mid);'>
+                    BLUE PPV
+                </span>
+            </td>
+
+            <td class='c'>
+                -
+            </td>
+
+            <td class='r'>
+                <span class='rs-tag'>
+                    5.1
+                </span>
+            </td>
+
+            <td>Textiles & Apparels</td>
+            <td>Garments & Apparels</td>
+            <td class='r'>—</td>
+            <td class="c">—</td>
+        </tr>
+        
+        <tr class='srow'
+            data-sym="CARRARO"
+            data-indgrp="Auto Components"
+            data-ind="Auto Components & Equipments"
+            data-close="606.4"
+            data-relvol="104.89"
+            data-rs="87.75">
+
+            <td>
+                <a class='sym-tag'
+                   style="background:var(--blue-bg);border-color:#bfdbfe;color:#1d4ed8"
+                   href='https://www.tradingview.com/chart/?symbol=NSE%3ACARRARO'
+                   target='_blank'
+                   rel='noopener'>
+                   CARRARO
+                </a>
+            </td>
+
+            <td class='r'>
+                ₹606.40
+            </td>
+
+            <td class='r'>
+                104.9%
+            </td>
+
+            <td class='c'>
+                <span class='badge'
+                    style='background:var(--blue-bg);
+                           color:var(--blue);
+                           border-color:var(--blue-mid);'>
+                    BLUE PPV
+                </span>
+            </td>
+
+            <td class='c'>
+                -
+            </td>
+
+            <td class='r'>
+                <span class='rs-tag'>
+                    87.7
+                </span>
+            </td>
+
+            <td>Auto Components</td>
+            <td>Auto Components & Equipments</td>
+            <td class='r'>—</td>
+            <td class="c">—</td>
+        </tr>
+        
+        <tr class='srow'
+            data-sym="EIEL"
+            data-indgrp="Other Utilities"
+            data-ind="Water Supply & Management"
+            data-close="205.0"
+            data-relvol="100.73"
+            data-rs="56.72">
+
+            <td>
+                <a class='sym-tag'
+                   style="background:var(--blue-bg);border-color:#bfdbfe;color:#1d4ed8"
+                   href='https://www.tradingview.com/chart/?symbol=NSE%3AEIEL'
+                   target='_blank'
+                   rel='noopener'>
+                   EIEL
+                </a>
+            </td>
+
+            <td class='r'>
+                ₹205.00
+            </td>
+
+            <td class='r'>
+                100.7%
+            </td>
+
+            <td class='c'>
+                <span class='badge'
+                    style='background:var(--blue-bg);
+                           color:var(--blue);
+                           border-color:var(--blue-mid);'>
+                    BLUE PPV
+                </span>
+            </td>
+
+            <td class='c'>
+                -
+            </td>
+
+            <td class='r'>
+                <span class='rs-tag'>
+                    56.7
+                </span>
+            </td>
+
+            <td>Other Utilities</td>
+            <td>Water Supply & Management</td>
+            <td class='r'>—</td>
+            <td class="c">—</td>
+        </tr>
+        
+        <tr class='srow'
+            data-sym="DREDGECORP"
+            data-indgrp="Engineering Services"
+            data-ind="Dredging"
+            data-close="1083.7"
+            data-relvol="99.38"
+            data-rs="88.72">
+
+            <td>
+                <a class='sym-tag'
+                   style="background:var(--blue-bg);border-color:#bfdbfe;color:#1d4ed8"
+                   href='https://www.tradingview.com/chart/?symbol=NSE%3ADREDGECORP'
+                   target='_blank'
+                   rel='noopener'>
+                   DREDGECORP
+                </a>
+            </td>
+
+            <td class='r'>
+                ₹1,083.70
+            </td>
+
+            <td class='r'>
+                99.4%
+            </td>
+
+            <td class='c'>
+                <span class='badge'
+                    style='background:var(--blue-bg);
+                           color:var(--blue);
+                           border-color:var(--blue-mid);'>
+                    BLUE PPV
+                </span>
+            </td>
+
+            <td class='c'>
+                -
+            </td>
+
+            <td class='r'>
+                <span class='rs-tag'>
+                    88.7
+                </span>
+            </td>
+
+            <td>Engineering Services</td>
+            <td>Dredging</td>
+            <td class='r'>—</td>
+            <td class="c">—</td>
+        </tr>
+        
+        <tr class='srow'
+            data-sym="JWL"
+            data-indgrp="Industrial Manufacturing"
+            data-ind="Railway Wagons"
+            data-close="293.85"
+            data-relvol="95.7"
+            data-rs="22.4">
+
+            <td>
+                <a class='sym-tag'
+                   style="background:var(--blue-bg);border-color:#bfdbfe;color:#1d4ed8"
+                   href='https://www.tradingview.com/chart/?symbol=NSE%3AJWL'
+                   target='_blank'
+                   rel='noopener'>
+                   JWL
+                </a>
+            </td>
+
+            <td class='r'>
+                ₹293.85
+            </td>
+
+            <td class='r'>
+                95.7%
+            </td>
+
+            <td class='c'>
+                <span class='badge'
+                    style='background:var(--blue-bg);
+                           color:var(--blue);
+                           border-color:var(--blue-mid);'>
+                    BLUE PPV
+                </span>
+            </td>
+
+            <td class='c'>
+                -
+            </td>
+
+            <td class='r'>
+                <span class='rs-tag'>
+                    22.4
+                </span>
+            </td>
+
+            <td>Industrial Manufacturing</td>
+            <td>Railway Wagons</td>
+            <td class='r'>—</td>
+            <td class="c">—</td>
+        </tr>
+        
+        <tr class='srow'
+            data-sym="SMCGLOBAL"
+            data-indgrp="Capital Markets"
+            data-ind="Stockbroking & Allied"
+            data-close="62.96"
+            data-relvol="93.53"
+            data-rs="70.43">
+
+            <td>
+                <a class='sym-tag'
+                   style="background:var(--blue-bg);border-color:#bfdbfe;color:#1d4ed8"
+                   href='https://www.tradingview.com/chart/?symbol=NSE%3ASMCGLOBAL'
+                   target='_blank'
+                   rel='noopener'>
+                   SMCGLOBAL
+                </a>
+            </td>
+
+            <td class='r'>
+                ₹62.96
+            </td>
+
+            <td class='r'>
+                93.5%
+            </td>
+
+            <td class='c'>
+                <span class='badge'
+                    style='background:var(--blue-bg);
+                           color:var(--blue);
+                           border-color:var(--blue-mid);'>
+                    BLUE PPV
+                </span>
+            </td>
+
+            <td class='c'>
+                -
+            </td>
+
+            <td class='r'>
+                <span class='rs-tag'>
+                    70.4
+                </span>
+            </td>
+
+            <td>Capital Markets</td>
+            <td>Stockbroking & Allied</td>
+            <td class='r'>—</td>
+            <td class="c">—</td>
+        </tr>
+        
+        <tr class='srow'
+            data-sym="SANGHVIMOV"
+            data-indgrp="Commercial Services & Supplies"
+            data-ind="Diversified Commercial Services"
+            data-close="371.4"
+            data-relvol="89.26"
+            data-rs="73.88">
+
+            <td>
+                <a class='sym-tag'
+                   style="background:var(--blue-bg);border-color:#bfdbfe;color:#1d4ed8"
+                   href='https://www.tradingview.com/chart/?symbol=NSE%3ASANGHVIMOV'
+                   target='_blank'
+                   rel='noopener'>
+                   SANGHVIMOV
+                </a>
+            </td>
+
+            <td class='r'>
+                ₹371.40
+            </td>
+
+            <td class='r'>
+                89.3%
+            </td>
+
+            <td class='c'>
+                <span class='badge'
+                    style='background:var(--blue-bg);
+                           color:var(--blue);
+                           border-color:var(--blue-mid);'>
+                    BLUE PPV
+                </span>
+            </td>
+
+            <td class='c'>
+                -
+            </td>
+
+            <td class='r'>
+                <span class='rs-tag'>
+                    73.9
+                </span>
+            </td>
+
+            <td>Commercial Services & Supplies</td>
+            <td>Diversified Commercial Services</td>
+            <td class='r'>—</td>
+            <td class="c">—</td>
+        </tr>
+        
+        <tr class='srow'
+            data-sym="SUNTECK"
+            data-indgrp="Realty"
+            data-ind="Residential, Commercial Projects"
+            data-close="305.05"
+            data-relvol="70.99"
+            data-rs="22.67">
+
+            <td>
+                <a class='sym-tag'
+                   style="background:var(--blue-bg);border-color:#bfdbfe;color:#1d4ed8"
+                   href='https://www.tradingview.com/chart/?symbol=NSE%3ASUNTECK'
+                   target='_blank'
+                   rel='noopener'>
+                   SUNTECK
+                </a>
+            </td>
+
+            <td class='r'>
+                ₹305.05
+            </td>
+
+            <td class='r'>
+                71.0%
+            </td>
+
+            <td class='c'>
+                <span class='badge'
+                    style='background:var(--blue-bg);
+                           color:var(--blue);
+                           border-color:var(--blue-mid);'>
+                    BLUE PPV
+                </span>
+            </td>
+
+            <td class='c'>
+                -
+            </td>
+
+            <td class='r'>
+                <span class='rs-tag'>
+                    22.7
+                </span>
+            </td>
+
+            <td>Realty</td>
+            <td>Residential, Commercial Projects</td>
+            <td class='r'>—</td>
+            <td class="c">—</td>
+        </tr>
+        
+        <tr class='srow'
+            data-sym="IXIGO"
+            data-indgrp="Leisure Services"
+            data-ind="Tour, Travel Related Services"
+            data-close="175.15"
+            data-relvol="69.2"
+            data-rs="61.25">
+
+            <td>
+                <a class='sym-tag'
+                   style="background:var(--blue-bg);border-color:#bfdbfe;color:#1d4ed8"
+                   href='https://www.tradingview.com/chart/?symbol=NSE%3AIXIGO'
+                   target='_blank'
+                   rel='noopener'>
+                   IXIGO
+                </a>
+            </td>
+
+            <td class='r'>
+                ₹175.15
+            </td>
+
+            <td class='r'>
+                69.2%
+            </td>
+
+            <td class='c'>
+                <span class='badge'
+                    style='background:var(--blue-bg);
+                           color:var(--blue);
+                           border-color:var(--blue-mid);'>
+                    BLUE PPV
+                </span>
+            </td>
+
+            <td class='c'>
+                -
+            </td>
+
+            <td class='r'>
+                <span class='rs-tag'>
+                    61.3
+                </span>
+            </td>
+
+            <td>Leisure Services</td>
+            <td>Tour, Travel Related Services</td>
+            <td class='r'>—</td>
+            <td class="c">—</td>
+        </tr>
+        
+        <tr class='srow'
+            data-sym="FINPIPE"
+            data-indgrp="Industrial Products"
+            data-ind="Plastic Products - Industrial"
+            data-close="176.94"
+            data-relvol="51.83"
+            data-rs="51.54">
+
+            <td>
+                <a class='sym-tag'
+                   style="background:var(--blue-bg);border-color:#bfdbfe;color:#1d4ed8"
+                   href='https://www.tradingview.com/chart/?symbol=NSE%3AFINPIPE'
+                   target='_blank'
+                   rel='noopener'>
+                   FINPIPE
+                </a>
+            </td>
+
+            <td class='r'>
+                ₹176.94
+            </td>
+
+            <td class='r'>
+                51.8%
+            </td>
+
+            <td class='c'>
+                <span class='badge'
+                    style='background:var(--blue-bg);
+                           color:var(--blue);
+                           border-color:var(--blue-mid);'>
+                    BLUE PPV
+                </span>
+            </td>
+
+            <td class='c'>
+                -
+            </td>
+
+            <td class='r'>
+                <span class='rs-tag'>
+                    51.5
+                </span>
+            </td>
+
+            <td>Industrial Products</td>
+            <td>Plastic Products - Industrial</td>
+            <td class='r'>—</td>
+            <td class="c">—</td>
+        </tr>
+        
+        <tr class='srow'
+            data-sym="KECL"
+            data-indgrp="Electrical Equipment"
+            data-ind="Other Electrical Equipment"
+            data-close="125.66"
+            data-relvol="50.44"
+            data-rs="53.97">
+
+            <td>
+                <a class='sym-tag'
+                   style="background:var(--blue-bg);border-color:#bfdbfe;color:#1d4ed8"
+                   href='https://www.tradingview.com/chart/?symbol=NSE%3AKECL'
+                   target='_blank'
+                   rel='noopener'>
+                   KECL
+                </a>
+            </td>
+
+            <td class='r'>
+                ₹125.66
+            </td>
+
+            <td class='r'>
+                50.4%
+            </td>
+
+            <td class='c'>
+                <span class='badge'
+                    style='background:var(--blue-bg);
+                           color:var(--blue);
+                           border-color:var(--blue-mid);'>
+                    BLUE PPV
+                </span>
+            </td>
+
+            <td class='c'>
+                -
+            </td>
+
+            <td class='r'>
+                <span class='rs-tag'>
+                    54.0
+                </span>
+            </td>
+
+            <td>Electrical Equipment</td>
+            <td>Other Electrical Equipment</td>
+            <td class='r'>—</td>
+            <td class="c">—</td>
+        </tr>
+        
+        <tr class='srow'
+            data-sym="UNIVPHOTO"
+            data-indgrp="Consumer Durables"
+            data-ind="Consumer Electronics"
+            data-close="431.4"
+            data-relvol="0.71"
+            data-rs="94.77">
+
+            <td>
+                <a class='sym-tag'
+                   style="background:var(--blue-bg);border-color:#bfdbfe;color:#1d4ed8"
+                   href='https://www.tradingview.com/chart/?symbol=NSE%3AUNIVPHOTO'
+                   target='_blank'
+                   rel='noopener'>
+                   UNIVPHOTO
+                </a>
+            </td>
+
+            <td class='r'>
+                ₹431.40
+            </td>
+
+            <td class='r'>
+                0.7%
+            </td>
+
+            <td class='c'>
+                <span class='badge'
+                    style='background:var(--blue-bg);
+                           color:var(--blue);
+                           border-color:var(--blue-mid);'>
+                    BLUE PPV
+                </span>
+            </td>
+
+            <td class='c'>
+                -
+            </td>
+
+            <td class='r'>
+                <span class='rs-tag'>
+                    94.8
+                </span>
+            </td>
+
+            <td>Consumer Durables</td>
+            <td>Consumer Electronics</td>
+            <td class='r'>—</td>
+            <td class="c">—</td>
+        </tr>
+        
+        <tr class='srow'
+            data-sym="HEALTHX"
+            data-indgrp="Healthcare Services"
+            data-ind="Healthcare Service Provider"
+            data-close="null"
+            data-relvol="null"
+            data-rs="null">
+
+            <td>
+                <a class='sym-tag'
+                   style="background:var(--blue-bg);border-color:#bfdbfe;color:#1d4ed8"
+                   href='https://www.tradingview.com/chart/?symbol=NSE%3AHEALTHX'
+                   target='_blank'
+                   rel='noopener'>
+                   HEALTHX
+                </a>
+            </td>
+
+            <td class='r'>
+                N/A
+            </td>
+
+            <td class='r'>
+                N/A
+            </td>
+
+            <td class='c'>
+                <span class='badge'
+                    style='background:var(--blue-bg);
+                           color:var(--blue);
+                           border-color:var(--blue-mid);'>
+                    BLUE PPV
+                </span>
+            </td>
+
+            <td class='c'>
+                -
+            </td>
+
+            <td class='r'>
+                <span class='rs-tag'>
+                    N/A
+                </span>
+            </td>
+
+            <td>Healthcare Services</td>
+            <td>Healthcare Service Provider</td>
+            <td class='r'>—</td>
+            <td class="c">—</td>
+        </tr>
+        
+        <tr class='srow'
+            data-sym="COCKERILL"
+            data-indgrp="Industrial Manufacturing"
+            data-ind="Industrial Products"
+            data-close="null"
+            data-relvol="null"
+            data-rs="null">
+
+            <td>
+                <a class='sym-tag'
+                   style="background:var(--blue-bg);border-color:#bfdbfe;color:#1d4ed8"
+                   href='https://www.tradingview.com/chart/?symbol=NSE%3ACOCKERILL'
+                   target='_blank'
+                   rel='noopener'>
+                   COCKERILL
+                </a>
+            </td>
+
+            <td class='r'>
+                N/A
+            </td>
+
+            <td class='r'>
+                N/A
+            </td>
+
+            <td class='c'>
+                <span class='badge'
+                    style='background:var(--blue-bg);
+                           color:var(--blue);
+                           border-color:var(--blue-mid);'>
+                    BLUE PPV
+                </span>
+            </td>
+
+            <td class='c'>
+                -
+            </td>
+
+            <td class='r'>
+                <span class='rs-tag'>
+                    N/A
+                </span>
+            </td>
+
+            <td>Industrial Manufacturing</td>
+            <td>Industrial Products</td>
+            <td class='r'>—</td>
+            <td class="c">—</td>
+        </tr>
+        
+        <tr class='srow'
+            data-sym="NITTAGELA"
+            data-indgrp="Chemicals & Petrochemicals"
+            data-ind="Specialty Chemicals"
+            data-close="null"
+            data-relvol="null"
+            data-rs="null">
+
+            <td>
+                <a class='sym-tag'
+                   style="background:var(--blue-bg);border-color:#bfdbfe;color:#1d4ed8"
+                   href='https://www.tradingview.com/chart/?symbol=NSE%3ANITTAGELA'
+                   target='_blank'
+                   rel='noopener'>
+                   NITTAGELA
+                </a>
+            </td>
+
+            <td class='r'>
+                N/A
+            </td>
+
+            <td class='r'>
+                N/A
+            </td>
+
+            <td class='c'>
+                <span class='badge'
+                    style='background:var(--blue-bg);
+                           color:var(--blue);
+                           border-color:var(--blue-mid);'>
+                    BLUE PPV
+                </span>
+            </td>
+
+            <td class='c'>
+                -
+            </td>
+
+            <td class='r'>
+                <span class='rs-tag'>
+                    N/A
+                </span>
+            </td>
+
+            <td>Chemicals & Petrochemicals</td>
+            <td>Specialty Chemicals</td>
+            <td class='r'>—</td>
+            <td class="c">—</td>
+        </tr>
+        
+        <tr class='srow'
+            data-sym="SINGERIND"
+            data-indgrp="Consumer Durables"
+            data-ind="Household Appliances"
+            data-close="null"
+            data-relvol="null"
+            data-rs="null">
+
+            <td>
+                <a class='sym-tag'
+                   style="background:var(--blue-bg);border-color:#bfdbfe;color:#1d4ed8"
+                   href='https://www.tradingview.com/chart/?symbol=NSE%3ASINGERIND'
+                   target='_blank'
+                   rel='noopener'>
+                   SINGERIND
+                </a>
+            </td>
+
+            <td class='r'>
+                N/A
+            </td>
+
+            <td class='r'>
+                N/A
+            </td>
+
+            <td class='c'>
+                <span class='badge'
+                    style='background:var(--blue-bg);
+                           color:var(--blue);
+                           border-color:var(--blue-mid);'>
+                    BLUE PPV
+                </span>
+            </td>
+
+            <td class='c'>
+                -
+            </td>
+
+            <td class='r'>
+                <span class='rs-tag'>
+                    N/A
+                </span>
+            </td>
+
+            <td>Consumer Durables</td>
+            <td>Household Appliances</td>
+            <td class='r'>—</td>
+            <td class="c">—</td>
+        </tr>
+        
+        <tr class='srow'
+            data-sym="KPL"
+            data-indgrp="Pharmaceuticals & Biotechnology"
+            data-ind="Pharmaceuticals"
+            data-close="null"
+            data-relvol="null"
+            data-rs="null">
+
+            <td>
+                <a class='sym-tag'
+                   style="background:var(--blue-bg);border-color:#bfdbfe;color:#1d4ed8"
+                   href='https://www.tradingview.com/chart/?symbol=NSE%3AKPL'
+                   target='_blank'
+                   rel='noopener'>
+                   KPL
+                </a>
+            </td>
+
+            <td class='r'>
+                N/A
+            </td>
+
+            <td class='r'>
+                N/A
+            </td>
+
+            <td class='c'>
+                <span class='badge'
+                    style='background:var(--blue-bg);
+                           color:var(--blue);
+                           border-color:var(--blue-mid);'>
+                    BLUE PPV
+                </span>
+            </td>
+
+            <td class='c'>
+                -
+            </td>
+
+            <td class='r'>
+                <span class='rs-tag'>
+                    N/A
+                </span>
+            </td>
+
+            <td>Pharmaceuticals & Biotechnology</td>
+            <td>Pharmaceuticals</td>
+            <td class='r'>—</td>
+            <td class="c">—</td>
+        </tr>
+        
+        <tr class='srow'
+            data-sym="HALDYNGL"
+            data-indgrp="Industrial Products"
+            data-ind="Packaging"
+            data-close="null"
+            data-relvol="null"
+            data-rs="null">
+
+            <td>
+                <a class='sym-tag'
+                   style="background:var(--blue-bg);border-color:#bfdbfe;color:#1d4ed8"
+                   href='https://www.tradingview.com/chart/?symbol=NSE%3AHALDYNGL'
+                   target='_blank'
+                   rel='noopener'>
+                   HALDYNGL
+                </a>
+            </td>
+
+            <td class='r'>
+                N/A
+            </td>
+
+            <td class='r'>
+                N/A
+            </td>
+
+            <td class='c'>
+                <span class='badge'
+                    style='background:var(--blue-bg);
+                           color:var(--blue);
+                           border-color:var(--blue-mid);'>
+                    BLUE PPV
+                </span>
+            </td>
+
+            <td class='c'>
+                -
+            </td>
+
+            <td class='r'>
+                <span class='rs-tag'>
+                    N/A
+                </span>
+            </td>
+
+            <td>Industrial Products</td>
+            <td>Packaging</td>
+            <td class='r'>—</td>
+            <td class="c">—</td>
+        </tr>
+        
+        <tr class='srow'
+            data-sym="SAIPARENT"
+            data-indgrp="Pharmaceuticals & Biotechnology"
+            data-ind="Pharmaceuticals"
+            data-close="null"
+            data-relvol="null"
+            data-rs="null">
+
+            <td>
+                <a class='sym-tag'
+                   style="background:var(--blue-bg);border-color:#bfdbfe;color:#1d4ed8"
+                   href='https://www.tradingview.com/chart/?symbol=NSE%3ASAIPARENT'
+                   target='_blank'
+                   rel='noopener'>
+                   SAIPARENT
+                </a>
+            </td>
+
+            <td class='r'>
+                N/A
+            </td>
+
+            <td class='r'>
+                N/A
+            </td>
+
+            <td class='c'>
+                <span class='badge'
+                    style='background:var(--blue-bg);
+                           color:var(--blue);
+                           border-color:var(--blue-mid);'>
+                    BLUE PPV
+                </span>
+            </td>
+
+            <td class='c'>
+                -
+            </td>
+
+            <td class='r'>
+                <span class='rs-tag'>
+                    N/A
+                </span>
+            </td>
+
+            <td>Pharmaceuticals & Biotechnology</td>
+            <td>Pharmaceuticals</td>
+            <td class='r'>—</td>
+            <td class="c">—</td>
+        </tr>
+        
+        <tr class='srow'
+            data-sym="MAJESAUT"
+            data-indgrp="Commercial Services & Supplies"
+            data-ind="Diversified Commercial Services"
+            data-close="null"
+            data-relvol="null"
+            data-rs="null">
+
+            <td>
+                <a class='sym-tag'
+                   style="background:var(--blue-bg);border-color:#bfdbfe;color:#1d4ed8"
+                   href='https://www.tradingview.com/chart/?symbol=NSE%3AMAJESAUT'
+                   target='_blank'
+                   rel='noopener'>
+                   MAJESAUT
+                </a>
+            </td>
+
+            <td class='r'>
+                N/A
+            </td>
+
+            <td class='r'>
+                N/A
+            </td>
+
+            <td class='c'>
+                <span class='badge'
+                    style='background:var(--blue-bg);
+                           color:var(--blue);
+                           border-color:var(--blue-mid);'>
+                    BLUE PPV
+                </span>
+            </td>
+
+            <td class='c'>
+                -
+            </td>
+
+            <td class='r'>
+                <span class='rs-tag'>
+                    N/A
+                </span>
+            </td>
+
+            <td>Commercial Services & Supplies</td>
+            <td>Diversified Commercial Services</td>
+            <td class='r'>—</td>
+            <td class="c">—</td>
+        </tr>
+        
+      </tbody>
+
+    </table>
+
+  </div>
+</div>
+
+<footer>
+  Data from NSE India &nbsp;·&nbsp;
+  Generated 25 May 2026
+</footer>
+
+<script>
+
+function filterRows() {
+  const q = document.getElementById('searchInput').value.toLowerCase();
+  document.querySelectorAll('#tableBody .srow').forEach(r => {
+    const sym    = (r.dataset.sym    || '').toLowerCase();
+    const indgrp = (r.dataset.indgrp || '').toLowerCase();
+    const ind    = (r.dataset.ind    || '').toLowerCase();
+    r.style.display = (sym.includes(q) || indgrp.includes(q) || ind.includes(q)) ? '' : 'none';
+  });
+}
+
+
+let sortCol = null, sortAsc = true;
+document.querySelectorAll('#mainTable thead th').forEach(th => {
+  th.addEventListener('click', () => {
+    const col  = th.dataset.col;
+    const type = th.dataset.type;
+    if (!col) return;
+    sortAsc = (sortCol === col) ? !sortAsc : true;
+    sortCol = col;
+    document.querySelectorAll('#mainTable thead th')
+      .forEach(h => h.classList.remove('sort-asc','sort-desc'));
+    th.classList.add(sortAsc ? 'sort-asc' : 'sort-desc');
+    const tbody = document.getElementById('tableBody');
+    Array.from(tbody.querySelectorAll('.srow'))
+      .sort((a, b) => {
+        let av = a.dataset[col], bv = b.dataset[col];
+        if (type === 'num') {
+          av = parseFloat(av); bv = parseFloat(bv);
+          if (isNaN(av)) av = -Infinity;
+          if (isNaN(bv)) bv = -Infinity;
+          return sortAsc ? av - bv : bv - av;
+        }
+        return sortAsc ? av.localeCompare(bv) : bv.localeCompare(av);
+      })
+      .forEach(r => tbody.appendChild(r));
+  });
+});
+
+</script>
+
+</body>
+</html>
