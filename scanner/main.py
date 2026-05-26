@@ -111,10 +111,10 @@ def run() -> None:
     volume_action.to_csv(volume_action_path, index=False)
 
     # ── 8b. Rocket Stocks (passing + inside bar) ──────────────────────────────
-    rocket = passing[passing["inside_bar"] == True].copy() 
-    
-    if "inside_bar" in passing.columns: 
-      else pd.DataFrame()
+    if "inside_bar" in passing.columns:
+        rocket = passing[passing["inside_bar"] == True].copy()
+    else:
+        rocket = pd.DataFrame()
     rocket_path = out_dir / f"rocket_stocks_{today_str}.csv"
     rocket.to_csv(rocket_path, index=False)
     logger.info("Rocket stocks (%d) → %s", len(rocket), rocket_path)
