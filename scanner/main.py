@@ -22,7 +22,7 @@ import pandas as pd
 from .config     import DOCS_DIR
 from .data_loader import download_all, load_symbols
 from .nse_client  import enrich_with_market_caps
-from .dashboard   import build_passing_dashboard, build_passing_ema10_dashboard, build_volume_action_dashboard
+from .dashboard   import build_passing_dashboard, build_passing_ema10_dashboard, build_volume_action_dashboard, build_rocket_dashboard
 from .result_calendar import get_result_date
 
 # ── Logging ───────────────────────────────────────────────────────────────────
@@ -110,6 +110,14 @@ def run() -> None:
     volume_action_path = out_dir / f"volume_action_{today_str}.csv"
     volume_action.to_csv(volume_action_path, index=False)
 
+    # ── 8b. Rocket Stocks (passing + inside bar) ──────────────────────────────
+    rocket = passing[passing["inside_bar"] == True].copy() 
+    
+    if "inside_bar" in passing.columns else pd.DataFrame()
+    rocket_path = out_dir / f"rocket_stocks_{today_str}.csv"
+    rocket.to_csv(rocket_path, index=False)
+    logger.info("Rocket stocks (%d) → %s", len(rocket), rocket_path)
+
   
 
     # ── 9. HTML Dashboards ────────────────────────────────────────────────────
@@ -119,7 +127,13 @@ def run() -> None:
             out_dir / f"dashboard_{today_str}.html",
             today_str,
         )
-
+        # ── Rocket Stocks dashboard ──
+        build_rocket_dashboard(
+            passing,
+            out_dir / f"rocket_dashboard_{today_str}.html",
+            today_str,
+        )
+      
     if not passing_ema10.empty:
         # ── Collect historical elite-stock data from past dated folders ───────
         history: list[dict] = []
@@ -211,6 +225,7 @@ def _update_index(today_str: str, out_dir: Path, n_passing: int, n_elite: int) -
           <td><a href="{passing_link}" class="btn-link">📊 Momentum Stocks</a></td>
           <td><a href="{elite_link}"   class="btn-link green">⚡ Elite Stocks</a></td>
           <td><a href="{d.name}/volume_dashboard_{slug}.html" class="btn-link">🔵 Volume Action</a></td>
+          <td><a href="{d.name}/rocket_dashboard_{slug}.html" class="btn-link" style="background:#fff7ed;border-color:#fdba74;color:#c2410c">🚀 Rocket Stocks</a></td>
         </tr>"""
     
     html = f"""<!DOCTYPE html>
@@ -273,6 +288,7 @@ def _update_index(today_str: str, out_dir: Path, n_passing: int, n_elite: int) -
         <th>Minervini Trend Template Stocks</th>
         <th>Minervini Trend Template Stocks (Above EMA10)</th>
         <th>Volume Action Stocks</th>
+        <th>Rocket Stocks</th>
       </tr>
     </thead>
     <tbody>{rows}</tbody>
