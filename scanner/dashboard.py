@@ -20,6 +20,7 @@ import numpy as np
 import pandas as pd
 
 from .utils import fmt_cr
+from scanner.journal_section.py import build_journal_html
 
 logger = logging.getLogger(__name__)
 
