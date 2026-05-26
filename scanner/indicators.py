@@ -30,6 +30,7 @@ def add_indicators(df: pd.DataFrame) -> pd.DataFrame:
     df["EMA10"]  = df["Close"].ewm(span=EMA10_WINDOW, adjust=False).mean()
     df["52w_low"]  = df["Low"].rolling(window=RS_LOOKBACK).min()
     df["52w_high"] = df["High"].rolling(window=RS_LOOKBACK).max()
+    df["inside_bar"] = (df["High"] < df["High"].shift(1)) & (df["Low"] > df["Low"].shift(1))  # ← ADD THIS
     return df
 
 
