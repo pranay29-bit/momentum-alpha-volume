@@ -867,3 +867,158 @@ def build_volume_action_dashboard(
     out_path.write_text(html, encoding='utf-8')
 
     logger.info("Volume action dashboard → %s", out_path)
+# ─────────────────────────────────────────────────────────────────────────────
+#  ROCKET DASHBOARD  (all 8 conditions + Inside Bar on latest close)
+# ─────────────────────────────────────────────────────────────────────────────
+
+def build_rocket_dashboard(
+    passing: pd.DataFrame,
+    out_path: Path,
+    date_str: str,
+) -> None:
+    """Rocket Stocks: passing all 8 Minervini conditions AND forming an Inside Bar."""
+
+    date_display = datetime.strptime(date_str, "%Y%m%d").strftime("%d %b %Y")
+
+    rocket = passing[passing["inside_bar"] == True].copy() \
+             if "inside_bar" in passing.columns else pd.DataFrame()
+
+    n_rocket  = len(rocket)
+    n_passing = len(passing)
+
+    rows_html = ""
+
+    if n_rocket == 0:
+        rows_html = """
+        <tr><td colspan="9" style="text-align:center;padding:60px;color:var(--muted)">
+          No Rocket Stocks today — no inside bars found among passing stocks.
+        </td></tr>"""
+    else:
+        for _, row in rocket.sort_values("rs_percentile", ascending=False).iterrows():
+            sym      = str(row.get("symbol", "")).replace(".NS", "")
+            link     = _tv_link(row.get("symbol", sym))
+            close    = row.get("close",  np.nan)
+            ema10    = row.get("EMA10",  np.nan)
+            rs       = row.get("rs_percentile", np.nan)
+            tmc      = row.get("total_market_cap_cr", np.nan)
+            tv       = row.get("traded_value_cr", np.nan)
+            hi52_pct = row.get("pct_from_52w_high", np.nan)
+            lo52_pct = row.get("pct_above_52w_low", np.nan)
+            ind_grp  = str(row.get("industry_group", "")) or "—"
+            industry = str(row.get("industry", ""))       or "—"
+
+            close_s  = f"₹{float(close):,.2f}" if _safe(close) else "N/A"
+            ema10_s  = f"₹{float(ema10):,.2f}" if _safe(ema10) else "N/A"
+            rs_s     = f"{float(rs):.1f}"       if _safe(rs)    else "N/A"
+            tmc_s    = fmt_cr(tmc)
+            tv_s     = fmt_cr(tv)
+
+            # % from 52w high / above 52w low — compute on the fly if not pre-enriched
+            if not _safe(hi52_pct) and _safe(close) and _safe(row.get("52w_high")):
+                hi52_pct = (float(close) / float(row["52w_high"]) - 1) * 100
+            if not _safe(lo52_pct) and _safe(close) and _safe(row.get("52w_low")):
+                lo52_pct = (float(close) / float(row["52w_low"]) - 1) * 100
+
+            hi52_s = f"{float(hi52_pct):+.1f}%" if _safe(hi52_pct) else "N/A"
+            lo52_s = f"{float(lo52_pct):+.1f}%" if _safe(lo52_pct) else "N/A"
+
+            rows_html += f"""
+            <tr class="srow"
+              data-sym="{sym}" data-close="{_r(close)}" data-rs="{_r(rs)}"
+              data-ema10="{_r(ema10)}" data-tmc="{_r(tmc)}" data-tv="{_r(tv)}"
+              data-indgrp="{ind_grp}" data-ind="{industry}">
+              <td>
+                <a class="sym-tag"
+                   style="background:#fff7ed;border-color:#fdba74;color:#c2410c"
+                   href="{link}" target="_blank" rel="noopener">{sym}</a>
+                <span style="font-size:.62rem;background:rgba(249,115,22,.15);
+                             border:1px solid #f97316;color:#f97316;padding:1px 5px;
+                             border-radius:3px;font-weight:700;margin-left:5px">IB</span>
+              </td>
+              <td class="r">{close_s}</td>
+              <td class="r"><span class="ema-tag"
+                   style="background:#f0fdf4;border-color:#86efac;color:#059669">{ema10_s}</span></td>
+              <td class="r"><span class="rs-tag">{rs_s}</span></td>
+              <td class="r" style="color:#15803d;font-weight:600">{lo52_s}</td>
+              <td class="r" style="color:#b45309;font-weight:600">{hi52_s}</td>
+              <td class="r">{tmc_s}</td>
+              <td class="r">{tv_s}</td>
+              <td>{ind_grp}</td>
+            </tr>"""
+
+    html = _html_head(f"🚀 Rocket Stocks — {date_display}")
+    html += f"""
+<header>
+  <div>
+    <div class="logo-line">
+      <div class="logo-dot" style="background:#f97316"></div>
+      <span class="logo-tag" style="color:#f97316">Momentum Alpha · Rocket Stocks</span>
+    </div>
+    <h1>🚀 Rocket Stocks</h1>
+    <p class="sub">All 8 Minervini conditions met &plus; Inside Bar on latest close · NSE data</p>
+    <div class="badge-row">
+      <span class="badge" style="background:#fff7ed;border-color:#fdba74;color:#c2410c">✓ All 8 Minervini Conditions</span>
+      <span class="badge" style="background:#fff7ed;border-color:#f97316;color:#f97316">✓ Inside Bar</span>
+    </div>
+  </div>
+  <div class="date-chip" style="background:#fff7ed;border-color:#fdba74;color:#c2410c">{date_display}</div>
+</header>
+
+<div class="kpi-row">
+  <div class="kpi amber"><div class="kpi-accent"></div>
+    <div class="kpi-label">Rocket Stocks</div>
+    <div class="kpi-val">{n_rocket}</div>
+  </div>
+  <div class="kpi blue"><div class="kpi-accent"></div>
+    <div class="kpi-label">Total Passing Stocks</div>
+    <div class="kpi-val">{n_passing}</div>
+  </div>
+  <div class="kpi green"><div class="kpi-accent"></div>
+    <div class="kpi-label">Inside Bar Hit Rate</div>
+    <div class="kpi-val">{100*n_rocket/n_passing:.1f}%</div>
+  </div>
+</div>
+
+<div style="padding:.75rem 3rem 0;font-size:.78rem;color:var(--muted)">
+  <strong style="color:#f97316">Inside Bar:</strong>
+  Today's high &lt; yesterday's high <strong>AND</strong> today's low &gt; yesterday's low —
+  price compression inside a strong uptrend. A potential coiling setup before breakout.
+</div>
+
+<div class="table-section">
+  <div class="sec-head">
+    <span class="sec-title">Rocket Stocks ({n_rocket})</span>
+    <div class="controls">
+      <input class="search-input" id="searchInput" type="text"
+             placeholder="Search symbol / industry…" oninput="filterRows()"/>
+    </div>
+  </div>
+  <div class="tbl-wrap">
+    <table id="mainTable">
+      <thead><tr>
+        <th data-col="sym"   data-type="str">Symbol<i class="si"></i></th>
+        <th class="r" data-col="close" data-type="num">Close ₹<i class="si"></i></th>
+        <th class="r" data-col="ema10" data-type="num">EMA10 ₹<i class="si"></i></th>
+        <th class="r" data-col="rs"    data-type="num">RS %ile<i class="si"></i></th>
+        <th class="r">% above 52W Low</th>
+        <th class="r">% from 52W High</th>
+        <th class="r" data-col="tmc"   data-type="num">Mkt Cap<i class="si"></i></th>
+        <th class="r" data-col="tv"    data-type="num">Traded Value<i class="si"></i></th>
+        <th data-col="indgrp" data-type="str">Industry Group<i class="si"></i></th>
+      </tr></thead>
+      <tbody id="tableBody">{rows_html}</tbody>
+    </table>
+  </div>
+</div>
+
+<footer>Data from NSE India &nbsp;·&nbsp; Generated {date_display}
+  &nbsp;·&nbsp; For informational purposes only &nbsp;·&nbsp; Not financial advice</footer>
+
+<script>
+{_FILTER_JS}
+{_TABLE_SORT_JS}
+</script>
+</body></html>"""
+
+    out_path.write_text(html, encoding="utf-8")
+    logger.info("Rocket dashboard → %s  (%d stocks)", out_path, n_rocket)
