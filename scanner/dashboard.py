@@ -20,7 +20,7 @@ import numpy as np
 import pandas as pd
 
 from .utils import fmt_cr
-from scanner.journal_section.py import build_journal_html
+from .journal_section import build_journal_html
 
 logger = logging.getLogger(__name__)
 
@@ -45,6 +45,98 @@ def _r(v, n=2):
 def _tv_link(symbol_ns: str) -> str:
     sym = symbol_ns.replace(".NS", "").strip()
     return f"https://www.tradingview.com/chart/?symbol=NSE%3A{sym}"
+
+def build_main_index(
+    passing_path="passing_dashboard.html",
+    elite_path="elite_dashboard.html",
+    volume_path="volume_action_dashboard.html",
+    rocket_path="rocket_dashboard.html",
+    out_path="index.html"
+):
+    html = f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <meta charset="utf-8">
+        <title>Momentum Alpha Dashboard</title>
+
+        <style>
+            body {{
+                font-family: Arial, sans-serif;
+                background: #0f172a;
+                color: white;
+                padding: 40px;
+            }}
+
+            h1 {{
+                margin-bottom: 30px;
+            }}
+
+            .grid {{
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+                gap: 20px;
+            }}
+
+            .card {{
+                background: #1e293b;
+                padding: 24px;
+                border-radius: 12px;
+                border: 1px solid #334155;
+            }}
+
+            .card h2 {{
+                margin-top: 0;
+                color: #60a5fa;
+            }}
+
+            .card a {{
+                display: inline-block;
+                margin-top: 15px;
+                padding: 10px 14px;
+                background: #2563eb;
+                color: white;
+                border-radius: 8px;
+                text-decoration: none;
+            }}
+        </style>
+    </head>
+
+    <body>
+
+        <h1>Momentum Alpha Dashboards</h1>
+
+        <div class="grid">
+
+            <div class="card">
+                <h2>Passing Stocks</h2>
+                <a href="{passing_path}">Open Dashboard</a>
+            </div>
+
+            <div class="card">
+                <h2>Elite EMA10</h2>
+                <a href="{elite_path}">Open Dashboard</a>
+            </div>
+
+            <div class="card">
+                <h2>Volume Action</h2>
+                <a href="{volume_path}">Open Dashboard</a>
+            </div>
+
+            <div class="card">
+                <h2>Rocket Stocks</h2>
+                <a href="{rocket_path}">Open Dashboard</a>
+            </div>
+
+        </div>
+
+    </body>
+    </html>
+    """
+
+    Path(out_path).write_text(html, encoding="utf-8")
+
+    logger.info("Main index page → %s", out_path)
 
 
 # ── Shared CSS / Chart.js CDN ─────────────────────────────────────────────────
