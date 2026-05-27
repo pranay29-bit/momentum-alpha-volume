@@ -19,7 +19,7 @@ from .config import (
     CSV_PATH, SYMBOL_COLUMN, EXCHANGE_SUFFIX,
     PERIOD, INTERVAL, BATCH_SIZE,
 )
-from .indicators import add_indicators, evaluate_trend_template, compute_12m_return, compute_volume_action
+from .indicators import add_indicators, evaluate_trend_template, compute_12m_return, compute_volume_action, is_inside_candle
 
 logger = logging.getLogger(__name__)
 
@@ -77,6 +77,7 @@ def _process_symbol(sym: str, data: pd.DataFrame, is_multi: bool) -> dict | None
         tpl      = evaluate_trend_template(df_sym)
         rs_ret   = compute_12m_return(df_sym)
         vol_data = compute_volume_action(df_sym)
+        inside_bar = is_inside_candle(df_sym)  
 
         return {
             "symbol":  sym,
@@ -99,6 +100,7 @@ def _process_symbol(sym: str, data: pd.DataFrame, is_multi: bool) -> dict | None
             "volume_signal":  vol_data["volume_signal"],
             "relative_volume": vol_data["relative_volume"],
             "bull_snort":     vol_data["bull_snort"],
+            "inside_bar":     inside_bar,
         }
     except Exception as exc:
         logger.error("Error processing %s: %r", sym, exc)
