@@ -63,6 +63,17 @@ def compute_12m_return(df: pd.DataFrame) -> float:
         return np.nan
     return (latest / past - 1.0) * 100.0
 
+def is_inside_candle(df: pd.DataFrame) -> bool:
+    """
+    Returns True if the latest bar is an inside candle
+    (its high/low range is fully contained within the prior bar's range).
+    """
+    if len(df) < 2:
+        return False
+    curr = df.iloc[-1]
+    prev = df.iloc[-2]
+    return bool((curr["High"] < prev["High"]) and (curr["Low"] > prev["Low"]))
+
 
 # ── Minervini Trend Template ──────────────────────────────────────────────────
 
