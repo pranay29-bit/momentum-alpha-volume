@@ -282,25 +282,7 @@ def _update_index(today_str: str, out_dir: Path, n_passing: int, n_elite: int) -
   <h1>NSE Trend Scanner</h1>
   <p>Daily Minervini trend-template scans \u00b7 Free-float &amp; liquidity data \u00b7 NSE India</p>
 </header>
-<div class="container">
-  <!-- JOURNAL WIDGET: reads data/journal.csv live from GitHub raw -->
-  <div class="journal-card" id="journal">
-    <div class="journal-top">
-      <div class="journal-title-block">
-        <span class="section-eyebrow">\U0001f4d2 Trading Journal</span>
-        <h2>Position Sizing &amp; Trade Log</h2>
-      </div>
-      <div class="journal-kpis" id="kpi-area"></div>
-    </div>
-    <div class="journal-scroll">
-      <table class="journal-table" id="journal-table">
-        <thead id="journal-thead"></thead>
-        <tbody id="journal-tbody">
-          <tr class="empty-row"><td colspan="9">Loading journal\u2026</td></tr>
-        </tbody>
-      </table>
-    </div>
-  </div>
+
 
   <h2 class="section-title">Scan History</h2>
   <table class="history-table">
@@ -321,52 +303,6 @@ def _update_index(today_str: str, out_dir: Path, n_passing: int, n_elite: int) -
   Updated daily at 18:00 IST &nbsp;\u00b7&nbsp;
   For informational purposes only \u2014 not financial advice
 </footer>
-<script>
-(async () => {{
-  const JOURNAL_URL = "{journal_raw_url}";
-  function fmt(v) {{ return (!v || v.trim() === "" || v.toLowerCase() === "nan") ? "\u2014" : v.trim(); }}
-  try {{
-    const res = await fetch(JOURNAL_URL);
-    if (!res.ok) throw new Error("HTTP " + res.status);
-    const text = await res.text();
-    const rows = text.trim().split("\\n").map(l => l.split(",").map(c => c.trim()));
-    // Row 0 col 2 = Portfolio Size, Row 1 col 2 = Risk per Trade
-    const portfolioRaw = (rows[0] && rows[0][2]) ? rows[0][2] : "";
-    const riskRaw      = (rows[1] && rows[1][2]) ? rows[1][2] : "";
-    const num = parseFloat(portfolioRaw.replace(/[^0-9.]/g, ""));
-    const portfolioFmt = isNaN(num) ? (portfolioRaw || "\u2014") : "\u20b9" + num.toLocaleString("en-IN");
-    document.getElementById("kpi-area").innerHTML =
-      `<div class="kpi-pill"><span class="kpi-label">Portfolio Size</span><span class="kpi-value">${{portfolioFmt}}</span></div>` +
-      `<div class="kpi-pill"><span class="kpi-label">Risk per Trade</span><span class="kpi-value risk">${{fmt(riskRaw)}}</span></div>`;
-    // Row 3 = headers, rows 4+ = data
-    const headerRow = rows[3] || [];
-    const dataRows  = rows.slice(4).filter(r => r.some(c => c && c.toLowerCase() !== "nan"));
-    const validCols = headerRow.map((h,i) => ({{h,i}})).filter(({{h}}) => h && h.toLowerCase() !== "nan");
-    document.getElementById("journal-thead").innerHTML =
-      "<tr>" + validCols.map(({{h}}) => `<th>${{h}}</th>`).join("") + "</tr>";
-    const lastIdx = validCols.length ? validCols[validCols.length-1].i : -1;
-    const tbody = document.getElementById("journal-tbody");
-    if (!dataRows.length) {{
-      tbody.innerHTML = `<tr class="empty-row"><td colspan="${{validCols.length || 9}}">No trade entries yet. Add rows to <code>data/journal.csv</code> and push to update.</td></tr>`;
-    }} else {{
-      tbody.innerHTML = dataRows.map(row => {{
-        const cells = validCols.map(({{i}}) => {{
-          const v = fmt(row[i] || "");
-          if (i === lastIdx && v !== "\u2014") {{
-            const n = parseFloat(v.replace("%",""));
-            if (!isNaN(n)) return `<td class="${{n>=0?"profit-pos":"profit-neg"}}">${{v}}</td>`;
-          }}
-          return `<td>${{v}}</td>`;
-        }}).join("");
-        return `<tr>${{cells}}</tr>`;
-      }}).join("");
-    }}
-  }} catch(e) {{
-    document.getElementById("journal-tbody").innerHTML =
-      `<tr class="empty-row"><td colspan="9">Could not load journal. (${{e.message}})</td></tr>`;
-  }}
-}})();
-</script>
 </body>
 </html>"""
 
