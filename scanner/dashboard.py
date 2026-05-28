@@ -20,7 +20,7 @@ import numpy as np
 import pandas as pd
 
 from .utils import fmt_cr
-from .journal_section import build_journal_html
+
 
 logger = logging.getLogger(__name__)
 
@@ -402,7 +402,6 @@ def build_passing_dashboard(passing: pd.DataFrame, out_path: Path, date_str: str
         chart_labels.append(f'"{sym}"')
         chart_total.append(_r(tmc))
 
-    journal_html = build_journal_html()
     html = _html_head(f"Market Cap Dashboard — {date_display}")
     html += f"""
 <header>
@@ -434,7 +433,6 @@ def build_passing_dashboard(passing: pd.DataFrame, out_path: Path, date_str: str
     <div class="chart-wrap"><canvas id="barChart"></canvas></div>
   </div>
 </div>
-{journal_html}
 <div class="table-section">
   <div class="sec-head">
     <span class="sec-title">Passing Stocks Detail</span>
