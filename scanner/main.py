@@ -228,10 +228,7 @@ def _update_index(today_str: str, out_dir: Path, n_passing: int, n_elite: int) -
           <td><a href="{d.name}/rocket_dashboard_{slug}.html" class="btn-link" style="background:#fff7ed;border-color:#fdba74;color:#c2410c">🚀 Rocket Stocks</a></td>
         </tr>"""
 
-    # The journal widget fetches data/journal.csv at runtime via JS,
-    # so pushing a new journal.csv updates the page without a pipeline run.
-    journal_raw_url = f"https://raw.githubusercontent.com/{repo}/main/data/journal.csv" if repo else "data/journal.csv"
-
+    
     html = f"""<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -276,36 +273,7 @@ def _update_index(today_str: str, out_dir: Path, n_passing: int, n_elite: int) -
   .btn-link.green:hover{{background:#dcfce7;}}
   footer{{text-align:center;padding:2rem;font-size:.72rem;color:var(--muted);
           border-top:1px solid var(--border);margin-top:3rem;}}
-  /* Journal */
-  .journal-card{{background:var(--surface);border:1px solid var(--border);border-radius:16px;
-    padding:1.75rem 2rem 1.5rem;margin-bottom:2.5rem;
-    box-shadow:0 1px 4px rgba(0,0,0,.04);}}
-  .journal-top{{display:flex;align-items:flex-start;justify-content:space-between;
-    flex-wrap:wrap;gap:1.25rem;margin-bottom:1.5rem;}}
-  .journal-title-block .section-eyebrow{{font-size:.68rem;font-weight:700;letter-spacing:.14em;
-    text-transform:uppercase;color:var(--emerald);display:block;margin-bottom:.3rem;}}
-  .journal-title-block h2{{font-family:var(--serif);font-size:1.35rem;font-weight:600;}}
-  .journal-kpis{{display:flex;gap:.75rem;flex-wrap:wrap;}}
-  .kpi-pill{{display:flex;flex-direction:column;align-items:center;
-    background:#faf9f7;border:1px solid var(--border);border-radius:12px;
-    padding:.55rem 1.25rem;min-width:140px;}}
-  .kpi-label{{font-size:.62rem;text-transform:uppercase;letter-spacing:.1em;
-    color:var(--muted);font-weight:600;margin-bottom:.2rem;}}
-  .kpi-value{{font-size:1.2rem;font-weight:700;color:var(--text);}}
-  .kpi-value.risk{{color:var(--amber);}}
-  .journal-scroll{{overflow-x:auto;border-radius:10px;border:1px solid var(--border);}}
-  .journal-table{{width:100%;border-collapse:collapse;background:var(--surface);
-    font-size:.84rem;white-space:nowrap;}}
-  .journal-table thead tr{{background:#faf9f7;}}
-  .journal-table th{{font-size:.61rem;font-weight:700;text-transform:uppercase;letter-spacing:.09em;
-    color:var(--muted);padding:.7rem 1.1rem;text-align:left;border-bottom:1px solid var(--border);}}
-  .journal-table td{{padding:.8rem 1.1rem;border-bottom:1px solid var(--border);}}
-  .journal-table tbody tr:last-child td{{border-bottom:none;}}
-  .journal-table tbody tr:hover{{background:#faf9f7;}}
-  .profit-pos{{color:var(--green);font-weight:600;}}
-  .profit-neg{{color:var(--red);font-weight:600;}}
-  .empty-row td{{text-align:center;color:var(--muted);padding:1.5rem;font-size:.85rem;}}
-</style>
+  </style>
 </head>
 <body>
 <header>
