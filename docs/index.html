@@ -42,36 +42,7 @@
   .btn-link.green:hover{background:#dcfce7;}
   footer{text-align:center;padding:2rem;font-size:.72rem;color:var(--muted);
           border-top:1px solid var(--border);margin-top:3rem;}
-  /* Journal */
-  .journal-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;
-    padding:1.75rem 2rem 1.5rem;margin-bottom:2.5rem;
-    box-shadow:0 1px 4px rgba(0,0,0,.04);}
-  .journal-top{display:flex;align-items:flex-start;justify-content:space-between;
-    flex-wrap:wrap;gap:1.25rem;margin-bottom:1.5rem;}
-  .journal-title-block .section-eyebrow{font-size:.68rem;font-weight:700;letter-spacing:.14em;
-    text-transform:uppercase;color:var(--emerald);display:block;margin-bottom:.3rem;}
-  .journal-title-block h2{font-family:var(--serif);font-size:1.35rem;font-weight:600;}
-  .journal-kpis{display:flex;gap:.75rem;flex-wrap:wrap;}
-  .kpi-pill{display:flex;flex-direction:column;align-items:center;
-    background:#faf9f7;border:1px solid var(--border);border-radius:12px;
-    padding:.55rem 1.25rem;min-width:140px;}
-  .kpi-label{font-size:.62rem;text-transform:uppercase;letter-spacing:.1em;
-    color:var(--muted);font-weight:600;margin-bottom:.2rem;}
-  .kpi-value{font-size:1.2rem;font-weight:700;color:var(--text);}
-  .kpi-value.risk{color:var(--amber);}
-  .journal-scroll{overflow-x:auto;border-radius:10px;border:1px solid var(--border);}
-  .journal-table{width:100%;border-collapse:collapse;background:var(--surface);
-    font-size:.84rem;white-space:nowrap;}
-  .journal-table thead tr{background:#faf9f7;}
-  .journal-table th{font-size:.61rem;font-weight:700;text-transform:uppercase;letter-spacing:.09em;
-    color:var(--muted);padding:.7rem 1.1rem;text-align:left;border-bottom:1px solid var(--border);}
-  .journal-table td{padding:.8rem 1.1rem;border-bottom:1px solid var(--border);}
-  .journal-table tbody tr:last-child td{border-bottom:none;}
-  .journal-table tbody tr:hover{background:#faf9f7;}
-  .profit-pos{color:var(--green);font-weight:600;}
-  .profit-neg{color:var(--red);font-weight:600;}
-  .empty-row td{text-align:center;color:var(--muted);padding:1.5rem;font-size:.85rem;}
-</style>
+  </style>
 </head>
 <body>
 <header>
@@ -80,25 +51,7 @@
   <h1>NSE Trend Scanner</h1>
   <p>Daily Minervini trend-template scans · Free-float &amp; liquidity data · NSE India</p>
 </header>
-<div class="container">
-  <!-- JOURNAL WIDGET: reads data/journal.csv live from GitHub raw -->
-  <div class="journal-card" id="journal">
-    <div class="journal-top">
-      <div class="journal-title-block">
-        <span class="section-eyebrow">📒 Trading Journal</span>
-        <h2>Position Sizing &amp; Trade Log</h2>
-      </div>
-      <div class="journal-kpis" id="kpi-area"></div>
-    </div>
-    <div class="journal-scroll">
-      <table class="journal-table" id="journal-table">
-        <thead id="journal-thead"></thead>
-        <tbody id="journal-tbody">
-          <tr class="empty-row"><td colspan="9">Loading journal…</td></tr>
-        </tbody>
-      </table>
-    </div>
-  </div>
+
 
   <h2 class="section-title">Scan History</h2>
   <table class="history-table">
@@ -112,6 +65,13 @@
       </tr>
     </thead>
     <tbody>
+        <tr>
+          <td class="date-cell">28 May 2026</td>
+          <td><a href="2026-05-28/dashboard_20260528.html" class="btn-link">📊 Momentum Stocks</a></td>
+          <td><a href="/momentum-alpha-volume/2026-05-28/elite_dashboard_20260528.html"   class="btn-link green">⚡ Elite Stocks</a></td>
+          <td><a href="2026-05-28/volume_dashboard_20260528.html" class="btn-link">🔵 Volume Action</a></td>
+          <td><a href="2026-05-28/rocket_dashboard_20260528.html" class="btn-link" style="background:#fff7ed;border-color:#fdba74;color:#c2410c">🚀 Rocket Stocks</a></td>
+        </tr>
         <tr>
           <td class="date-cell">27 May 2026</td>
           <td><a href="2026-05-27/dashboard_20260527.html" class="btn-link">📊 Momentum Stocks</a></td>
@@ -147,51 +107,5 @@
   Updated daily at 18:00 IST &nbsp;·&nbsp;
   For informational purposes only — not financial advice
 </footer>
-<script>
-(async () => {
-  const JOURNAL_URL = "https://raw.githubusercontent.com/pranay29-bit/momentum-alpha-volume/main/data/journal.csv";
-  function fmt(v) { return (!v || v.trim() === "" || v.toLowerCase() === "nan") ? "—" : v.trim(); }
-  try {
-    const res = await fetch(JOURNAL_URL);
-    if (!res.ok) throw new Error("HTTP " + res.status);
-    const text = await res.text();
-    const rows = text.trim().split("\n").map(l => l.split(",").map(c => c.trim()));
-    // Row 0 col 2 = Portfolio Size, Row 1 col 2 = Risk per Trade
-    const portfolioRaw = (rows[0] && rows[0][2]) ? rows[0][2] : "";
-    const riskRaw      = (rows[1] && rows[1][2]) ? rows[1][2] : "";
-    const num = parseFloat(portfolioRaw.replace(/[^0-9.]/g, ""));
-    const portfolioFmt = isNaN(num) ? (portfolioRaw || "—") : "₹" + num.toLocaleString("en-IN");
-    document.getElementById("kpi-area").innerHTML =
-      `<div class="kpi-pill"><span class="kpi-label">Portfolio Size</span><span class="kpi-value">${portfolioFmt}</span></div>` +
-      `<div class="kpi-pill"><span class="kpi-label">Risk per Trade</span><span class="kpi-value risk">${fmt(riskRaw)}</span></div>`;
-    // Row 3 = headers, rows 4+ = data
-    const headerRow = rows[3] || [];
-    const dataRows  = rows.slice(4).filter(r => r.some(c => c && c.toLowerCase() !== "nan"));
-    const validCols = headerRow.map((h,i) => ({h,i})).filter(({h}) => h && h.toLowerCase() !== "nan");
-    document.getElementById("journal-thead").innerHTML =
-      "<tr>" + validCols.map(({h}) => `<th>${h}</th>`).join("") + "</tr>";
-    const lastIdx = validCols.length ? validCols[validCols.length-1].i : -1;
-    const tbody = document.getElementById("journal-tbody");
-    if (!dataRows.length) {
-      tbody.innerHTML = `<tr class="empty-row"><td colspan="${validCols.length || 9}">No trade entries yet. Add rows to <code>data/journal.csv</code> and push to update.</td></tr>`;
-    } else {
-      tbody.innerHTML = dataRows.map(row => {
-        const cells = validCols.map(({i}) => {
-          const v = fmt(row[i] || "");
-          if (i === lastIdx && v !== "—") {
-            const n = parseFloat(v.replace("%",""));
-            if (!isNaN(n)) return `<td class="${n>=0?"profit-pos":"profit-neg"}">${v}</td>`;
-          }
-          return `<td>${v}</td>`;
-        }).join("");
-        return `<tr>${cells}</tr>`;
-      }).join("");
-    }
-  } catch(e) {
-    document.getElementById("journal-tbody").innerHTML =
-      `<tr class="empty-row"><td colspan="9">Could not load journal. (${e.message})</td></tr>`;
-  }
-})();
-</script>
 </body>
 </html>
