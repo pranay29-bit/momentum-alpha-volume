@@ -21,7 +21,6 @@ import pandas as pd
 
 from .utils import fmt_cr
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -265,7 +264,36 @@ a.sym-tag { display:inline-block; font-weight:700; font-size:.75rem;
 .badge-row { display:flex; gap:.5rem; margin-top:.5rem; flex-wrap:wrap; }
 footer { text-align:center; padding:1.1rem; font-size:.7rem; color:var(--subtle);
          border-top:1px solid var(--border); background:var(--surface); }
+/* ── CSV download button ── */
+.csv-bar { display:flex; align-items:center; gap:12px; padding:.65rem 3rem;
+           background:var(--surface); border-bottom:1px solid var(--border); }
+.csv-btn  { display:inline-flex; align-items:center; gap:5px; padding:.4rem 1rem;
+            background:#238636; color:#fff; font-size:.78rem; font-weight:700;
+            border:1px solid #2ea043; border-radius:6px; text-decoration:none;
+            transition:background .15s; }
+.csv-btn:hover { background:#2ea043; }
+.csv-btn-full { background:#1f6feb; border-color:#388bfd; }
+.csv-btn-full:hover { background:#388bfd; }
+.csv-bar-label { font-size:.72rem; color:var(--muted); }
 """
+def _csv_bar(date_str: str, elite: bool = False) -> str:
+    """Returns the HTML download bar injected just after <header>."""
+    scan_date_display = datetime.strptime(date_str, "%Y%m%d").strftime("%Y-%m-%d")
+    if elite:
+        primary = f"passing_ema10_{date_str}.csv"
+        label   = "⬇ Download Elite CSV"
+        note    = f"Elite Stocks · Scan date: {scan_date_display}"
+    else:
+        primary = f"passing_stocks_{date_str}.csv"
+        label   = "⬇ Download CSV"
+        note    = f"Passing Stocks · Scan date: {scan_date_display}"
+    full = f"full_results_{date_str}.csv"
+    return f"""
+<div class="csv-bar">
+  <a class="csv-btn" href="{primary}" download="{primary}">{label}</a>
+  <a class="csv-btn csv-btn-full" href="{full}" download="{full}">⬇ Full Results CSV</a>
+  <span class="csv-bar-label">{note}</span>
+</div>"""
 
 _TABLE_SORT_JS = """
 let sortCol = null, sortAsc = true;
@@ -403,7 +431,9 @@ def build_passing_dashboard(passing: pd.DataFrame, out_path: Path, date_str: str
         chart_total.append(_r(tmc))
 
     html = _html_head(f"Market Cap Dashboard — {date_display}")
+    html += _csv_bar(date_str, elite=True)
     html += f"""
+<header>
 <header>
   <div>
     <div class="logo-line">
