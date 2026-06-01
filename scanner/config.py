@@ -31,6 +31,7 @@ MA50_WINDOW  = 50
 MA150_WINDOW = 150
 MA200_WINDOW = 200
 EMA10_WINDOW = 10
+EMA20_WINDOW = 20
 CROSS_LOOKBACK = 10
 
 # ── NSE API ───────────────────────────────────────────────────────────────────
