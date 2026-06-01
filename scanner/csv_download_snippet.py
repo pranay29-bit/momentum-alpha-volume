@@ -81,7 +81,7 @@ def csv_download_bar_html(
 
     full_btn = ""
     if include_full:
-        full_file = f"full_results_{date_str}.csv"
+        full_file = f"passing_stocks_{date_str}.csv"
         full_btn = f"""
       <a class="csv-download-btn"
          style="background:#1f6feb; border-color:#388bfd;"
