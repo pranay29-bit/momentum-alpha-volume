@@ -49,7 +49,7 @@ def get_market_sentiment() -> dict:
 
     TICKERS = {
         "cnxsmallcap":    "^CNXSC",
-        "niftysmlcap250": "^CNXSC250",
+        "niftysmlcap250": "NIFTYSMLCAP250.NS",
     }
 
     result: dict = {
