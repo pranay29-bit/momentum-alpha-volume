@@ -25,9 +25,9 @@ from .indicators import add_indicators, evaluate_trend_template, compute_12m_ret
 logger = logging.getLogger(__name__)
 
 # Seconds to pause between batches — prevents Yahoo Finance rate limiting
-_BATCH_DELAY        = 0.5
+_BATCH_DELAY        = 1.0
 # Extra back-off when a 429 / rate-limit error is detected
-_RATE_LIMIT_BACKOFF = 10.0
+_RATE_LIMIT_BACKOFF = 30.0
 
 
 # ── Symbol list & metadata ─────────────────────────────────────────────────────
