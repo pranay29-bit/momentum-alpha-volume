@@ -89,8 +89,8 @@ def get_market_sentiment() -> dict:
             else:
                 bull_count += 0.5  # mixed contribution
 
-        except Exception:
-            pass  # leave defaults (None)
+        except Exception as e:
+            print(f"[Market Sentiment] {ticker} failed: {e}")
 
     if ok_count == 0:
         result["overall"] = "unavailable"
