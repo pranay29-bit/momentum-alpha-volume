@@ -14,6 +14,7 @@ from __future__ import annotations
 import logging
 import sys
 import os
+import json
 from datetime import datetime
 from pathlib import Path
 
@@ -183,7 +184,7 @@ def run() -> None:
     # ── 9b. Market Sentiment (small-cap indices) ──────────────────────────────
     logger.info("Fetching market sentiment (small-cap indices)…")
     sentiment = get_market_sentiment()
-    logger.info("Market sentiment: %s", sentiment.get("overall", "unavailable"))
+    logger.info("Market sentiment:\n%s", json.dumps(sentiment, indent=2, default=str))
 
     # ── 10. Update docs/index.html  (GitHub Pages landing page) ───────────────
     _update_index(today_str, out_dir, len(passing), len(passing_ema10), sentiment=sentiment)
