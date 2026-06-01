@@ -69,15 +69,23 @@ def _chunk(lst: list, n: int):
 
 def _process_symbol(sym: str, data: pd.DataFrame, is_multi: bool) -> dict | None:
     try:
-        df_sym = data[sym].copy() if is_multi else data.copy()
+        if is_multi:
+            df_sym = data[sym].copy()
+            # ── Fix: flatten any residual MultiIndex after column selection ──
+            if isinstance(df_sym.columns, pd.MultiIndex):
+                df_sym.columns = df_sym.columns.get_level_values(0)
+        else:
+            df_sym = data.copy()
+            # ── Fix: flatten MultiIndex for single-ticker downloads ──────────
+            if isinstance(df_sym.columns, pd.MultiIndex):
+                df_sym.columns = df_sym.columns.get_level_values(0)
+
         if "Close" not in df_sym.columns:
             if "Adj Close" in df_sym.columns:
                 df_sym = df_sym.rename(columns={"Adj Close": "Close"})
             else:
                 return None
-        df_sym = df_sym.dropna(subset=["Close"])
-        if df_sym.empty:
-            return None
+        # ... rest of the function unchanged
 
         df_sym   = add_indicators(df_sym)
         tpl      = evaluate_trend_template(df_sym)
@@ -173,11 +181,12 @@ def download_all(symbols: list[str]) -> pd.DataFrame:
         if data is None or data.empty:
             continue
 
-        is_multi = isinstance(data.columns, pd.MultiIndex)
-        for sym in batch:
-            row = _process_symbol(sym, data, is_multi)
-            if row:
-                all_rows.append(row)
+        # ── Fix: newer yfinance always returns MultiIndex; treat as multi
+        #    only if the ticker level actually contains our symbols ────────────
+        is_multi = (
+            isinstance(data.columns, pd.MultiIndex)
+            and len(batch) > 1
+        )
 
     df = pd.DataFrame(all_rows)
 
