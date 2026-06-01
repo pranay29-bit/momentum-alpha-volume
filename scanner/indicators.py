@@ -49,7 +49,7 @@ def get_market_sentiment() -> dict:
         },
         "niftysmlcap250": {
             "name": "Nifty Smallcap 250",
-            "candidates": ["NIFTYSMLCAP250.NS", "NIFTYSMLCAP250.NS"],
+            "candidates": ["^NSMIDCP250", "NIFTYSMLCAP250.NS"],
         },
     }
 
