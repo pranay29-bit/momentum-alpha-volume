@@ -45,11 +45,11 @@ def get_market_sentiment() -> dict:
     TICKERS = {
         "cnxsmallcap": {
             "name": "CNX Smallcap",
-            "candidates": ["^CNXSC", "CNXSMALLCAP.NS", "^NSMIDCP"],
+            "candidates": ["^CNXSC", "NIFTYSMLCAP250.NS"]
         },
         "niftysmlcap250": {
             "name": "Nifty Smallcap 250",
-            "candidates": ["^NSMIDCP250", "NIFTYSMLCAP250.NS", "NIFTYSMALLCAP250.NS"],
+            "candidates": ["^NSMIDCP250", "NIFTYSMLCAP250.NS"],
         },
     }
 
