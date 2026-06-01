@@ -12,7 +12,7 @@ import pandas as pd
 
 from .config import (
     MA12_WINDOW, MA36_WINDOW, MA50_WINDOW,
-    MA150_WINDOW, MA200_WINDOW, EMA10_WINDOW,
+    MA150_WINDOW, MA200_WINDOW, EMA10_WINDOW, EMA20_WINDOW,
     RS_LOOKBACK,
 )
 
@@ -28,10 +28,80 @@ def add_indicators(df: pd.DataFrame) -> pd.DataFrame:
     df["MA150"]  = df["Close"].rolling(window=MA150_WINDOW).mean()
     df["MA200"]  = df["Close"].rolling(window=MA200_WINDOW).mean()
     df["EMA10"]  = df["Close"].ewm(span=EMA10_WINDOW, adjust=False).mean()
+    df["EMA20"]  = df["Close"].ewm(span=EMA20_WINDOW, adjust=False).mean()
     df["52w_low"]  = df["Low"].rolling(window=RS_LOOKBACK).min()
     df["52w_high"] = df["High"].rolling(window=RS_LOOKBACK).max()
     df["inside_bar"] = (df["High"] < df["High"].shift(1)) & (df["Low"] > df["Low"].shift(1))  # ← ADD THIS
     return df
+
+
+def get_market_sentiment() -> dict:
+    """
+    Fetch CNXSMALLCAP and NIFTYSMLCAP250 index data from yfinance,
+    compute EMA10 / EMA20, and return a sentiment dict with red/green signals.
+
+    Returns a dict with keys:
+        cnxsmallcap  : { close, ema10, ema20, above_ema10, above_ema20 }
+        niftysmlcap250: { close, ema10, ema20, above_ema10, above_ema20 }
+        overall      : "bullish" | "bearish" | "mixed" | "unavailable"
+    """
+    import yfinance as yf  # local import to keep top-level imports light
+
+    TICKERS = {
+        "cnxsmallcap":    "^CNXSMALLCAP",
+        "niftysmlcap250": "NIFTYSMLCAP250.NS",
+    }
+
+    result: dict = {
+        "cnxsmallcap":    {"close": None, "ema10": None, "ema20": None, "above_ema10": None, "above_ema20": None, "name": "CNX Smallcap"},
+        "niftysmlcap250": {"close": None, "ema10": None, "ema20": None, "above_ema10": None, "above_ema20": None, "name": "Nifty Smallcap 250"},
+        "overall": "unavailable",
+    }
+
+    ok_count  = 0
+    bull_count = 0
+
+    for key, ticker in TICKERS.items():
+        try:
+            raw = yf.download(ticker, period="60d", interval="1d", progress=False, auto_adjust=True)
+            if raw.empty or len(raw) < 21:
+                continue
+            close = raw["Close"].squeeze()
+            ema10 = float(close.ewm(span=10, adjust=False).mean().iloc[-1])
+            ema20 = float(close.ewm(span=20, adjust=False).mean().iloc[-1])
+            last  = float(close.iloc[-1])
+
+            above10 = last > ema10
+            above20 = last > ema20
+
+            result[key].update({
+                "close":      round(last,  2),
+                "ema10":      round(ema10, 2),
+                "ema20":      round(ema20, 2),
+                "above_ema10": above10,
+                "above_ema20": above20,
+            })
+            ok_count  += 1
+            if above10 and above20:
+                bull_count += 1
+            elif not above10 and not above20:
+                pass  # bearish — no increment
+            else:
+                bull_count += 0.5  # mixed contribution
+
+        except Exception:
+            pass  # leave defaults (None)
+
+    if ok_count == 0:
+        result["overall"] = "unavailable"
+    elif bull_count >= ok_count * 0.75:
+        result["overall"] = "bullish"
+    elif bull_count <= ok_count * 0.25:
+        result["overall"] = "bearish"
+    else:
+        result["overall"] = "mixed"
+
+    return result
 
 
 # ── Helper predicates ─────────────────────────────────────────────────────────
