@@ -48,8 +48,8 @@ def get_market_sentiment() -> dict:
     import yfinance as yf  # local import to keep top-level imports light
 
     TICKERS = {
-        "cnxsmallcap":    "^CNXSMALLCAP",
-        "niftysmlcap250": "NIFTYSMLCAP250.NS",
+        "cnxsmallcap":    "^CNXSC",
+        "niftysmlcap250": "^CNXSC250",
     }
 
     result: dict = {
