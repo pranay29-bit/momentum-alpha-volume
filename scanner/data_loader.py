@@ -9,6 +9,7 @@ from the same CSV and merges it into the result DataFrame.
 from __future__ import annotations
 
 import logging
+import time
 from math import ceil
 from pathlib import Path
 
@@ -22,6 +23,11 @@ from .config import (
 from .indicators import add_indicators, evaluate_trend_template, compute_12m_return, compute_volume_action, is_inside_candle
 
 logger = logging.getLogger(__name__)
+
+# Seconds to pause between batches — prevents Yahoo Finance rate limiting
+_BATCH_DELAY        = 3.0
+# Extra back-off when a 429 / rate-limit error is detected
+_RATE_LIMIT_BACKOFF = 30.0
 
 
 # ── Symbol list & metadata ─────────────────────────────────────────────────────
@@ -124,6 +130,10 @@ def download_all(symbols: list[str]) -> pd.DataFrame:
     total = ceil(len(symbols) / BATCH_SIZE)
 
     for i, batch in enumerate(_chunk(symbols, BATCH_SIZE), start=1):
+        # Polite pause between batches to avoid Yahoo Finance rate limiting
+        if i > 1:
+            time.sleep(_BATCH_DELAY)
+
         logger.info("=== Batch %d/%d (%d symbols) ===", i, total, len(batch))
         try:
             data = yf.download(
@@ -132,12 +142,33 @@ def download_all(symbols: list[str]) -> pd.DataFrame:
                 interval=INTERVAL,
                 group_by="ticker",
                 auto_adjust=True,
-                threads=True,
+                threads=False,   # sequential within batch — avoids burst 429s
                 progress=False,
             )
         except Exception as exc:
-            logger.error("Batch %d download failed: %s", i, exc)
-            continue
+            err_str = str(exc).lower()
+            if "too many requests" in err_str or "rate limit" in err_str or "429" in err_str:
+                logger.warning(
+                    "Rate limited on batch %d — backing off %ds then retrying once…",
+                    i, _RATE_LIMIT_BACKOFF,
+                )
+                time.sleep(_RATE_LIMIT_BACKOFF)
+                try:
+                    data = yf.download(
+                        tickers=batch,
+                        period=PERIOD,
+                        interval=INTERVAL,
+                        group_by="ticker",
+                        auto_adjust=True,
+                        threads=False,
+                        progress=False,
+                    )
+                except Exception as exc2:
+                    logger.error("Batch %d retry also failed: %s", i, exc2)
+                    continue
+            else:
+                logger.error("Batch %d download failed: %s", i, exc)
+                continue
 
         if data is None or data.empty:
             continue
