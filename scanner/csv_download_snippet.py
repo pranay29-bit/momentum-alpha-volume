@@ -87,7 +87,7 @@ def csv_download_bar_html(
          style="background:#1f6feb; border-color:#388bfd;"
          href="{full_file}"
          download="{full_file}">
-        ⬇ Full Results CSV
+        ⬇ Minervini Trend Template Passing Stock CSV
       </a>"""
 
     return f"""
