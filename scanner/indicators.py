@@ -34,63 +34,93 @@ def add_indicators(df: pd.DataFrame) -> pd.DataFrame:
     df["inside_bar"] = (df["High"] < df["High"].shift(1)) & (df["Low"] > df["Low"].shift(1))  # ← ADD THIS
     return df
 
-
 def get_market_sentiment() -> dict:
     """
     Fetch CNXSMALLCAP and NIFTYSMLCAP250 index data from yfinance,
     compute EMA10 / EMA20, and return a sentiment dict with red/green signals.
-
-    Returns a dict with keys:
-        cnxsmallcap  : { close, ema10, ema20, above_ema10, above_ema20 }
-        niftysmlcap250: { close, ema10, ema20, above_ema10, above_ema20 }
-        overall      : "bullish" | "bearish" | "mixed" | "unavailable"
     """
-    import yfinance as yf  # local import to keep top-level imports light
+    import yfinance as yf
 
+    # Multiple fallback tickers per index — Yahoo Finance changes these silently
     TICKERS = {
-        "cnxsmallcap":    "^CNXSC",
-        "niftysmlcap250": "NIFTYSMLCAP250.NS",
+        "cnxsmallcap": {
+            "name": "CNX Smallcap",
+            "candidates": ["^CNXSC", "CNXSMALLCAP.NS", "^NSMIDCP"],
+        },
+        "niftysmlcap250": {
+            "name": "Nifty Smallcap 250",
+            "candidates": ["^NSMIDCP250", "NIFTYSMLCAP250.NS", "NIFTYSMALLCAP250.NS"],
+        },
     }
 
     result: dict = {
-        "cnxsmallcap":    {"close": None, "ema10": None, "ema20": None, "above_ema10": None, "above_ema20": None, "name": "CNX Smallcap"},
-        "niftysmlcap250": {"close": None, "ema10": None, "ema20": None, "above_ema10": None, "above_ema20": None, "name": "Nifty Smallcap 250"},
+        "cnxsmallcap":    {"close": None, "ema10": None, "ema20": None,
+                           "above_ema10": None, "above_ema20": None, "name": "CNX Smallcap"},
+        "niftysmlcap250": {"close": None, "ema10": None, "ema20": None,
+                           "above_ema10": None, "above_ema20": None, "name": "Nifty Smallcap 250"},
         "overall": "unavailable",
     }
 
-    ok_count  = 0
+    ok_count   = 0
     bull_count = 0
 
-    for key, ticker in TICKERS.items():
-        try:
-            raw = yf.download(ticker, period="60d", interval="1d", progress=False, auto_adjust=True)
-            if raw.empty or len(raw) < 21:
-                continue
-            close = raw["Close"].squeeze()
-            ema10 = float(close.ewm(span=10, adjust=False).mean().iloc[-1])
-            ema20 = float(close.ewm(span=20, adjust=False).mean().iloc[-1])
-            last  = float(close.iloc[-1])
+    for key, meta in TICKERS.items():
+        close_series = None
 
-            above10 = last > ema10
-            above20 = last > ema20
+        for ticker in meta["candidates"]:
+            try:
+                raw = yf.download(
+                    ticker, period="60d", interval="1d",
+                    progress=False, auto_adjust=True
+                )
+                if raw.empty or len(raw) < 21:
+                    continue
 
-            result[key].update({
-                "close":      round(last,  2),
-                "ema10":      round(ema10, 2),
-                "ema20":      round(ema20, 2),
-                "above_ema10": above10,
-                "above_ema20": above20,
-            })
-            ok_count  += 1
-            if above10 and above20:
-                bull_count += 1
-            elif not above10 and not above20:
-                pass  # bearish — no increment
-            else:
-                bull_count += 0.5  # mixed contribution
+                # ── Fix MultiIndex columns (yfinance >= 0.2.38) ──────────────
+                if isinstance(raw.columns, pd.MultiIndex):
+                    raw.columns = raw.columns.get_level_values(0)
 
-        except Exception as e:
-            print(f"[Market Sentiment] {ticker} failed: {e}")
+                close_col = raw["Close"].dropna()
+
+                # After flattening, if downloading one ticker we may still get
+                # a DataFrame with one column — squeeze to Series
+                if isinstance(close_col, pd.DataFrame):
+                    close_col = close_col.iloc[:, 0]
+
+                if len(close_col) < 21:
+                    continue
+
+                close_series = close_col.astype(float)
+                print(f"[Market Sentiment] {ticker} OK — {len(close_series)} rows")
+                break  # got valid data, stop trying fallbacks
+
+            except Exception as e:
+                print(f"[Market Sentiment] {ticker} failed: {e}")
+
+        if close_series is None:
+            print(f"[Market Sentiment] All tickers failed for {meta['name']}")
+            continue
+
+        last  = float(close_series.iloc[-1])
+        ema10 = float(close_series.ewm(span=10, adjust=False).mean().iloc[-1])
+        ema20 = float(close_series.ewm(span=20, adjust=False).mean().iloc[-1])
+
+        above10 = last > ema10
+        above20 = last > ema20
+
+        result[key].update({
+            "close":       round(last,  2),
+            "ema10":       round(ema10, 2),
+            "ema20":       round(ema20, 2),
+            "above_ema10": above10,
+            "above_ema20": above20,
+        })
+
+        ok_count += 1
+        if above10 and above20:
+            bull_count += 1
+        elif above10 or above20:
+            bull_count += 0.5
 
     if ok_count == 0:
         result["overall"] = "unavailable"
@@ -102,7 +132,6 @@ def get_market_sentiment() -> dict:
         result["overall"] = "mixed"
 
     return result
-
 
 # ── Helper predicates ─────────────────────────────────────────────────────────
 
