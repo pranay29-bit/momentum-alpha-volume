@@ -24,6 +24,7 @@ from .data_loader import download_all, load_symbols
 from .nse_client  import enrich_with_market_caps
 from .dashboard   import build_passing_dashboard, build_passing_ema10_dashboard, build_volume_action_dashboard, build_rocket_dashboard
 from .result_calendar import get_result_date
+from .indicators  import get_market_sentiment
 
 # ── Logging ───────────────────────────────────────────────────────────────────
 logging.basicConfig(
@@ -179,8 +180,13 @@ def run() -> None:
             today_str,
         )
 
+    # ── 9b. Market Sentiment (small-cap indices) ──────────────────────────────
+    logger.info("Fetching market sentiment (small-cap indices)…")
+    sentiment = get_market_sentiment()
+    logger.info("Market sentiment: %s", sentiment.get("overall", "unavailable"))
+
     # ── 10. Update docs/index.html  (GitHub Pages landing page) ───────────────
-    _update_index(today_str, out_dir, len(passing), len(passing_ema10))
+    _update_index(today_str, out_dir, len(passing), len(passing_ema10), sentiment=sentiment)
 
     # ── 10. Console summary ───────────────────────────────────────────────────
     logger.info("── SUMMARY ──────────────────────────────")
@@ -192,7 +198,7 @@ def run() -> None:
 
 # ── Landing-page updater ──────────────────────────────────────────────────────
 
-def _update_index(today_str: str, out_dir: Path, n_passing: int, n_elite: int) -> None:
+def _update_index(today_str: str, out_dir: Path, n_passing: int, n_elite: int, sentiment: dict | None = None) -> None:
     """Regenerate docs/index.html with a link to today's dashboards."""
     docs_root  = Path(DOCS_DIR)
     index_path = docs_root / "index.html"
@@ -228,7 +234,9 @@ def _update_index(today_str: str, out_dir: Path, n_passing: int, n_elite: int) -
           <td><a href="{d.name}/rocket_dashboard_{slug}.html" class="btn-link" style="background:#fff7ed;border-color:#fdba74;color:#c2410c">🚀 Rocket Stocks</a></td>
         </tr>"""
 
-    
+    # ── Build Market Sentiment HTML block ─────────────────────────────────────
+    sentiment_html = _build_sentiment_html(sentiment or {})
+
     html = f"""<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -273,6 +281,33 @@ def _update_index(today_str: str, out_dir: Path, n_passing: int, n_elite: int) -
   .btn-link.green:hover{{background:#dcfce7;}}
   footer{{text-align:center;padding:2rem;font-size:.72rem;color:var(--muted);
           border-top:1px solid var(--border);margin-top:3rem;}}
+
+  /* ── Market Sentiment ── */
+  .sentiment-section{{max-width:1120px;margin:0 auto 2.5rem;padding:0 1.5rem;}}
+  .sentiment-grid{{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:1.25rem;margin-top:1rem;}}
+  .sentiment-card{{background:var(--surface);border:1px solid var(--border);border-radius:14px;
+                   padding:1.4rem 1.6rem;}}
+  .sentiment-card-header{{display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;}}
+  .sentiment-index-name{{font-weight:700;font-size:.95rem;}}
+  .overall-badge{{display:inline-block;padding:.25rem .85rem;border-radius:999px;
+                  font-size:.72rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;}}
+  .overall-badge.bullish{{background:#f0fdf4;border:1px solid #86efac;color:#15803d;}}
+  .overall-badge.bearish{{background:#fef2f2;border:1px solid #fca5a5;color:#dc2626;}}
+  .overall-badge.mixed{{background:#fffbeb;border:1px solid #fde68a;color:#b45309;}}
+  .overall-badge.unavailable{{background:#f8fafc;border:1px solid #e2e8f0;color:#94a3b8;}}
+  .ema-row{{display:flex;gap:.75rem;flex-wrap:wrap;}}
+  .ema-pill{{display:flex;align-items:center;gap:.4rem;padding:.35rem .85rem;
+             border-radius:999px;font-size:.78rem;font-weight:600;border:1px solid;}}
+  .ema-pill.green{{background:#f0fdf4;border-color:#86efac;color:#15803d;}}
+  .ema-pill.red{{background:#fef2f2;border-color:#fca5a5;color:#dc2626;}}
+  .ema-pill.na{{background:#f8fafc;border-color:#e2e8f0;color:#94a3b8;}}
+  .ema-dot{{width:7px;height:7px;border-radius:50%;flex-shrink:0;}}
+  .ema-dot.green{{background:#15803d;}}
+  .ema-dot.red{{background:#dc2626;}}
+  .ema-dot.na{{background:#94a3b8;}}
+  .close-val{{font-size:.8rem;color:var(--muted);margin-bottom:.75rem;}}
+  .close-val strong{{color:var(--text);}}
+  .sentiment-legend{{font-size:.72rem;color:var(--muted);margin-top:.6rem;}}
   </style>
 </head>
 <body>
@@ -283,7 +318,9 @@ def _update_index(today_str: str, out_dir: Path, n_passing: int, n_elite: int) -
   <p>Daily Minervini trend-template scans \u00b7 Free-float &amp; liquidity data \u00b7 NSE India</p>
 </header>
 
+{sentiment_html}
 
+<div class="container">
   <h2 class="section-title">Scan History</h2>
   <table class="history-table">
     <thead>
@@ -308,6 +345,66 @@ def _update_index(today_str: str, out_dir: Path, n_passing: int, n_elite: int) -
 
     index_path.write_text(html, encoding="utf-8")
     logger.info("Index page updated → %s", index_path)
+
+
+def _build_sentiment_html(sentiment: dict) -> str:
+    """Build the Market Sentiment HTML section from the sentiment dict."""
+
+    def _pill(label: str, above: bool | None, ema_val: float | None) -> str:
+        if above is None:
+            css = "na"
+            text = f"{label} N/A"
+        else:
+            css = "green" if above else "red"
+            direction = "above" if above else "below"
+            val_str = f" ({ema_val:,.0f})" if ema_val is not None else ""
+            text = f"Price {direction} {label}{val_str}"
+        return f'<span class="ema-pill {css}"><span class="ema-dot {css}"></span>{text}</span>'
+
+    overall = sentiment.get("overall", "unavailable")
+    overall_label = {"bullish": "🟢 Bullish", "bearish": "🔴 Bearish",
+                     "mixed":   "🟡 Mixed",   "unavailable": "⬜ N/A"}.get(overall, "⬜ N/A")
+
+    cards_html = ""
+    for key in ("cnxsmallcap", "niftysmlcap250"):
+        info = sentiment.get(key, {})
+        name    = info.get("name", key)
+        close   = info.get("close")
+        ema10   = info.get("ema10")
+        ema20   = info.get("ema20")
+        above10 = info.get("above_ema10")
+        above20 = info.get("above_ema20")
+
+        close_str = f"₹{close:,.2f}" if close is not None else "N/A"
+        pill10    = _pill("EMA10", above10, ema10)
+        pill20    = _pill("EMA20", above20, ema20)
+
+        cards_html += f"""
+    <div class="sentiment-card">
+      <div class="sentiment-card-header">
+        <span class="sentiment-index-name">{name}</span>
+      </div>
+      <div class="close-val">Last Close: <strong>{close_str}</strong></div>
+      <div class="ema-row">
+        {pill10}
+        {pill20}
+      </div>
+      <div class="sentiment-legend">Green = price above EMA &nbsp;·&nbsp; Red = price below EMA</div>
+    </div>"""
+
+    return f"""
+<div class="sentiment-section">
+  <div style="display:flex;align-items:center;gap:1rem;margin-bottom:.25rem;">
+    <h2 class="section-title" style="margin-bottom:0">Market Sentiment</h2>
+    <span class="overall-badge {overall}">{overall_label}</span>
+  </div>
+  <p style="font-size:.8rem;color:var(--muted);margin-bottom:.75rem;">
+    Small-cap index health based on 10-EMA &amp; 20-EMA — updated each scan run.
+  </p>
+  <div class="sentiment-grid">
+    {cards_html}
+  </div>
+</div>"""
 
 if __name__ == "__main__":
     run()
