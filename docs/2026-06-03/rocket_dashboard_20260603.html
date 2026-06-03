@@ -1,0 +1,777 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>🚀 Rocket Stocks — 03 Jun 2026</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@500;600&display=swap" rel="stylesheet"/>
+<style>
+:root {
+  --bg:#f5f3ef; --surface:#ffffff; --border:#e4e0d8; --border2:#ccc8bf;
+  --text:#1c1917; --muted:#78716c; --subtle:#a8a29e;
+  --blue:#2563eb; --blue-bg:#eff6ff; --blue-mid:#bfdbfe;
+  --teal:#0d9488; --amber:#b45309; --amber-bg:#fffbeb;
+  --green:#15803d; --green-bg:#f0fdf4; --green-mid:#86efac;
+  --emerald:#059669; --red:#dc2626;
+  --purple:#7c3aed; --purple-bg:#f5f3ff;
+  --sans:'Inter',sans-serif; --serif:'Playfair Display',Georgia,serif;
+  --r:10px; --rl:14px;
+}
+*, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
+html { font-size:15px; }
+body { background:var(--bg); color:var(--text); font-family:var(--sans);
+       line-height:1.6; min-height:100vh; }
+a { color:inherit; text-decoration:none; }
+
+/* ── Header ── */
+header { background:var(--surface); border-bottom:1px solid var(--border);
+         padding:1.75rem 3rem; display:flex; align-items:flex-end;
+         justify-content:space-between; gap:1rem; flex-wrap:wrap; }
+.logo-line { display:flex; align-items:center; gap:.6rem; margin-bottom:.3rem; }
+.logo-dot  { width:8px; height:8px; border-radius:50%; }
+.logo-tag  { font-size:.68rem; letter-spacing:.14em; text-transform:uppercase;
+             font-weight:700; }
+header h1  { font-family:var(--serif); font-size:clamp(1.5rem,3vw,2.1rem);
+             font-weight:600; letter-spacing:-.02em; line-height:1.1; }
+header .sub { font-size:.8rem; color:var(--muted); margin-top:.2rem; }
+.date-chip  { border-radius:999px; padding:.35rem 1rem; font-size:.78rem;
+              font-weight:700; white-space:nowrap; border:1px solid; }
+
+/* ── KPI row ── */
+.kpi-row { display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr));
+           gap:1rem; padding:1.5rem 3rem; }
+.kpi { background:var(--surface); border:1px solid var(--border);
+       border-radius:var(--rl); padding:1rem 1.3rem; position:relative;
+       overflow:hidden; min-width:0; }
+.kpi-accent { position:absolute; top:0; left:1.3rem; height:3px; width:28px;
+              border-radius:0 0 3px 3px; }
+.kpi-label  { font-size:.65rem; text-transform:uppercase; letter-spacing:.1em;
+              color:var(--muted); font-weight:700; margin-bottom:.4rem; }
+.kpi-val    { font-family:var(--serif); font-size:clamp(.95rem,2vw,1.65rem);
+              font-weight:600; line-height:1; word-break:break-word; }
+.kpi.blue   .kpi-val { color:var(--blue); }
+.kpi.blue   .kpi-accent { background:var(--blue); }
+.kpi.teal   .kpi-val { color:var(--teal); }
+.kpi.teal   .kpi-accent { background:var(--teal); }
+.kpi.amber  .kpi-val { color:var(--amber); }
+.kpi.amber  .kpi-accent { background:var(--amber); }
+.kpi.green  .kpi-val { color:var(--emerald); }
+.kpi.green  .kpi-accent { background:var(--emerald); }
+.kpi.purple .kpi-val { color:var(--purple); }
+.kpi.purple .kpi-accent { background:var(--purple); }
+
+/* ── Charts ── */
+.charts-grid { padding:0 3rem 1.5rem; display:grid; gap:1rem;
+               grid-template-columns:3fr 2fr; }
+@media(max-width:860px) { .charts-grid { grid-template-columns:1fr; } }
+.chart-card  { background:var(--surface); border:1px solid var(--border);
+               border-radius:var(--rl); padding:1.25rem 1.4rem 1rem; }
+.chart-title { font-size:.68rem; text-transform:uppercase; letter-spacing:.1em;
+               color:var(--muted); font-weight:700; margin-bottom:1rem; }
+.chart-wrap  { position:relative; height:250px; }
+
+/* ── Table section ── */
+.table-section { padding:0 3rem 3rem; }
+.sec-head  { display:flex; align-items:center; justify-content:space-between;
+             margin-bottom:.85rem; flex-wrap:wrap; gap:.75rem; }
+.sec-title { font-size:.68rem; text-transform:uppercase; letter-spacing:.1em;
+             color:var(--muted); font-weight:700; }
+.controls  { display:flex; align-items:center; gap:1.25rem; flex-wrap:wrap; }
+.search-input { background:var(--surface); border:1px solid var(--border2);
+                border-radius:var(--r); color:var(--text); font-family:var(--sans);
+                font-size:.82rem; padding:.4rem .85rem; outline:none; width:190px;
+                transition:border-color .18s; }
+.search-input::placeholder { color:var(--subtle); }
+.legend { display:flex; gap:1.1rem; font-size:.7rem; color:var(--muted);
+          flex-wrap:wrap; align-items:center; }
+.leg-item { display:flex; align-items:center; gap:.3rem; }
+.leg-dot  { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+.tbl-wrap { background:var(--surface); border:1px solid var(--border);
+            border-radius:var(--rl); overflow:auto; }
+table { width:100%; border-collapse:collapse; font-size:.82rem; white-space:nowrap; }
+thead tr { background:#faf9f7; border-bottom:1px solid var(--border);
+           position:sticky; top:0; z-index:2; }
+th { font-size:.65rem; font-weight:700; text-transform:uppercase; letter-spacing:.09em;
+     color:var(--muted); padding:.7rem 1rem; text-align:left; cursor:pointer;
+     user-select:none; transition:background .12s; }
+th:hover { background:#f0ede8; }
+th.r { text-align:right; } th.c { text-align:center; }
+th .si { margin-left:.3rem; opacity:.35; font-style:normal; font-size:.7rem; }
+th.sort-asc  .si::after { content:'▲'; opacity:1; }
+th.sort-desc .si::after { content:'▼'; opacity:1; }
+th:not(.sort-asc):not(.sort-desc) .si::after { content:'⇅'; }
+.srow { border-bottom:1px solid var(--border); transition:background .12s; }
+.srow:last-child { border-bottom:none; }
+.srow:hover { background:#fafaf8; }
+td { padding:.7rem 1rem; vertical-align:middle; }
+td.r { text-align:right; } td.c { text-align:center; }
+a.sym-tag { display:inline-block; font-weight:700; font-size:.75rem;
+            padding:.17rem .55rem; border-radius:6px; letter-spacing:.04em;
+            text-decoration:none; border:1px solid; transition:background .15s; }
+.rs-tag  { display:inline-block; background:var(--amber-bg); border:1px solid #fde68a;
+           color:var(--amber); font-size:.73rem; font-weight:700;
+           padding:.14rem .5rem; border-radius:999px; }
+.ema-tag { display:inline-block; font-size:.73rem; font-weight:700;
+           padding:.14rem .5rem; border-radius:999px; border:1px solid transparent; }
+.bar-cell { display:flex; align-items:center; gap:.5rem; min-width:150px; }
+.bar-bg   { flex:1; height:5px; background:#ebe9e4; border-radius:99px; overflow:hidden; }
+.bar-fill { height:100%; border-radius:99px; }
+.bar-pct  { font-size:.73rem; font-weight:700; min-width:36px; text-align:right; }
+.badge    { font-size:.65rem; font-weight:700; letter-spacing:.06em;
+            text-transform:uppercase; border-radius:999px; padding:.22rem .7rem;
+            border:1px solid; }
+.badge-row { display:flex; gap:.5rem; margin-top:.5rem; flex-wrap:wrap; }
+footer { text-align:center; padding:1.1rem; font-size:.7rem; color:var(--subtle);
+         border-top:1px solid var(--border); background:var(--surface); }
+/* ── CSV download button ── */
+.csv-bar { display:flex; align-items:center; gap:12px; padding:.65rem 3rem;
+           background:var(--surface); border-bottom:1px solid var(--border); }
+.csv-btn  { display:inline-flex; align-items:center; gap:5px; padding:.4rem 1rem;
+            background:#238636; color:#fff; font-size:.78rem; font-weight:700;
+            border:1px solid #2ea043; border-radius:6px; text-decoration:none;
+            transition:background .15s; }
+.csv-btn:hover { background:#2ea043; }
+.csv-btn-full { background:#1f6feb; border-color:#388bfd; }
+.csv-btn-full:hover { background:#388bfd; }
+.csv-bar-label { font-size:.72rem; color:var(--muted); }
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <div class="logo-line">
+      <div class="logo-dot" style="background:#f97316"></div>
+      <span class="logo-tag" style="color:#f97316">Momentum Alpha · Rocket Stocks</span>
+    </div>
+    <h1>🚀 Rocket Stocks</h1>
+    <p class="sub">All 8 Minervini conditions met &plus; Inside Bar on latest close · NSE data</p>
+    <div class="badge-row">
+      <span class="badge" style="background:#fff7ed;border-color:#fdba74;color:#c2410c">✓ All 8 Minervini Conditions</span>
+      <span class="badge" style="background:#fff7ed;border-color:#f97316;color:#f97316">✓ Inside Bar</span>
+    </div>
+  </div>
+  <div class="date-chip" style="background:#fff7ed;border-color:#fdba74;color:#c2410c">03 Jun 2026</div>
+</header>
+
+<div class="kpi-row">
+  <div class="kpi amber"><div class="kpi-accent"></div>
+    <div class="kpi-label">Rocket Stocks</div>
+    <div class="kpi-val">24</div>
+  </div>
+  <div class="kpi blue"><div class="kpi-accent"></div>
+    <div class="kpi-label">Total Passing Stocks</div>
+    <div class="kpi-val">202</div>
+  </div>
+  <div class="kpi green"><div class="kpi-accent"></div>
+    <div class="kpi-label">Inside Bar Hit Rate</div>
+    <div class="kpi-val">11.9%</div>
+  </div>
+</div>
+
+<div style="padding:.75rem 3rem 0;font-size:.78rem;color:var(--muted)">
+  <strong style="color:#f97316">Inside Bar:</strong>
+  Today's high &lt; yesterday's high <strong>AND</strong> today's low &gt; yesterday's low —
+  price compression inside a strong uptrend. A potential coiling setup before breakout.
+</div>
+
+<div class="table-section">
+  <div class="sec-head">
+    <span class="sec-title">Rocket Stocks (24)</span>
+    <div class="controls">
+      <input class="search-input" id="searchInput" type="text"
+             placeholder="Search symbol / industry…" oninput="filterRows()"/>
+    </div>
+  </div>
+  <div class="tbl-wrap">
+    <table id="mainTable">
+      <thead><tr>
+        <th data-col="sym"   data-type="str">Symbol<i class="si"></i></th>
+        <th class="r" data-col="close" data-type="num">Close ₹<i class="si"></i></th>
+        <th class="r" data-col="ema10" data-type="num">EMA10 ₹<i class="si"></i></th>
+        <th class="r" data-col="rs"    data-type="num">RS %ile<i class="si"></i></th>
+        <th class="r">% above 52W Low</th>
+        <th class="r">% from 52W High</th>
+        <th class="r" data-col="tmc"   data-type="num">Mkt Cap<i class="si"></i></th>
+        <th class="r" data-col="tv"    data-type="num">Traded Value<i class="si"></i></th>
+        <th data-col="indgrp" data-type="str">Industry Group<i class="si"></i></th>
+      </tr></thead>
+      <tbody id="tableBody">
+            <tr class="srow"
+              data-sym="VMARCIND" data-close="1436.65" data-rs="99.71"
+              data-ema10="1257.99" data-tmc="441.28" data-tv="0.84"
+              data-indgrp="Industrial Products" data-ind="Cables - Electricals">
+              <td>
+                <a class="sym-tag"
+                   style="background:#fff7ed;border-color:#fdba74;color:#c2410c"
+                   href="https://www.tradingview.com/chart/?symbol=NSE%3AVMARCIND" target="_blank" rel="noopener">VMARCIND</a>
+                <span style="font-size:.62rem;background:rgba(249,115,22,.15);
+                             border:1px solid #f97316;color:#f97316;padding:1px 5px;
+                             border-radius:3px;font-weight:700;margin-left:5px">IB</span>
+              </td>
+              <td class="r">₹1,436.65</td>
+              <td class="r"><span class="ema-tag"
+                   style="background:#f0fdf4;border-color:#86efac;color:#059669">₹1,257.99</span></td>
+              <td class="r"><span class="rs-tag">99.7</span></td>
+              <td class="r" style="color:#15803d;font-weight:600">+429.4%</td>
+              <td class="r" style="color:#b45309;font-weight:600">-3.1%</td>
+              <td class="r">₹441 Cr</td>
+              <td class="r">₹1 Cr</td>
+              <td>Industrial Products</td>
+            </tr>
+            <tr class="srow"
+              data-sym="MIRCELECTR" data-close="40.72" data-rs="98.44"
+              data-ema10="40.99" data-tmc="1504.17" data-tv="10.0"
+              data-indgrp="Consumer Durables" data-ind="Consumer Electronics">
+              <td>
+                <a class="sym-tag"
+                   style="background:#fff7ed;border-color:#fdba74;color:#c2410c"
+                   href="https://www.tradingview.com/chart/?symbol=NSE%3AMIRCELECTR" target="_blank" rel="noopener">MIRCELECTR</a>
+                <span style="font-size:.62rem;background:rgba(249,115,22,.15);
+                             border:1px solid #f97316;color:#f97316;padding:1px 5px;
+                             border-radius:3px;font-weight:700;margin-left:5px">IB</span>
+              </td>
+              <td class="r">₹40.72</td>
+              <td class="r"><span class="ema-tag"
+                   style="background:#f0fdf4;border-color:#86efac;color:#059669">₹40.99</span></td>
+              <td class="r"><span class="rs-tag">98.4</span></td>
+              <td class="r" style="color:#15803d;font-weight:600">+210.8%</td>
+              <td class="r" style="color:#b45309;font-weight:600">-17.3%</td>
+              <td class="r">₹1,504 Cr</td>
+              <td class="r">₹10 Cr</td>
+              <td>Consumer Durables</td>
+            </tr>
+            <tr class="srow"
+              data-sym="SBC" data-close="36.74" data-rs="97.95"
+              data-ema10="37.44" data-tmc="1749.52" data-tv="44.11"
+              data-indgrp="Textiles & Apparels" data-ind="Garments & Apparels">
+              <td>
+                <a class="sym-tag"
+                   style="background:#fff7ed;border-color:#fdba74;color:#c2410c"
+                   href="https://www.tradingview.com/chart/?symbol=NSE%3ASBC" target="_blank" rel="noopener">SBC</a>
+                <span style="font-size:.62rem;background:rgba(249,115,22,.15);
+                             border:1px solid #f97316;color:#f97316;padding:1px 5px;
+                             border-radius:3px;font-weight:700;margin-left:5px">IB</span>
+              </td>
+              <td class="r">₹36.74</td>
+              <td class="r"><span class="ema-tag"
+                   style="background:#f0fdf4;border-color:#86efac;color:#059669">₹37.44</span></td>
+              <td class="r"><span class="rs-tag">98.0</span></td>
+              <td class="r" style="color:#15803d;font-weight:600">+158.6%</td>
+              <td class="r" style="color:#b45309;font-weight:600">-9.2%</td>
+              <td class="r">₹1,750 Cr</td>
+              <td class="r">₹44 Cr</td>
+              <td>Textiles & Apparels</td>
+            </tr>
+            <tr class="srow"
+              data-sym="PRECWIRE" data-close="436.7" data-rs="97.81"
+              data-ema10="426.09" data-tmc="7983.22" data-tv="39.29"
+              data-indgrp="Industrial Products" data-ind="Aluminium, Copper & Zinc Products">
+              <td>
+                <a class="sym-tag"
+                   style="background:#fff7ed;border-color:#fdba74;color:#c2410c"
+                   href="https://www.tradingview.com/chart/?symbol=NSE%3APRECWIRE" target="_blank" rel="noopener">PRECWIRE</a>
+                <span style="font-size:.62rem;background:rgba(249,115,22,.15);
+                             border:1px solid #f97316;color:#f97316;padding:1px 5px;
+                             border-radius:3px;font-weight:700;margin-left:5px">IB</span>
+              </td>
+              <td class="r">₹436.70</td>
+              <td class="r"><span class="ema-tag"
+                   style="background:#f0fdf4;border-color:#86efac;color:#059669">₹426.09</span></td>
+              <td class="r"><span class="rs-tag">97.8</span></td>
+              <td class="r" style="color:#15803d;font-weight:600">+159.8%</td>
+              <td class="r" style="color:#b45309;font-weight:600">-6.6%</td>
+              <td class="r">₹7,983 Cr</td>
+              <td class="r">₹39 Cr</td>
+              <td>Industrial Products</td>
+            </tr>
+            <tr class="srow"
+              data-sym="MWL" data-close="380.65" data-rs="97.56"
+              data-ema10="374.33" data-tmc="1130.56" data-tv="3.27"
+              data-indgrp="Metals & Minerals Trading" data-ind="Trading - Metals">
+              <td>
+                <a class="sym-tag"
+                   style="background:#fff7ed;border-color:#fdba74;color:#c2410c"
+                   href="https://www.tradingview.com/chart/?symbol=NSE%3AMWL" target="_blank" rel="noopener">MWL</a>
+                <span style="font-size:.62rem;background:rgba(249,115,22,.15);
+                             border:1px solid #f97316;color:#f97316;padding:1px 5px;
+                             border-radius:3px;font-weight:700;margin-left:5px">IB</span>
+              </td>
+              <td class="r">₹380.65</td>
+              <td class="r"><span class="ema-tag"
+                   style="background:#f0fdf4;border-color:#86efac;color:#059669">₹374.33</span></td>
+              <td class="r"><span class="rs-tag">97.6</span></td>
+              <td class="r" style="color:#15803d;font-weight:600">+154.1%</td>
+              <td class="r" style="color:#b45309;font-weight:600">-3.8%</td>
+              <td class="r">₹1,131 Cr</td>
+              <td class="r">₹3 Cr</td>
+              <td>Metals & Minerals Trading</td>
+            </tr>
+            <tr class="srow"
+              data-sym="KIRLOSENG" data-close="1889.5" data-rs="96.44"
+              data-ema10="1823.0" data-tmc="27469.54" data-tv="83.37"
+              data-indgrp="Industrial Products" data-ind="Compressors, Pumps & Diesel Engines">
+              <td>
+                <a class="sym-tag"
+                   style="background:#fff7ed;border-color:#fdba74;color:#c2410c"
+                   href="https://www.tradingview.com/chart/?symbol=NSE%3AKIRLOSENG" target="_blank" rel="noopener">KIRLOSENG</a>
+                <span style="font-size:.62rem;background:rgba(249,115,22,.15);
+                             border:1px solid #f97316;color:#f97316;padding:1px 5px;
+                             border-radius:3px;font-weight:700;margin-left:5px">IB</span>
+              </td>
+              <td class="r">₹1,889.50</td>
+              <td class="r"><span class="ema-tag"
+                   style="background:#f0fdf4;border-color:#86efac;color:#059669">₹1,823.00</span></td>
+              <td class="r"><span class="rs-tag">96.4</span></td>
+              <td class="r" style="color:#15803d;font-weight:600">+130.3%</td>
+              <td class="r" style="color:#b45309;font-weight:600">-5.1%</td>
+              <td class="r">₹27,470 Cr</td>
+              <td class="r">₹83 Cr</td>
+              <td>Industrial Products</td>
+            </tr>
+            <tr class="srow"
+              data-sym="NARMADA" data-close="36.49" data-rs="95.81"
+              data-ema10="36.55" data-tmc="138.43" data-tv="1.13"
+              data-indgrp="Food Products" data-ind="Animal Feed">
+              <td>
+                <a class="sym-tag"
+                   style="background:#fff7ed;border-color:#fdba74;color:#c2410c"
+                   href="https://www.tradingview.com/chart/?symbol=NSE%3ANARMADA" target="_blank" rel="noopener">NARMADA</a>
+                <span style="font-size:.62rem;background:rgba(249,115,22,.15);
+                             border:1px solid #f97316;color:#f97316;padding:1px 5px;
+                             border-radius:3px;font-weight:700;margin-left:5px">IB</span>
+              </td>
+              <td class="r">₹36.49</td>
+              <td class="r"><span class="ema-tag"
+                   style="background:#f0fdf4;border-color:#86efac;color:#059669">₹36.55</span></td>
+              <td class="r"><span class="rs-tag">95.8</span></td>
+              <td class="r" style="color:#15803d;font-weight:600">+133.9%</td>
+              <td class="r" style="color:#b45309;font-weight:600">-7.9%</td>
+              <td class="r">₹138 Cr</td>
+              <td class="r">₹1 Cr</td>
+              <td>Food Products</td>
+            </tr>
+            <tr class="srow"
+              data-sym="HARDWYN" data-close="25.31" data-rs="95.37"
+              data-ema10="25.26" data-tmc="1236.23" data-tv="7.92"
+              data-indgrp="Consumer Durables" data-ind="Furniture, Home Furnishing">
+              <td>
+                <a class="sym-tag"
+                   style="background:#fff7ed;border-color:#fdba74;color:#c2410c"
+                   href="https://www.tradingview.com/chart/?symbol=NSE%3AHARDWYN" target="_blank" rel="noopener">HARDWYN</a>
+                <span style="font-size:.62rem;background:rgba(249,115,22,.15);
+                             border:1px solid #f97316;color:#f97316;padding:1px 5px;
+                             border-radius:3px;font-weight:700;margin-left:5px">IB</span>
+              </td>
+              <td class="r">₹25.31</td>
+              <td class="r"><span class="ema-tag"
+                   style="background:#f0fdf4;border-color:#86efac;color:#059669">₹25.26</span></td>
+              <td class="r"><span class="rs-tag">95.4</span></td>
+              <td class="r" style="color:#15803d;font-weight:600">+132.8%</td>
+              <td class="r" style="color:#b45309;font-weight:600">-10.5%</td>
+              <td class="r">₹1,236 Cr</td>
+              <td class="r">₹8 Cr</td>
+              <td>Consumer Durables</td>
+            </tr>
+            <tr class="srow"
+              data-sym="GOKULAGRO" data-close="231.62" data-rs="95.27"
+              data-ema10="231.33" data-tmc="6834.8" data-tv="58.72"
+              data-indgrp="Agricultural Food & other Products" data-ind="Edible Oil">
+              <td>
+                <a class="sym-tag"
+                   style="background:#fff7ed;border-color:#fdba74;color:#c2410c"
+                   href="https://www.tradingview.com/chart/?symbol=NSE%3AGOKULAGRO" target="_blank" rel="noopener">GOKULAGRO</a>
+                <span style="font-size:.62rem;background:rgba(249,115,22,.15);
+                             border:1px solid #f97316;color:#f97316;padding:1px 5px;
+                             border-radius:3px;font-weight:700;margin-left:5px">IB</span>
+              </td>
+              <td class="r">₹231.62</td>
+              <td class="r"><span class="ema-tag"
+                   style="background:#f0fdf4;border-color:#86efac;color:#059669">₹231.33</span></td>
+              <td class="r"><span class="rs-tag">95.3</span></td>
+              <td class="r" style="color:#15803d;font-weight:600">+90.6%</td>
+              <td class="r" style="color:#b45309;font-weight:600">-7.3%</td>
+              <td class="r">₹6,835 Cr</td>
+              <td class="r">₹59 Cr</td>
+              <td>Agricultural Food & other Products</td>
+            </tr>
+            <tr class="srow"
+              data-sym="POWERINDIA" data-close="35190.0" data-rs="94.88"
+              data-ema10="35858.87" data-tmc="156850.15" data-tv="542.81"
+              data-indgrp="Electrical Equipment" data-ind="Heavy Electrical Equipment">
+              <td>
+                <a class="sym-tag"
+                   style="background:#fff7ed;border-color:#fdba74;color:#c2410c"
+                   href="https://www.tradingview.com/chart/?symbol=NSE%3APOWERINDIA" target="_blank" rel="noopener">POWERINDIA</a>
+                <span style="font-size:.62rem;background:rgba(249,115,22,.15);
+                             border:1px solid #f97316;color:#f97316;padding:1px 5px;
+                             border-radius:3px;font-weight:700;margin-left:5px">IB</span>
+              </td>
+              <td class="r">₹35,190.00</td>
+              <td class="r"><span class="ema-tag"
+                   style="background:#f0fdf4;border-color:#86efac;color:#059669">₹35,858.87</span></td>
+              <td class="r"><span class="rs-tag">94.9</span></td>
+              <td class="r" style="color:#15803d;font-weight:600">+118.4%</td>
+              <td class="r" style="color:#b45309;font-weight:600">-9.3%</td>
+              <td class="r">₹1.57L Cr</td>
+              <td class="r">₹543 Cr</td>
+              <td>Electrical Equipment</td>
+            </tr>
+            <tr class="srow"
+              data-sym="BHARATSE" data-close="182.34" data-rs="94.69"
+              data-ema10="185.72" data-tmc="1145.1" data-tv="4.16"
+              data-indgrp="Auto Components" data-ind="Auto Components & Equipments">
+              <td>
+                <a class="sym-tag"
+                   style="background:#fff7ed;border-color:#fdba74;color:#c2410c"
+                   href="https://www.tradingview.com/chart/?symbol=NSE%3ABHARATSE" target="_blank" rel="noopener">BHARATSE</a>
+                <span style="font-size:.62rem;background:rgba(249,115,22,.15);
+                             border:1px solid #f97316;color:#f97316;padding:1px 5px;
+                             border-radius:3px;font-weight:700;margin-left:5px">IB</span>
+              </td>
+              <td class="r">₹182.34</td>
+              <td class="r"><span class="ema-tag"
+                   style="background:#f0fdf4;border-color:#86efac;color:#059669">₹185.72</span></td>
+              <td class="r"><span class="rs-tag">94.7</span></td>
+              <td class="r" style="color:#15803d;font-weight:600">+90.8%</td>
+              <td class="r" style="color:#b45309;font-weight:600">-23.9%</td>
+              <td class="r">₹1,145 Cr</td>
+              <td class="r">₹4 Cr</td>
+              <td>Auto Components</td>
+            </tr>
+            <tr class="srow"
+              data-sym="CUMMINSIND" data-close="5692.5" data-rs="94.39"
+              data-ema10="5659.92" data-tmc="157796.1" data-tv="401.01"
+              data-indgrp="Industrial Products" data-ind="Compressors, Pumps & Diesel Engines">
+              <td>
+                <a class="sym-tag"
+                   style="background:#fff7ed;border-color:#fdba74;color:#c2410c"
+                   href="https://www.tradingview.com/chart/?symbol=NSE%3ACUMMINSIND" target="_blank" rel="noopener">CUMMINSIND</a>
+                <span style="font-size:.62rem;background:rgba(249,115,22,.15);
+                             border:1px solid #f97316;color:#f97316;padding:1px 5px;
+                             border-radius:3px;font-weight:700;margin-left:5px">IB</span>
+              </td>
+              <td class="r">₹5,692.50</td>
+              <td class="r"><span class="ema-tag"
+                   style="background:#f0fdf4;border-color:#86efac;color:#059669">₹5,659.92</span></td>
+              <td class="r"><span class="rs-tag">94.4</span></td>
+              <td class="r" style="color:#15803d;font-weight:600">+81.2%</td>
+              <td class="r" style="color:#b45309;font-weight:600">-6.7%</td>
+              <td class="r">₹1.58L Cr</td>
+              <td class="r">₹401 Cr</td>
+              <td>Industrial Products</td>
+            </tr>
+            <tr class="srow"
+              data-sym="SPORTKING" data-close="182.43" data-rs="93.56"
+              data-ema10="175.42" data-tmc="2321.8" data-tv="9.26"
+              data-indgrp="Textiles & Apparels" data-ind="Other Textile Products">
+              <td>
+                <a class="sym-tag"
+                   style="background:#fff7ed;border-color:#fdba74;color:#c2410c"
+                   href="https://www.tradingview.com/chart/?symbol=NSE%3ASPORTKING" target="_blank" rel="noopener">SPORTKING</a>
+                <span style="font-size:.62rem;background:rgba(249,115,22,.15);
+                             border:1px solid #f97316;color:#f97316;padding:1px 5px;
+                             border-radius:3px;font-weight:700;margin-left:5px">IB</span>
+              </td>
+              <td class="r">₹182.43</td>
+              <td class="r"><span class="ema-tag"
+                   style="background:#f0fdf4;border-color:#86efac;color:#059669">₹175.42</span></td>
+              <td class="r"><span class="rs-tag">93.6</span></td>
+              <td class="r" style="color:#15803d;font-weight:600">+133.4%</td>
+              <td class="r" style="color:#b45309;font-weight:600">-8.1%</td>
+              <td class="r">₹2,322 Cr</td>
+              <td class="r">₹9 Cr</td>
+              <td>Textiles & Apparels</td>
+            </tr>
+            <tr class="srow"
+              data-sym="KARURVYSYA" data-close="289.1" data-rs="92.3"
+              data-ema10="290.78" data-tmc="27944.95" data-tv="98.51"
+              data-indgrp="Banks" data-ind="Private Sector Bank">
+              <td>
+                <a class="sym-tag"
+                   style="background:#fff7ed;border-color:#fdba74;color:#c2410c"
+                   href="https://www.tradingview.com/chart/?symbol=NSE%3AKARURVYSYA" target="_blank" rel="noopener">KARURVYSYA</a>
+                <span style="font-size:.62rem;background:rgba(249,115,22,.15);
+                             border:1px solid #f97316;color:#f97316;padding:1px 5px;
+                             border-radius:3px;font-weight:700;margin-left:5px">IB</span>
+              </td>
+              <td class="r">₹289.10</td>
+              <td class="r"><span class="ema-tag"
+                   style="background:#f0fdf4;border-color:#86efac;color:#059669">₹290.78</span></td>
+              <td class="r"><span class="rs-tag">92.3</span></td>
+              <td class="r" style="color:#15803d;font-weight:600">+60.5%</td>
+              <td class="r" style="color:#b45309;font-weight:600">-15.8%</td>
+              <td class="r">₹27,945 Cr</td>
+              <td class="r">₹99 Cr</td>
+              <td>Banks</td>
+            </tr>
+            <tr class="srow"
+              data-sym="MUTHOOTMF" data-close="180.1" data-rs="88.4"
+              data-ema10="179.53" data-tmc="3021.48" data-tv="13.09"
+              data-indgrp="Finance" data-ind="Microfinance Institutions">
+              <td>
+                <a class="sym-tag"
+                   style="background:#fff7ed;border-color:#fdba74;color:#c2410c"
+                   href="https://www.tradingview.com/chart/?symbol=NSE%3AMUTHOOTMF" target="_blank" rel="noopener">MUTHOOTMF</a>
+                <span style="font-size:.62rem;background:rgba(249,115,22,.15);
+                             border:1px solid #f97316;color:#f97316;padding:1px 5px;
+                             border-radius:3px;font-weight:700;margin-left:5px">IB</span>
+              </td>
+              <td class="r">₹180.10</td>
+              <td class="r"><span class="ema-tag"
+                   style="background:#f0fdf4;border-color:#86efac;color:#059669">₹179.53</span></td>
+              <td class="r"><span class="rs-tag">88.4</span></td>
+              <td class="r" style="color:#15803d;font-weight:600">+45.1%</td>
+              <td class="r" style="color:#b45309;font-weight:600">-17.4%</td>
+              <td class="r">₹3,021 Cr</td>
+              <td class="r">₹13 Cr</td>
+              <td>Finance</td>
+            </tr>
+            <tr class="srow"
+              data-sym="KRISHNADEF" data-close="1134.6" data-rs="87.57"
+              data-ema10="1129.62" data-tmc="1595.14" data-tv="17.88"
+              data-indgrp="Aerospace & Defense" data-ind="Aerospace & Defense">
+              <td>
+                <a class="sym-tag"
+                   style="background:#fff7ed;border-color:#fdba74;color:#c2410c"
+                   href="https://www.tradingview.com/chart/?symbol=NSE%3AKRISHNADEF" target="_blank" rel="noopener">KRISHNADEF</a>
+                <span style="font-size:.62rem;background:rgba(249,115,22,.15);
+                             border:1px solid #f97316;color:#f97316;padding:1px 5px;
+                             border-radius:3px;font-weight:700;margin-left:5px">IB</span>
+              </td>
+              <td class="r">₹1,134.60</td>
+              <td class="r"><span class="ema-tag"
+                   style="background:#f0fdf4;border-color:#86efac;color:#059669">₹1,129.62</span></td>
+              <td class="r"><span class="rs-tag">87.6</span></td>
+              <td class="r" style="color:#15803d;font-weight:600">+70.6%</td>
+              <td class="r" style="color:#b45309;font-weight:600">-13.6%</td>
+              <td class="r">₹1,595 Cr</td>
+              <td class="r">₹18 Cr</td>
+              <td>Aerospace & Defense</td>
+            </tr>
+            <tr class="srow"
+              data-sym="STAR" data-close="1081.2" data-rs="87.18"
+              data-ema10="1117.76" data-tmc="9965.71" data-tv="34.82"
+              data-indgrp="Pharmaceuticals & Biotechnology" data-ind="Pharmaceuticals">
+              <td>
+                <a class="sym-tag"
+                   style="background:#fff7ed;border-color:#fdba74;color:#c2410c"
+                   href="https://www.tradingview.com/chart/?symbol=NSE%3ASTAR" target="_blank" rel="noopener">STAR</a>
+                <span style="font-size:.62rem;background:rgba(249,115,22,.15);
+                             border:1px solid #f97316;color:#f97316;padding:1px 5px;
+                             border-radius:3px;font-weight:700;margin-left:5px">IB</span>
+              </td>
+              <td class="r">₹1,081.20</td>
+              <td class="r"><span class="ema-tag"
+                   style="background:#f0fdf4;border-color:#86efac;color:#059669">₹1,117.76</span></td>
+              <td class="r"><span class="rs-tag">87.2</span></td>
+              <td class="r" style="color:#15803d;font-weight:600">+52.3%</td>
+              <td class="r" style="color:#b45309;font-weight:600">-12.2%</td>
+              <td class="r">₹9,966 Cr</td>
+              <td class="r">₹35 Cr</td>
+              <td>Pharmaceuticals & Biotechnology</td>
+            </tr>
+            <tr class="srow"
+              data-sym="VIJAYA" data-close="1279.4" data-rs="86.45"
+              data-ema10="1272.41" data-tmc="13164.61" data-tv="28.44"
+              data-indgrp="Healthcare Services" data-ind="Healthcare Service Provider">
+              <td>
+                <a class="sym-tag"
+                   style="background:#fff7ed;border-color:#fdba74;color:#c2410c"
+                   href="https://www.tradingview.com/chart/?symbol=NSE%3AVIJAYA" target="_blank" rel="noopener">VIJAYA</a>
+                <span style="font-size:.62rem;background:rgba(249,115,22,.15);
+                             border:1px solid #f97316;color:#f97316;padding:1px 5px;
+                             border-radius:3px;font-weight:700;margin-left:5px">IB</span>
+              </td>
+              <td class="r">₹1,279.40</td>
+              <td class="r"><span class="ema-tag"
+                   style="background:#f0fdf4;border-color:#86efac;color:#059669">₹1,272.41</span></td>
+              <td class="r"><span class="rs-tag">86.4</span></td>
+              <td class="r" style="color:#15803d;font-weight:600">+50.9%</td>
+              <td class="r" style="color:#b45309;font-weight:600">-7.2%</td>
+              <td class="r">₹13,165 Cr</td>
+              <td class="r">₹28 Cr</td>
+              <td>Healthcare Services</td>
+            </tr>
+            <tr class="srow"
+              data-sym="HONASA" data-close="402.1" data-rs="82.25"
+              data-ema10="396.51" data-tmc="13087.69" data-tv="88.94"
+              data-indgrp="Personal Products" data-ind="Personal Care">
+              <td>
+                <a class="sym-tag"
+                   style="background:#fff7ed;border-color:#fdba74;color:#c2410c"
+                   href="https://www.tradingview.com/chart/?symbol=NSE%3AHONASA" target="_blank" rel="noopener">HONASA</a>
+                <span style="font-size:.62rem;background:rgba(249,115,22,.15);
+                             border:1px solid #f97316;color:#f97316;padding:1px 5px;
+                             border-radius:3px;font-weight:700;margin-left:5px">IB</span>
+              </td>
+              <td class="r">₹402.10</td>
+              <td class="r"><span class="ema-tag"
+                   style="background:#f0fdf4;border-color:#86efac;color:#059669">₹396.51</span></td>
+              <td class="r"><span class="rs-tag">82.3</span></td>
+              <td class="r" style="color:#15803d;font-weight:600">+61.9%</td>
+              <td class="r" style="color:#b45309;font-weight:600">-5.4%</td>
+              <td class="r">₹13,088 Cr</td>
+              <td class="r">₹89 Cr</td>
+              <td>Personal Products</td>
+            </tr>
+            <tr class="srow"
+              data-sym="VHLTD" data-close="139.82" data-rs="81.03"
+              data-ema10="139.17" data-tmc="946.58" data-tv="0.18"
+              data-indgrp="Leisure Services" data-ind="Hotels & Resorts">
+              <td>
+                <a class="sym-tag"
+                   style="background:#fff7ed;border-color:#fdba74;color:#c2410c"
+                   href="https://www.tradingview.com/chart/?symbol=NSE%3AVHLTD" target="_blank" rel="noopener">VHLTD</a>
+                <span style="font-size:.62rem;background:rgba(249,115,22,.15);
+                             border:1px solid #f97316;color:#f97316;padding:1px 5px;
+                             border-radius:3px;font-weight:700;margin-left:5px">IB</span>
+              </td>
+              <td class="r">₹139.82</td>
+              <td class="r"><span class="ema-tag"
+                   style="background:#f0fdf4;border-color:#86efac;color:#059669">₹139.17</span></td>
+              <td class="r"><span class="rs-tag">81.0</span></td>
+              <td class="r" style="color:#15803d;font-weight:600">+50.3%</td>
+              <td class="r" style="color:#b45309;font-weight:600">-10.0%</td>
+              <td class="r">₹947 Cr</td>
+              <td class="r">₹0 Cr</td>
+              <td>Leisure Services</td>
+            </tr>
+            <tr class="srow"
+              data-sym="AARVI" data-close="131.94" data-rs="80.35"
+              data-ema10="130.69" data-tmc="195.41" data-tv="0.28"
+              data-indgrp="Commercial Services & Supplies" data-ind="Diversified Commercial Services">
+              <td>
+                <a class="sym-tag"
+                   style="background:#fff7ed;border-color:#fdba74;color:#c2410c"
+                   href="https://www.tradingview.com/chart/?symbol=NSE%3AAARVI" target="_blank" rel="noopener">AARVI</a>
+                <span style="font-size:.62rem;background:rgba(249,115,22,.15);
+                             border:1px solid #f97316;color:#f97316;padding:1px 5px;
+                             border-radius:3px;font-weight:700;margin-left:5px">IB</span>
+              </td>
+              <td class="r">₹131.94</td>
+              <td class="r"><span class="ema-tag"
+                   style="background:#f0fdf4;border-color:#86efac;color:#059669">₹130.69</span></td>
+              <td class="r"><span class="rs-tag">80.4</span></td>
+              <td class="r" style="color:#15803d;font-weight:600">+36.0%</td>
+              <td class="r" style="color:#b45309;font-weight:600">-13.2%</td>
+              <td class="r">₹195 Cr</td>
+              <td class="r">₹0 Cr</td>
+              <td>Commercial Services & Supplies</td>
+            </tr>
+            <tr class="srow"
+              data-sym="BHARATWIRE" data-close="215.7" data-rs="79.08"
+              data-ema10="221.59" data-tmc="1480.2" data-tv="19.97"
+              data-indgrp="Industrial Products" data-ind="Iron & Steel Products">
+              <td>
+                <a class="sym-tag"
+                   style="background:#fff7ed;border-color:#fdba74;color:#c2410c"
+                   href="https://www.tradingview.com/chart/?symbol=NSE%3ABHARATWIRE" target="_blank" rel="noopener">BHARATWIRE</a>
+                <span style="font-size:.62rem;background:rgba(249,115,22,.15);
+                             border:1px solid #f97316;color:#f97316;padding:1px 5px;
+                             border-radius:3px;font-weight:700;margin-left:5px">IB</span>
+              </td>
+              <td class="r">₹215.70</td>
+              <td class="r"><span class="ema-tag"
+                   style="background:#f0fdf4;border-color:#86efac;color:#059669">₹221.59</span></td>
+              <td class="r"><span class="rs-tag">79.1</span></td>
+              <td class="r" style="color:#15803d;font-weight:600">+45.7%</td>
+              <td class="r" style="color:#b45309;font-weight:600">-17.7%</td>
+              <td class="r">₹1,480 Cr</td>
+              <td class="r">₹20 Cr</td>
+              <td>Industrial Products</td>
+            </tr>
+            <tr class="srow"
+              data-sym="ASHIANA" data-close="355.7" data-rs="73.77"
+              data-ema10="365.38" data-tmc="3575.67" data-tv="4.08"
+              data-indgrp="Realty" data-ind="Residential, Commercial Projects">
+              <td>
+                <a class="sym-tag"
+                   style="background:#fff7ed;border-color:#fdba74;color:#c2410c"
+                   href="https://www.tradingview.com/chart/?symbol=NSE%3AASHIANA" target="_blank" rel="noopener">ASHIANA</a>
+                <span style="font-size:.62rem;background:rgba(249,115,22,.15);
+                             border:1px solid #f97316;color:#f97316;padding:1px 5px;
+                             border-radius:3px;font-weight:700;margin-left:5px">IB</span>
+              </td>
+              <td class="r">₹355.70</td>
+              <td class="r"><span class="ema-tag"
+                   style="background:#f0fdf4;border-color:#86efac;color:#059669">₹365.38</span></td>
+              <td class="r"><span class="rs-tag">73.8</span></td>
+              <td class="r" style="color:#15803d;font-weight:600">+32.4%</td>
+              <td class="r" style="color:#b45309;font-weight:600">-8.7%</td>
+              <td class="r">₹3,576 Cr</td>
+              <td class="r">₹4 Cr</td>
+              <td>Realty</td>
+            </tr>
+            <tr class="srow"
+              data-sym="SIEMENS" data-close="3709.6" data-rs="73.14"
+              data-ema10="3742.99" data-tmc="132106.47" data-tv="188.84"
+              data-indgrp="Electrical Equipment" data-ind="Heavy Electrical Equipment">
+              <td>
+                <a class="sym-tag"
+                   style="background:#fff7ed;border-color:#fdba74;color:#c2410c"
+                   href="https://www.tradingview.com/chart/?symbol=NSE%3ASIEMENS" target="_blank" rel="noopener">SIEMENS</a>
+                <span style="font-size:.62rem;background:rgba(249,115,22,.15);
+                             border:1px solid #f97316;color:#f97316;padding:1px 5px;
+                             border-radius:3px;font-weight:700;margin-left:5px">IB</span>
+              </td>
+              <td class="r">₹3,709.60</td>
+              <td class="r"><span class="ema-tag"
+                   style="background:#f0fdf4;border-color:#86efac;color:#059669">₹3,742.99</span></td>
+              <td class="r"><span class="rs-tag">73.1</span></td>
+              <td class="r" style="color:#15803d;font-weight:600">+31.3%</td>
+              <td class="r" style="color:#b45309;font-weight:600">-5.8%</td>
+              <td class="r">₹1.32L Cr</td>
+              <td class="r">₹189 Cr</td>
+              <td>Electrical Equipment</td>
+            </tr></tbody>
+    </table>
+  </div>
+</div>
+
+<footer>Data from NSE India &nbsp;·&nbsp; Generated 03 Jun 2026
+  &nbsp;·&nbsp; For informational purposes only &nbsp;·&nbsp; Not financial advice</footer>
+
+<script>
+
+function filterRows() {
+  const q = document.getElementById('searchInput').value.toLowerCase();
+  document.querySelectorAll('#tableBody .srow').forEach(r => {
+    const sym    = (r.dataset.sym    || '').toLowerCase();
+    const indgrp = (r.dataset.indgrp || '').toLowerCase();
+    const ind    = (r.dataset.ind    || '').toLowerCase();
+    r.style.display = (sym.includes(q) || indgrp.includes(q) || ind.includes(q)) ? '' : 'none';
+  });
+}
+
+
+let sortCol = null, sortAsc = true;
+document.querySelectorAll('#mainTable thead th').forEach(th => {
+  th.addEventListener('click', () => {
+    const col  = th.dataset.col;
+    const type = th.dataset.type;
+    if (!col) return;
+    sortAsc = (sortCol === col) ? !sortAsc : true;
+    sortCol = col;
+    document.querySelectorAll('#mainTable thead th')
+      .forEach(h => h.classList.remove('sort-asc','sort-desc'));
+    th.classList.add(sortAsc ? 'sort-asc' : 'sort-desc');
+    const tbody = document.getElementById('tableBody');
+    Array.from(tbody.querySelectorAll('.srow'))
+      .sort((a, b) => {
+        let av = a.dataset[col], bv = b.dataset[col];
+        if (type === 'num') {
+          av = parseFloat(av); bv = parseFloat(bv);
+          if (isNaN(av)) av = -Infinity;
+          if (isNaN(bv)) bv = -Infinity;
+          return sortAsc ? av - bv : bv - av;
+        }
+        return sortAsc ? av.localeCompare(bv) : bv.localeCompare(av);
+      })
+      .forEach(r => tbody.appendChild(r));
+  });
+});
+
+</script>
+</body></html>
