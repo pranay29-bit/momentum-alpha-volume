@@ -1,0 +1,2543 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Momentum Alpha — Volume Action — 11 Jun 2026</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+:root { --ACCENT1:var(--blue); --ACCENT2:var(--indigo); }
+
+:root {
+  /* Surfaces */
+  --bg:         #f7f8fc;
+  --surface:    #ffffff;
+  --surface2:   #f1f3f9;
+  --surface3:   #e8ebf5;
+  --border:     #e2e6f0;
+  --border2:    #ccd1e4;
+
+  /* Text */
+  --text:       #0f1629;
+  --muted:      #5a6282;
+  --subtle:     #8b93b5;
+
+  /* Brand accents */
+  --indigo:     #4f46e5;
+  --indigo-lt:  #eef0fd;
+  --indigo-mid: #c7d2fe;
+  --emerald:    #059669;
+  --emerald-lt: #ecfdf5;
+  --emerald-mid:#a7f3d0;
+  --blue:       #2563eb;
+  --blue-lt:    #eff6ff;
+  --blue-mid:   #bfdbfe;
+  --amber:      #d97706;
+  --amber-lt:   #fffbeb;
+  --amber-mid:  #fde68a;
+  --red:        #dc2626;
+  --red-lt:     #fef2f2;
+  --violet:     #7c3aed;
+  --violet-lt:  #f5f3ff;
+  --violet-mid: #ddd6fe;
+
+  /* NEW badge */
+  --new-bg:     #fdf4ff;
+  --new-border: #d946ef;
+  --new-text:   #a21caf;
+  --new-row:    #fdf4ff;
+
+  /* Type */
+  --sans:  'Outfit', system-ui, sans-serif;
+  --mono:  'DM Mono', 'Courier New', monospace;
+
+  /* Radii */
+  --r:   8px;
+  --rl:  12px;
+  --rxl: 16px;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 14px; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--sans);
+  line-height: 1.6;
+  min-height: 100vh;
+}
+a { color: inherit; text-decoration: none; }
+
+/* ── Topbar ── */
+.topbar {
+  height: 3px;
+  background: linear-gradient(90deg, var(--ACCENT1) 0%, var(--ACCENT2) 100%);
+}
+
+/* ── Header ── */
+header {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 1.6rem 2.5rem;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+.hdr-left { display: flex; flex-direction: column; gap: .2rem; }
+.brand {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  margin-bottom: .25rem;
+}
+.brand-dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+}
+.brand-name {
+  font-family: var(--mono);
+  font-size: .65rem;
+  font-weight: 500;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+header h1 {
+  font-size: clamp(1.35rem, 2.5vw, 1.9rem);
+  font-weight: 700;
+  letter-spacing: -.03em;
+  line-height: 1.1;
+  color: var(--text);
+}
+.hdr-sub {
+  font-size: .8rem;
+  color: var(--muted);
+  margin-top: .15rem;
+}
+.badge-row { display: flex; gap: .45rem; margin-top: .5rem; flex-wrap: wrap; }
+.hdr-badge {
+  font-size: .64rem;
+  font-weight: 600;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  border-radius: 999px;
+  padding: .22rem .75rem;
+  border: 1px solid;
+}
+.date-pill {
+  font-family: var(--mono);
+  font-size: .72rem;
+  font-weight: 500;
+  padding: .4rem 1.1rem;
+  border-radius: 999px;
+  border: 1px solid;
+  white-space: nowrap;
+  letter-spacing: .04em;
+  align-self: flex-start;
+  margin-top: .25rem;
+}
+
+/* ── CSV bar ── */
+.csv-bar {
+  display: flex;
+  align-items: center;
+  gap: .6rem;
+  padding: .6rem 2.5rem;
+  background: var(--surface2);
+  border-bottom: 1px solid var(--border);
+  flex-wrap: wrap;
+}
+.csv-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: .35rem .95rem;
+  font-family: var(--mono);
+  font-size: .7rem;
+  font-weight: 500;
+  border-radius: var(--r);
+  border: 1px solid;
+  cursor: pointer;
+  transition: background .14s;
+  letter-spacing: .03em;
+}
+.csv-primary {
+  background: var(--emerald-lt);
+  border-color: var(--emerald-mid);
+  color: var(--emerald);
+}
+.csv-primary:hover { background: #d1fae5; }
+.csv-secondary {
+  background: var(--blue-lt);
+  border-color: var(--blue-mid);
+  color: var(--blue);
+}
+.csv-secondary:hover { background: #dbeafe; }
+.csv-label {
+  font-family: var(--mono);
+  font-size: .67rem;
+  color: var(--subtle);
+  margin-left: auto;
+}
+
+/* ── KPI strip ── */
+.kpi-strip {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  border-bottom: 1px solid var(--border);
+}
+.kpi {
+  background: var(--surface);
+  padding: 1.1rem 1.6rem;
+  border-right: 1px solid var(--border);
+  position: relative;
+}
+.kpi:last-child { border-right: none; }
+.kpi::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  border-radius: 0 0 2px 2px;
+  background: var(--accent);
+}
+.kpi-lbl {
+  font-size: .62rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .11em;
+  color: var(--muted);
+  margin-bottom: .35rem;
+}
+.kpi-val {
+  font-size: clamp(1.1rem, 2vw, 1.65rem);
+  font-weight: 700;
+  letter-spacing: -.02em;
+  line-height: 1;
+  color: var(--accent);
+}
+.kpi-hint {
+  font-size: .67rem;
+  color: var(--subtle);
+  margin-top: .25rem;
+}
+
+/* ── Charts area ── */
+.charts-area {
+  padding: 1.1rem 2.5rem;
+  display: grid;
+  gap: .85rem;
+}
+.chart-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--rl);
+  padding: 1.1rem 1.3rem .9rem;
+}
+.chart-lbl {
+  font-size: .62rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .11em;
+  color: var(--muted);
+  margin-bottom: .8rem;
+}
+.chart-wrap { position: relative; height: 220px; }
+
+/* ── Table section ── */
+.table-sec { padding: 0 2.5rem 3rem; }
+.tbl-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: .9rem 0 .7rem;
+  flex-wrap: wrap;
+  gap: .6rem;
+}
+.tbl-title {
+  font-size: .62rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .12em;
+  color: var(--muted);
+}
+.tbl-count { color: var(--ACCENT1); margin-left: .4rem; }
+.controls { display: flex; align-items: center; gap: .85rem; flex-wrap: wrap; }
+.search {
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-radius: var(--r);
+  color: var(--text);
+  font-family: var(--sans);
+  font-size: .82rem;
+  padding: .38rem .9rem;
+  outline: none;
+  width: 210px;
+  transition: border-color .16s, box-shadow .16s;
+}
+.search::placeholder { color: var(--subtle); }
+.search:focus {
+  border-color: var(--ACCENT1);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--ACCENT1) 12%, transparent);
+}
+.legend-row { display: flex; gap: .9rem; align-items: center; flex-wrap: wrap; }
+.leg { display: flex; align-items: center; gap: .3rem; font-size: .68rem; color: var(--muted); }
+.leg-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+
+/* ── Table ── */
+.tbl-outer {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--rl);
+  overflow: hidden;
+}
+table { width: 100%; border-collapse: collapse; font-size: .82rem; white-space: nowrap; }
+thead tr {
+  background: var(--surface2);
+  border-bottom: 1px solid var(--border);
+  position: sticky; top: 0; z-index: 2;
+}
+th {
+  font-size: .62rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .1em;
+  color: var(--muted);
+  padding: .68rem 1rem;
+  text-align: left;
+  cursor: pointer;
+  user-select: none;
+  transition: background .12s;
+  white-space: nowrap;
+}
+th:hover { background: var(--surface3); }
+th.r { text-align: right; } th.c { text-align: center; }
+th .si { margin-left: .25rem; opacity: .3; font-style: normal; font-size: .65rem; }
+th.sort-asc  .si::after { content: '▲'; opacity: 1; color: var(--ACCENT1); }
+th.sort-desc .si::after { content: '▼'; opacity: 1; color: var(--ACCENT1); }
+th:not(.sort-asc):not(.sort-desc) .si::after { content: '⇅'; }
+.srow { border-bottom: 1px solid var(--border); transition: background .1s; }
+.srow:last-child { border-bottom: none; }
+.srow:hover { background: var(--bg); }
+td { padding: .65rem 1rem; vertical-align: middle; }
+td.r { text-align: right; } td.c { text-align: center; }
+
+/* ── NEW-stock highlight row ── */
+.srow.is-new { background: var(--new-row); }
+.srow.is-new:hover { background: #fae8ff; }
+
+/* ── Symbol tags ── */
+.sym-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: .35rem;
+  font-family: var(--mono);
+  font-weight: 500;
+  font-size: .72rem;
+  padding: .2rem .6rem;
+  border-radius: 6px;
+  letter-spacing: .05em;
+  border: 1px solid;
+  transition: filter .12s;
+}
+.sym-tag:hover { filter: brightness(.93); }
+.sym-new-star {
+  font-size: .55rem;
+  background: var(--new-bg);
+  border: 1px solid var(--new-border);
+  color: var(--new-text);
+  border-radius: 999px;
+  padding: .1rem .38rem;
+  font-weight: 700;
+  letter-spacing: .04em;
+  white-space: nowrap;
+}
+
+/* ── Value pills ── */
+.pill {
+  display: inline-block;
+  font-family: var(--mono);
+  font-size: .71rem;
+  font-weight: 500;
+  padding: .18rem .55rem;
+  border-radius: 999px;
+  border: 1px solid transparent;
+}
+.pill-green  { background: var(--emerald-lt); border-color: var(--emerald-mid); color: var(--emerald); }
+.pill-red    { background: var(--red-lt);     border-color: #fca5a5;            color: var(--red); }
+.pill-amber  { background: var(--amber-lt);   border-color: var(--amber-mid);   color: var(--amber); }
+.pill-indigo { background: var(--indigo-lt);  border-color: var(--indigo-mid);  color: var(--indigo); }
+.pill-blue   { background: var(--blue-lt);    border-color: var(--blue-mid);    color: var(--blue); }
+.pill-muted  { background: var(--surface2);   border-color: var(--border2);     color: var(--muted); }
+.pill-violet { background: var(--violet-lt);  border-color: var(--violet-mid);  color: var(--violet); }
+
+/* ── Volume bar ── */
+.vol-wrap { display: flex; align-items: center; gap: .5rem; min-width: 130px; }
+.vol-bg   { flex: 1; height: 4px; background: var(--surface3); border-radius: 99px; overflow: hidden; }
+.vol-fill { height: 100%; border-radius: 99px; }
+.vol-pct  { font-family: var(--mono); font-size: .7rem; font-weight: 600; min-width: 42px; text-align: right; }
+
+/* ── IB badge ── */
+.ib-badge {
+  display: inline-block;
+  font-family: var(--mono);
+  font-size: .58rem;
+  font-weight: 600;
+  background: var(--amber-lt);
+  border: 1px solid var(--amber-mid);
+  color: var(--amber);
+  padding: .1rem .4rem;
+  border-radius: 4px;
+  margin-left: .3rem;
+  letter-spacing: .04em;
+  vertical-align: middle;
+}
+
+/* ── No-data row ── */
+.no-data {
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--muted);
+  font-size: .82rem;
+}
+
+/* ── Info callout ── */
+.callout {
+  padding: .6rem 2.5rem;
+  font-size: .78rem;
+  color: var(--muted);
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+}
+
+/* ── Footer ── */
+footer {
+  text-align: center;
+  padding: 1rem;
+  font-size: .68rem;
+  color: var(--subtle);
+  border-top: 1px solid var(--border);
+  background: var(--surface);
+  font-family: var(--mono);
+  letter-spacing: .04em;
+}
+
+</style>
+</head>
+<body>
+<div class="topbar"></div>
+
+<header>
+  <div class="hdr-left">
+    <div class="brand">
+      <div class="brand-dot" style="background:var(--blue)"></div>
+      <span class="brand-name">Momentum Alpha · Volume Action</span>
+    </div>
+    <h1>Pocket Pivot Stocks</h1>
+    <p class="hdr-sub">Blue volume / pocket pivot events · NSE India · 11 Jun 2026</p>
+    <div class="badge-row">
+      <span class="hdr-badge" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)">✓ Pocket Pivot Volume</span>
+      <span class='hdr-badge' style='background:var(--new-bg);border-color:var(--new-border);color:var(--new-text)'>✦ 32 New Stocks</span>
+    </div>
+  </div>
+  <div class="date-pill" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)">91 Stocks · 11 Jun 2026</div>
+</header>
+
+<div class="kpi-strip">
+  <div class="kpi" style="--accent:var(--blue)">
+    <div class="kpi-lbl">PPV Stocks</div>
+    <div class="kpi-val">91</div>
+    <div class="kpi-hint">pocket pivot volume</div>
+  </div>
+  <div class='kpi' style='--accent:var(--new-text)'><div class='kpi-lbl'>New Appearances</div><div class='kpi-val'>32</div><div class='kpi-hint'>first time in 10 days</div></div>
+</div>
+
+<div class="callout">
+  <strong style="color:var(--blue)">Pocket Pivot Volume (PPV):</strong>
+  Today's volume exceeds the highest <em>down-day</em> volume of the prior 10 sessions while the stock closes in the upper portion of its range —
+  a sign of institutional accumulation in a trending stock.
+  <strong>Bull Snort</strong> signals unusually explosive volume (&gt; 200% relative) alongside a bullish close.
+</div>
+
+<div class="table-sec" style="padding-top:1.1rem">
+  <div class="tbl-head">
+    <div>
+      <span class="tbl-title">Volume Action Stocks</span>
+      <span class="tbl-count tbl-title">[91]</span>
+    </div>
+    <div class="controls">
+      <div class="legend-row">
+        <div class="leg"><div class="leg-dot" style="background:var(--new-border)"></div>✦ New (10-day)</div>
+      </div>
+      <input class="search" id="searchInput" type="text"
+             placeholder="Search symbol / industry…" oninput="filterRows()"/>
+    </div>
+  </div>
+  <div class="tbl-outer">
+    <table id="mainTable">
+      <thead><tr>
+        <th data-col="sym"    data-type="str">Symbol<i class="si"></i></th>
+        <th class="r" data-col="close"  data-type="num">Close ₹<i class="si"></i></th>
+        <th class="r" data-col="relvol" data-type="num">Rel Volume<i class="si"></i></th>
+        <th class="c">Signal</th>
+        <th class="c">Bull Snort</th>
+        <th class="r" data-col="rs"    data-type="num">RS %ile<i class="si"></i></th>
+        <th data-col="indgrp" data-type="str">Industry Group<i class="si"></i></th>
+        <th data-col="ind"    data-type="str">Industry<i class="si"></i></th>
+        <th class="r">Result Date</th>
+        <th class="c">Band</th>
+      </tr></thead>
+      <tbody id="tableBody">
+        <tr class="srow"
+          data-sym="UNICHEMLAB" data-indgrp="Pharmaceuticals & Biotechnology" data-ind="Pharmaceuticals"
+          data-close="462.6" data-relvol="4000.74" data-rs="36.97">
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3AUNICHEMLAB" target="_blank" rel="noopener">UNICHEMLAB</a>
+          </td>
+          <td class="r" style="font-family:var(--mono)">₹462.60</td>
+          <td class="r">
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:100.0%;background:var(--red)"></div></div>
+              <span class="vol-pct" style="color:var(--red)">4000.7%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue" style="font-size:.65rem;letter-spacing:.04em">BLUE PPV</span></td>
+          <td class="c"><span style="color:var(--subtle);font-size:.74rem">—</span></td>
+          <td class="r"><span class="pill pill-amber">37.0</span></td>
+          <td style="color:var(--muted);font-size:.78rem">Pharmaceuticals & Biotechnology</td>
+          <td style="color:var(--subtle);font-size:.74rem">Pharmaceuticals</td>
+          <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+        </tr>
+        <tr class="srow is-new"
+          data-sym="UNIECOM" data-indgrp="IT - Software" data-ind="Software Products"
+          data-close="90.83" data-relvol="3163.37" data-rs="17.68">
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3AUNIECOM" target="_blank" rel="noopener">UNIECOM <span class="sym-new-star">✦ NEW</span></a>
+          </td>
+          <td class="r" style="font-family:var(--mono)">₹90.83</td>
+          <td class="r">
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:100.0%;background:var(--red)"></div></div>
+              <span class="vol-pct" style="color:var(--red)">3163.4%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue" style="font-size:.65rem;letter-spacing:.04em">BLUE PPV</span></td>
+          <td class="c"><span style="color:var(--subtle);font-size:.74rem">—</span></td>
+          <td class="r"><span class="pill pill-amber">17.7</span></td>
+          <td style="color:var(--muted);font-size:.78rem">IT - Software</td>
+          <td style="color:var(--subtle);font-size:.74rem">Software Products</td>
+          <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+        </tr>
+        <tr class="srow"
+          data-sym="INDOCO" data-indgrp="Pharmaceuticals & Biotechnology" data-ind="Pharmaceuticals"
+          data-close="243.0" data-relvol="3123.16" data-rs="44.57">
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3AINDOCO" target="_blank" rel="noopener">INDOCO</a>
+          </td>
+          <td class="r" style="font-family:var(--mono)">₹243.00</td>
+          <td class="r">
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:100.0%;background:var(--red)"></div></div>
+              <span class="vol-pct" style="color:var(--red)">3123.2%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue" style="font-size:.65rem;letter-spacing:.04em">BLUE PPV</span></td>
+          <td class="c"><span class="pill pill-amber" style="font-size:.65rem">🔥 SNORT</span></td>
+          <td class="r"><span class="pill pill-amber">44.6</span></td>
+          <td style="color:var(--muted);font-size:.78rem">Pharmaceuticals & Biotechnology</td>
+          <td style="color:var(--subtle);font-size:.74rem">Pharmaceuticals</td>
+          <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+        </tr>
+        <tr class="srow is-new"
+          data-sym="PPAP" data-indgrp="Auto Components" data-ind="Auto Components & Equipments"
+          data-close="244.82" data-relvol="2870.53" data-rs="66.24">
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3APPAP" target="_blank" rel="noopener">PPAP <span class="sym-new-star">✦ NEW</span></a>
+          </td>
+          <td class="r" style="font-family:var(--mono)">₹244.82</td>
+          <td class="r">
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:100.0%;background:var(--red)"></div></div>
+              <span class="vol-pct" style="color:var(--red)">2870.5%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue" style="font-size:.65rem;letter-spacing:.04em">BLUE PPV</span></td>
+          <td class="c"><span class="pill pill-amber" style="font-size:.65rem">🔥 SNORT</span></td>
+          <td class="r"><span class="pill pill-amber">66.2</span></td>
+          <td style="color:var(--muted);font-size:.78rem">Auto Components</td>
+          <td style="color:var(--subtle);font-size:.74rem">Auto Components & Equipments</td>
+          <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+        </tr>
+        <tr class="srow"
+          data-sym="AEGISLOG" data-indgrp="Gas" data-ind="Trading - Gas"
+          data-close="925.9" data-relvol="2186.73" data-rs="79.69">
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3AAEGISLOG" target="_blank" rel="noopener">AEGISLOG</a>
+          </td>
+          <td class="r" style="font-family:var(--mono)">₹925.90</td>
+          <td class="r">
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:100.0%;background:var(--red)"></div></div>
+              <span class="vol-pct" style="color:var(--red)">2186.7%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue" style="font-size:.65rem;letter-spacing:.04em">BLUE PPV</span></td>
+          <td class="c"><span class="pill pill-amber" style="font-size:.65rem">🔥 SNORT</span></td>
+          <td class="r"><span class="pill pill-amber">79.7</span></td>
+          <td style="color:var(--muted);font-size:.78rem">Gas</td>
+          <td style="color:var(--subtle);font-size:.74rem">Trading - Gas</td>
+          <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+        </tr>
+        <tr class="srow"
+          data-sym="AMANTA" data-indgrp="Pharmaceuticals & Biotechnology" data-ind="Pharmaceuticals"
+          data-close="null" data-relvol="1991.77" data-rs="null">
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3AAMANTA" target="_blank" rel="noopener">AMANTA</a>
+          </td>
+          <td class="r" style="font-family:var(--mono)">N/A</td>
+          <td class="r">
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:100.0%;background:var(--red)"></div></div>
+              <span class="vol-pct" style="color:var(--red)">1991.8%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue" style="font-size:.65rem;letter-spacing:.04em">BLUE PPV</span></td>
+          <td class="c"><span style="color:var(--subtle);font-size:.74rem">—</span></td>
+          <td class="r"><span class="pill pill-amber">N/A</span></td>
+          <td style="color:var(--muted);font-size:.78rem">Pharmaceuticals & Biotechnology</td>
+          <td style="color:var(--subtle);font-size:.74rem">Pharmaceuticals</td>
+          <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+        </tr>
+        <tr class="srow is-new"
+          data-sym="SUPREMEINF" data-indgrp="Construction" data-ind="Civil Construction"
+          data-close="80.19" data-relvol="1983.8" data-rs="54.99">
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3ASUPREMEINF" target="_blank" rel="noopener">SUPREMEINF <span class="sym-new-star">✦ NEW</span></a>
+          </td>
+          <td class="r" style="font-family:var(--mono)">₹80.19</td>
+          <td class="r">
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:100.0%;background:var(--red)"></div></div>
+              <span class="vol-pct" style="color:var(--red)">1983.8%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue" style="font-size:.65rem;letter-spacing:.04em">BLUE PPV</span></td>
+          <td class="c"><span class="pill pill-amber" style="font-size:.65rem">🔥 SNORT</span></td>
+          <td class="r"><span class="pill pill-amber">55.0</span></td>
+          <td style="color:var(--muted);font-size:.78rem">Construction</td>
+          <td style="color:var(--subtle);font-size:.74rem">Civil Construction</td>
+          <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+        </tr>
+        <tr class="srow is-new"
+          data-sym="EPACKPEB" data-indgrp="Industrial Manufacturing" data-ind="Industrial Products"
+          data-close="null" data-relvol="1791.98" data-rs="null">
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3AEPACKPEB" target="_blank" rel="noopener">EPACKPEB <span class="sym-new-star">✦ NEW</span></a>
+          </td>
+          <td class="r" style="font-family:var(--mono)">N/A</td>
+          <td class="r">
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:100.0%;background:var(--red)"></div></div>
+              <span class="vol-pct" style="color:var(--red)">1792.0%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue" style="font-size:.65rem;letter-spacing:.04em">BLUE PPV</span></td>
+          <td class="c"><span class="pill pill-amber" style="font-size:.65rem">🔥 SNORT</span></td>
+          <td class="r"><span class="pill pill-amber">N/A</span></td>
+          <td style="color:var(--muted);font-size:.78rem">Industrial Manufacturing</td>
+          <td style="color:var(--subtle);font-size:.74rem">Industrial Products</td>
+          <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+        </tr>
+        <tr class="srow is-new"
+          data-sym="MOTISONS" data-indgrp="Consumer Durables" data-ind="Gems, Jewellery And Watches"
+          data-close="13.22" data-relvol="1661.45" data-rs="22.07">
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3AMOTISONS" target="_blank" rel="noopener">MOTISONS <span class="sym-new-star">✦ NEW</span></a>
+          </td>
+          <td class="r" style="font-family:var(--mono)">₹13.22</td>
+          <td class="r">
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:100.0%;background:var(--red)"></div></div>
+              <span class="vol-pct" style="color:var(--red)">1661.4%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue" style="font-size:.65rem;letter-spacing:.04em">BLUE PPV</span></td>
+          <td class="c"><span style="color:var(--subtle);font-size:.74rem">—</span></td>
+          <td class="r"><span class="pill pill-amber">22.1</span></td>
+          <td style="color:var(--muted);font-size:.78rem">Consumer Durables</td>
+          <td style="color:var(--subtle);font-size:.74rem">Gems, Jewellery And Watches</td>
+          <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+        </tr>
+        <tr class="srow"
+          data-sym="LOTUSEYE" data-indgrp="Healthcare Services" data-ind="Hospital"
+          data-close="134.23" data-relvol="1644.24" data-rs="95.96">
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3ALOTUSEYE" target="_blank" rel="noopener">LOTUSEYE</a>
+          </td>
+          <td class="r" style="font-family:var(--mono)">₹134.23</td>
+          <td class="r">
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:100.0%;background:var(--red)"></div></div>
+              <span class="vol-pct" style="color:var(--red)">1644.2%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue" style="font-size:.65rem;letter-spacing:.04em">BLUE PPV</span></td>
+          <td class="c"><span class="pill pill-amber" style="font-size:.65rem">🔥 SNORT</span></td>
+          <td class="r"><span class="pill pill-amber">96.0</span></td>
+          <td style="color:var(--muted);font-size:.78rem">Healthcare Services</td>
+          <td style="color:var(--subtle);font-size:.74rem">Hospital</td>
+          <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+        </tr>
+        <tr class="srow"
+          data-sym="JAINAM" data-indgrp="Ferrous Metals" data-ind="Ferro & Silica Manganese"
+          data-close="262.95" data-relvol="1215.6" data-rs="71.26">
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3AJAINAM" target="_blank" rel="noopener">JAINAM</a>
+          </td>
+          <td class="r" style="font-family:var(--mono)">₹262.95</td>
+          <td class="r">
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:100.0%;background:var(--red)"></div></div>
+              <span class="vol-pct" style="color:var(--red)">1215.6%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue" style="font-size:.65rem;letter-spacing:.04em">BLUE PPV</span></td>
+          <td class="c"><span class="pill pill-amber" style="font-size:.65rem">🔥 SNORT</span></td>
+          <td class="r"><span class="pill pill-amber">71.3</span></td>
+          <td style="color:var(--muted);font-size:.78rem">Ferrous Metals</td>
+          <td style="color:var(--subtle);font-size:.74rem">Ferro & Silica Manganese</td>
+          <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+        </tr>
+        <tr class="srow"
+          data-sym="DOMS" data-indgrp="Household Products" data-ind="Stationary"
+          data-close="2255.4" data-relvol="1172.84" data-rs="59.23">
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3ADOMS" target="_blank" rel="noopener">DOMS</a>
+          </td>
+          <td class="r" style="font-family:var(--mono)">₹2,255.40</td>
+          <td class="r">
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:100.0%;background:var(--red)"></div></div>
+              <span class="vol-pct" style="color:var(--red)">1172.8%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue" style="font-size:.65rem;letter-spacing:.04em">BLUE PPV</span></td>
+          <td class="c"><span class="pill pill-amber" style="font-size:.65rem">🔥 SNORT</span></td>
+          <td class="r"><span class="pill pill-amber">59.2</span></td>
+          <td style="color:var(--muted);font-size:.78rem">Household Products</td>
+          <td style="color:var(--subtle);font-size:.74rem">Stationary</td>
+          <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+        </tr>
+        <tr class="srow is-new"
+          data-sym="VINCOFE" data-indgrp="Commercial Services & Supplies" data-ind="Trading & Distributors"
+          data-close="158.85" data-relvol="1157.05" data-rs="86.8">
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3AVINCOFE" target="_blank" rel="noopener">VINCOFE <span class="sym-new-star">✦ NEW</span></a>
+          </td>
+          <td class="r" style="font-family:var(--mono)">₹158.85</td>
+          <td class="r">
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:100.0%;background:var(--red)"></div></div>
+              <span class="vol-pct" style="color:var(--red)">1157.0%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue" style="font-size:.65rem;letter-spacing:.04em">BLUE PPV</span></td>
+          <td class="c"><span style="color:var(--subtle);font-size:.74rem">—</span></td>
+          <td class="r"><span class="pill pill-amber">86.8</span></td>
+          <td style="color:var(--muted);font-size:.78rem">Commercial Services & Supplies</td>
+          <td style="color:var(--subtle);font-size:.74rem">Trading & Distributors</td>
+          <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+        </tr>
+        <tr class="srow"
+          data-sym="ARVEE" data-indgrp="Chemicals & Petrochemicals" data-ind="Specialty Chemicals"
+          data-close="170.25" data-relvol="1093.53" data-rs="62.15">
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3AARVEE" target="_blank" rel="noopener">ARVEE</a>
+          </td>
+          <td class="r" style="font-family:var(--mono)">₹170.25</td>
+          <td class="r">
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:100.0%;background:var(--red)"></div></div>
+              <span class="vol-pct" style="color:var(--red)">1093.5%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue" style="font-size:.65rem;letter-spacing:.04em">BLUE PPV</span></td>
+          <td class="c"><span style="color:var(--subtle);font-size:.74rem">—</span></td>
+          <td class="r"><span class="pill pill-amber">62.2</span></td>
+          <td style="color:var(--muted);font-size:.78rem">Chemicals & Petrochemicals</td>
+          <td style="color:var(--subtle);font-size:.74rem">Specialty Chemicals</td>
+          <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+        </tr>
+        <tr class="srow"
+          data-sym="MEGASTAR" data-indgrp="Food Products" data-ind="Other Food Products"
+          data-close="306.45" data-relvol="858.64" data-rs="81.05">
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3AMEGASTAR" target="_blank" rel="noopener">MEGASTAR</a>
+          </td>
+          <td class="r" style="font-family:var(--mono)">₹306.45</td>
+          <td class="r">
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:100.0%;background:var(--red)"></div></div>
+              <span class="vol-pct" style="color:var(--red)">858.6%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue" style="font-size:.65rem;letter-spacing:.04em">BLUE PPV</span></td>
+          <td class="c"><span style="color:var(--subtle);font-size:.74rem">—</span></td>
+          <td class="r"><span class="pill pill-amber">81.1</span></td>
+          <td style="color:var(--muted);font-size:.78rem">Food Products</td>
+          <td style="color:var(--subtle);font-size:.74rem">Other Food Products</td>
+          <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+        </tr>
+        <tr class="srow is-new"
+          data-sym="BLUEJET" data-indgrp="Pharmaceuticals & Biotechnology" data-ind="Pharmaceuticals"
+          data-close="498.45" data-relvol="847.1" data-rs="10.18">
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3ABLUEJET" target="_blank" rel="noopener">BLUEJET <span class="sym-new-star">✦ NEW</span></a>
+          </td>
+          <td class="r" style="font-family:var(--mono)">₹498.45</td>
+          <td class="r">
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:100.0%;background:var(--red)"></div></div>
+              <span class="vol-pct" style="color:var(--red)">847.1%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue" style="font-size:.65rem;letter-spacing:.04em">BLUE PPV</span></td>
+          <td class="c"><span style="color:var(--subtle);font-size:.74rem">—</span></td>
+          <td class="r"><span class="pill pill-amber">10.2</span></td>
+          <td style="color:var(--muted);font-size:.78rem">Pharmaceuticals & Biotechnology</td>
+          <td style="color:var(--subtle);font-size:.74rem">Pharmaceuticals</td>
+          <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+        </tr>
+        <tr class="srow"
+          data-sym="NITIRAJ" data-indgrp="Consumer Durables" data-ind="Consumer Electronics"
+          data-close="196.55" data-relvol="818.0" data-rs="58.65">
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3ANITIRAJ" target="_blank" rel="noopener">NITIRAJ</a>
+          </td>
+          <td class="r" style="font-family:var(--mono)">₹196.55</td>
+          <td class="r">
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:100.0%;background:var(--red)"></div></div>
+              <span class="vol-pct" style="color:var(--red)">818.0%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue" style="font-size:.65rem;letter-spacing:.04em">BLUE PPV</span></td>
+          <td class="c"><span class="pill pill-amber" style="font-size:.65rem">🔥 SNORT</span></td>
+          <td class="r"><span class="pill pill-amber">58.6</span></td>
+          <td style="color:var(--muted);font-size:.78rem">Consumer Durables</td>
+          <td style="color:var(--subtle);font-size:.74rem">Consumer Electronics</td>
+          <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+        </tr>
+        <tr class="srow is-new"
+          data-sym="SAMPANN" data-indgrp="Industrial Products" data-ind="Rubber"
+          data-close="26.88" data-relvol="811.64" data-rs="50.95">
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3ASAMPANN" target="_blank" rel="noopener">SAMPANN <span class="sym-new-star">✦ NEW</span></a>
+          </td>
+          <td class="r" style="font-family:var(--mono)">₹26.88</td>
+          <td class="r">
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:100.0%;background:var(--red)"></div></div>
+              <span class="vol-pct" style="color:var(--red)">811.6%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue" style="font-size:.65rem;letter-spacing:.04em">BLUE PPV</span></td>
+          <td class="c"><span style="color:var(--subtle);font-size:.74rem">—</span></td>
+          <td class="r"><span class="pill pill-amber">50.9</span></td>
+          <td style="color:var(--muted);font-size:.78rem">Industrial Products</td>
+          <td style="color:var(--subtle);font-size:.74rem">Rubber</td>
+          <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+        </tr>
+        <tr class="srow is-new"
+          data-sym="AVG" data-indgrp="Transport Services" data-ind="Logistics Solution Provider"
+          data-close="168.22" data-relvol="773.43" data-rs="15.44">
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3AAVG" target="_blank" rel="noopener">AVG <span class="sym-new-star">✦ NEW</span></a>
+          </td>
+          <td class="r" style="font-family:var(--mono)">₹168.22</td>
+          <td class="r">
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:100.0%;background:var(--red)"></div></div>
+              <span class="vol-pct" style="color:var(--red)">773.4%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue" style="font-size:.65rem;letter-spacing:.04em">BLUE PPV</span></td>
+          <td class="c"><span style="color:var(--subtle);font-size:.74rem">—</span></td>
+          <td class="r"><span class="pill pill-amber">15.4</span></td>
+          <td style="color:var(--muted);font-size:.78rem">Transport Services</td>
+          <td style="color:var(--subtle);font-size:.74rem">Logistics Solution Provider</td>
+          <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+        </tr>
+        <tr class="srow"
+          data-sym="JMA" data-indgrp="Auto Components" data-ind="Trading - Auto components"
+          data-close="94.45" data-relvol="767.88" data-rs="66.54">
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3AJMA" target="_blank" rel="noopener">JMA</a>
+          </td>
+          <td class="r" style="font-family:var(--mono)">₹94.45</td>
+          <td class="r">
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:100.0%;background:var(--red)"></div></div>
+              <span class="vol-pct" style="color:var(--red)">767.9%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue" style="font-size:.65rem;letter-spacing:.04em">BLUE PPV</span></td>
+          <td class="c"><span style="color:var(--subtle);font-size:.74rem">—</span></td>
+          <td class="r"><span class="pill pill-amber">66.5</span></td>
+          <td style="color:var(--muted);font-size:.78rem">Auto Components</td>
+          <td style="color:var(--subtle);font-size:.74rem">Trading - Auto components</td>
+          <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+        </tr>
+        <tr class="srow"
+          data-sym="AKUMS" data-indgrp="Pharmaceuticals & Biotechnology" data-ind="Pharmaceuticals"
+          data-close="609.1" data-relvol="698.76" data-rs="74.33">
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3AAKUMS" target="_blank" rel="noopener">AKUMS</a>
+          </td>
+          <td class="r" style="font-family:var(--mono)">₹609.10</td>
+          <td class="r">
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:100.0%;background:var(--red)"></div></div>
+              <span class="vol-pct" style="color:var(--red)">698.8%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue" style="font-size:.65rem;letter-spacing:.04em">BLUE PPV</span></td>
+          <td class="c"><span style="color:var(--subtle);font-size:.74rem">—</span></td>
+          <td class="r"><span class="pill pill-amber">74.3</span></td>
+          <td style="color:var(--muted);font-size:.78rem">Pharmaceuticals & Biotechnology</td>
+          <td style="color:var(--subtle);font-size:.74rem">Pharmaceuticals</td>
+          <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+        </tr>
+        <tr class="srow is-new"
+          data-sym="AAVAS" data-indgrp="Finance" data-ind="Housing Finance Company"
+          data-close="1328.2" data-relvol="661.63" data-rs="23.43">
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3AAAVAS" target="_blank" rel="noopener">AAVAS <span class="sym-new-star">✦ NEW</span></a>
+          </td>
+          <td class="r" style="font-family:var(--mono)">₹1,328.20</td>
+          <td class="r">
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:100.0%;background:var(--red)"></div></div>
+              <span class="vol-pct" style="color:var(--red)">661.6%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue" style="font-size:.65rem;letter-spacing:.04em">BLUE PPV</span></td>
+          <td class="c"><span style="color:var(--subtle);font-size:.74rem">—</span></td>
+          <td class="r"><span class="pill pill-amber">23.4</span></td>
+          <td style="color:var(--muted);font-size:.78rem">Finance</td>
+          <td style="color:var(--subtle);font-size:.74rem">Housing Finance Company</td>
+          <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+        </tr>
+        <tr class="srow"
+          data-sym="AARVI" data-indgrp="Commercial Services & Supplies" data-ind="Diversified Commercial Services"
+          data-close="142.31" data-relvol="628.67" data-rs="84.61">
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3AAARVI" target="_blank" rel="noopener">AARVI</a>
+          </td>
+          <td class="r" style="font-family:var(--mono)">₹142.31</td>
+          <td class="r">
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:100.0%;background:var(--red)"></div></div>
+              <span class="vol-pct" style="color:var(--red)">628.7%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue" style="font-size:.65rem;letter-spacing:.04em">BLUE PPV</span></td>
+          <td class="c"><span style="color:var(--subtle);font-size:.74rem">—</span></td>
+          <td class="r"><span class="pill pill-amber">84.6</span></td>
+          <td style="color:var(--muted);font-size:.78rem">Commercial Services & Supplies</td>
+          <td style="color:var(--subtle);font-size:.74rem">Diversified Commercial Services</td>
+          <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+        </tr>
+        <tr class="srow is-new"
+          data-sym="RGL" data-indgrp="Consumer Durables" data-ind="Gems, Jewellery And Watches"
+          data-close="102.67" data-relvol="513.88" data-rs="41.21">
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3ARGL" target="_blank" rel="noopener">RGL <span class="sym-new-star">✦ NEW</span></a>
+          </td>
+          <td class="r" style="font-family:var(--mono)">₹102.67</td>
+          <td class="r">
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:100.0%;background:var(--red)"></div></div>
+              <span class="vol-pct" style="color:var(--red)">513.9%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue" style="font-size:.65rem;letter-spacing:.04em">BLUE PPV</span></td>
+          <td class="c"><span style="color:var(--subtle);font-size:.74rem">—</span></td>
+          <td class="r"><span class="pill pill-amber">41.2</span></td>
+          <td style="color:var(--muted);font-size:.78rem">Consumer Durables</td>
+          <td style="color:var(--subtle);font-size:.74rem">Gems, Jewellery And Watches</td>
+          <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+        </tr>
+        <tr class="srow is-new"
+          data-sym="GLAND" data-indgrp="Pharmaceuticals & Biotechnology" data-ind="Pharmaceuticals"
+          data-close="2306.5" data-relvol="504.28" data-rs="89.87">
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3AGLAND" target="_blank" rel="noopener">GLAND <span class="sym-new-star">✦ NEW</span></a>
+          </td>
+          <td class="r" style="font-family:var(--mono)">₹2,306.50</td>
+          <td class="r">
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:100.0%;background:var(--red)"></div></div>
+              <span class="vol-pct" style="color:var(--red)">504.3%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue" style="font-size:.65rem;letter-spacing:.04em">BLUE PPV</span></td>
+          <td class="c"><span style="color:var(--subtle);font-size:.74rem">—</span></td>
+          <td class="r"><span class="pill pill-amber">89.9</span></td>
+          <td style="color:var(--muted);font-size:.78rem">Pharmaceuticals & Biotechnology</td>
+          <td style="color:var(--subtle);font-size:.74rem">Pharmaceuticals</td>
+          <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+        </tr>
+        <tr class="srow"
+          data-sym="ELECTHERM" data-indgrp="Industrial Products" data-ind="Iron & Steel Products"
+          data-close="1182.65" data-relvol="495.4" data-rs="77.74">
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3AELECTHERM" target="_blank" rel="noopener">ELECTHERM</a>
+          </td>
+          <td class="r" style="font-family:var(--mono)">₹1,182.65</td>
+          <td class="r">
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:99.1%;background:var(--red)"></div></div>
+              <span class="vol-pct" style="color:var(--red)">495.4%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue" style="font-size:.65rem;letter-spacing:.04em">BLUE PPV</span></td>
+          <td class="c"><span style="color:var(--subtle);font-size:.74rem">—</span></td>
+          <td class="r"><span class="pill pill-amber">77.7</span></td>
+          <td style="color:var(--muted);font-size:.78rem">Industrial Products</td>
+          <td style="color:var(--subtle);font-size:.74rem">Iron & Steel Products</td>
+          <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+        </tr>
+        <tr class="srow"
+          data-sym="SMCGLOBAL" data-indgrp="Capital Markets" data-ind="Stockbroking & Allied"
+          data-close="71.12" data-relvol="490.03" data-rs="82.9">
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3ASMCGLOBAL" target="_blank" rel="noopener">SMCGLOBAL</a>
+          </td>
+          <td class="r" style="font-family:var(--mono)">₹71.12</td>
+          <td class="r">
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:98.0%;background:var(--red)"></div></div>
+              <span class="vol-pct" style="color:var(--red)">490.0%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue" style="font-size:.65rem;letter-spacing:.04em">BLUE PPV</span></td>
+          <td class="c"><span class="pill pill-amber" style="font-size:.65rem">🔥 SNORT</span></td>
+          <td class="r"><span class="pill pill-amber">82.9</span></td>
+          <td style="color:var(--muted);font-size:.78rem">Capital Markets</td>
+          <td style="color:var(--subtle);font-size:.74rem">Stockbroking & Allied</td>
+          <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+        </tr>
+        <tr class="srow"
+          data-sym="PODDARMENT" data-indgrp="Chemicals & Petrochemicals" data-ind="Dyes And Pigments"
+          data-close="256.9" data-relvol="474.07" data-rs="50.02">
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3APODDARMENT" target="_blank" rel="noopener">PODDARMENT</a>
+          </td>
+          <td class="r" style="font-family:var(--mono)">₹256.90</td>
+          <td class="r">
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:94.8%;background:var(--red)"></div></div>
+              <span class="vol-pct" style="color:var(--red)">474.1%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue" style="font-size:.65rem;letter-spacing:.04em">BLUE PPV</span></td>
+          <td class="c"><span style="color:var(--subtle);font-size:.74rem">—</span></td>
+          <td class="r"><span class="pill pill-amber">50.0</span></td>
+          <td style="color:var(--muted);font-size:.78rem">Chemicals & Petrochemicals</td>
+          <td style="color:var(--subtle);font-size:.74rem">Dyes And Pigments</td>
+          <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+        </tr>
+        <tr class="srow"
+          data-sym="OBCL" data-indgrp="Transport Services" data-ind="Logistics Solution Provider"
+          data-close="58.77" data-relvol="466.85" data-rs="73.02">
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3AOBCL" target="_blank" rel="noopener">OBCL</a>
+          </td>
+          <td class="r" style="font-family:var(--mono)">₹58.77</td>
+          <td class="r">
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:93.4%;background:var(--red)"></div></div>
+              <span class="vol-pct" style="color:var(--red)">466.8%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue" style="font-size:.65rem;letter-spacing:.04em">BLUE PPV</span></td>
+          <td class="c"><span style="color:var(--subtle);font-size:.74rem">—</span></td>
+          <td class="r"><span class="pill pill-amber">73.0</span></td>
+          <td style="color:var(--muted);font-size:.78rem">Transport Services</td>
+          <td style="color:var(--subtle);font-size:.74rem">Logistics Solution Provider</td>
+          <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+        </tr>
+        <tr class="srow"
+          data-sym="INNOVACAP" data-indgrp="Pharmaceuticals & Biotechnology" data-ind="Pharmaceuticals"
+          data-close="950.75" data-relvol="449.82" data-rs="73.36">
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3AINNOVACAP" target="_blank" rel="noopener">INNOVACAP</a>
+          </td>
+          <td class="r" style="font-family:var(--mono)">₹950.75</td>
+          <td class="r">
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:90.0%;background:var(--red)"></div></div>
+              <span class="vol-pct" style="color:var(--red)">449.8%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue" style="font-size:.65rem;letter-spacing:.04em">BLUE PPV</span></td>
+          <td class="c"><span style="color:var(--subtle);font-size:.74rem">—</span></td>
+          <td class="r"><span class="pill pill-amber">73.4</span></td>
+          <td style="color:var(--muted);font-size:.78rem">Pharmaceuticals & Biotechnology</td>
+          <td style="color:var(--subtle);font-size:.74rem">Pharmaceuticals</td>
+          <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+        </tr>
+        <tr class="srow"
+          data-sym="ZEEL" data-indgrp="Entertainment" data-ind="TV Broadcasting & Software Production"
+          data-close="111.45" data-relvol="444.01" data-rs="53.53">
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3AZEEL" target="_blank" rel="noopener">ZEEL</a>
+          </td>
+          <td class="r" style="font-family:var(--mono)">₹111.45</td>
+          <td class="r">
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:88.8%;background:var(--red)"></div></div>
+              <span class="vol-pct" style="color:var(--red)">444.0%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue" style="font-size:.65rem;letter-spacing:.04em">BLUE PPV</span></td>
+          <td class="c"><span class="pill pill-amber" style="font-size:.65rem">🔥 SNORT</span></td>
+          <td class="r"><span class="pill pill-amber">53.5</span></td>
+          <td style="color:var(--muted);font-size:.78rem">Entertainment</td>
+          <td style="color:var(--subtle);font-size:.74rem">TV Broadcasting & Software Production</td>
+          <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+        </tr>
+        <tr class="srow"
+          data-sym="RUBICON" data-indgrp="Pharmaceuticals & Biotechnology" data-ind="Pharmaceuticals"
+          data-close="null" data-relvol="440.0" data-rs="null">
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3ARUBICON" target="_blank" rel="noopener">RUBICON</a>
+          </td>
+          <td class="r" style="font-family:var(--mono)">N/A</td>
+          <td class="r">
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:88.0%;background:var(--red)"></div></div>
+              <span class="vol-pct" style="color:var(--red)">440.0%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue" style="font-size:.65rem;letter-spacing:.04em">BLUE PPV</span></td>
+          <td class="c"><span class="pill pill-amber" style="font-size:.65rem">🔥 SNORT</span></td>
+          <td class="r"><span class="pill pill-amber">N/A</span></td>
+          <td style="color:var(--muted);font-size:.78rem">Pharmaceuticals & Biotechnology</td>
+          <td style="color:var(--subtle);font-size:.74rem">Pharmaceuticals</td>
+          <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+        </tr>
+        <tr class="srow is-new"
+          data-sym="DOLLEX" data-indgrp="Agricultural Food & other Products" data-ind="Sugar"
+          data-close="30.55" data-relvol="436.24" data-rs="43.98">
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3ADOLLEX" target="_blank" rel="noopener">DOLLEX <span class="sym-new-star">✦ NEW</span></a>
+          </td>
+          <td class="r" style="font-family:var(--mono)">₹30.55</td>
+          <td class="r">
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:87.2%;background:var(--red)"></div></div>
+              <span class="vol-pct" style="color:var(--red)">436.2%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue" style="font-size:.65rem;letter-spacing:.04em">BLUE PPV</span></td>
+          <td class="c"><span style="color:var(--subtle);font-size:.74rem">—</span></td>
+          <td class="r"><span class="pill pill-amber">44.0</span></td>
+          <td style="color:var(--muted);font-size:.78rem">Agricultural Food & other Products</td>
+          <td style="color:var(--subtle);font-size:.74rem">Sugar</td>
+          <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+        </tr>
+        <tr class="srow"
+          data-sym="SILKFLEX" data-indgrp="Chemicals & Petrochemicals" data-ind="Specialty Chemicals"
+          data-close="209.45" data-relvol="421.69" data-rs="97.32">
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3ASILKFLEX" target="_blank" rel="noopener">SILKFLEX</a>
+          </td>
+          <td class="r" style="font-family:var(--mono)">₹209.45</td>
+          <td class="r">
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:84.3%;background:var(--red)"></div></div>
+              <span class="vol-pct" style="color:var(--red)">421.7%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue" style="font-size:.65rem;letter-spacing:.04em">BLUE PPV</span></td>
+          <td class="c"><span class="pill pill-amber" style="font-size:.65rem">🔥 SNORT</span></td>
+          <td class="r"><span class="pill pill-amber">97.3</span></td>
+          <td style="color:var(--muted);font-size:.78rem">Chemicals & Petrochemicals</td>
+          <td style="color:var(--subtle);font-size:.74rem">Specialty Chemicals</td>
+          <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+        </tr>
+        <tr class="srow"
+          data-sym="KWIL" data-indgrp="Food Products" data-ind="Dairy Products"
+          data-close="null" data-relvol="419.14" data-rs="null">
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3AKWIL" target="_blank" rel="noopener">KWIL</a>
+          </td>
+          <td class="r" style="font-family:var(--mono)">N/A</td>
+          <td class="r">
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:83.8%;background:var(--red)"></div></div>
+              <span class="vol-pct" style="color:var(--red)">419.1%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue" style="font-size:.65rem;letter-spacing:.04em">BLUE PPV</span></td>
+          <td class="c"><span style="color:var(--subtle);font-size:.74rem">—</span></td>
+          <td class="r"><span class="pill pill-amber">N/A</span></td>
+          <td style="color:var(--muted);font-size:.78rem">Food Products</td>
+          <td style="color:var(--subtle);font-size:.74rem">Dairy Products</td>
+          <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+        </tr>
+        <tr class="srow"
+          data-sym="HONASA" data-indgrp="Personal Products" data-ind="Personal Care"
+          data-close="417.65" data-relvol="416.55" data-rs="86.22">
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3AHONASA" target="_blank" rel="noopener">HONASA</a>
+          </td>
+          <td class="r" style="font-family:var(--mono)">₹417.65</td>
+          <td class="r">
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:83.3%;background:var(--red)"></div></div>
+              <span class="vol-pct" style="color:var(--red)">416.5%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue" style="font-size:.65rem;letter-spacing:.04em">BLUE PPV</span></td>
+          <td class="c"><span style="color:var(--subtle);font-size:.74rem">—</span></td>
+          <td class="r"><span class="pill pill-amber">86.2</span></td>
+          <td style="color:var(--muted);font-size:.78rem">Personal Products</td>
+          <td style="color:var(--subtle);font-size:.74rem">Personal Care</td>
+          <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+        </tr>
+        <tr class="srow"
+          data-sym="GENESYS" data-indgrp="IT - Services" data-ind="IT Enabled Services"
+          data-close="331.4" data-relvol="408.68" data-rs="4.38">
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3AGENESYS" target="_blank" rel="noopener">GENESYS</a>
+          </td>
+          <td class="r" style="font-family:var(--mono)">₹331.40</td>
+          <td class="r">
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:81.7%;background:var(--red)"></div></div>
+              <span class="vol-pct" style="color:var(--red)">408.7%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue" style="font-size:.65rem;letter-spacing:.04em">BLUE PPV</span></td>
+          <td class="c"><span style="color:var(--subtle);font-size:.74rem">—</span></td>
+          <td class="r"><span class="pill pill-amber">4.4</span></td>
+          <td style="color:var(--muted);font-size:.78rem">IT - Services</td>
+          <td style="color:var(--subtle);font-size:.74rem">IT Enabled Services</td>
+          <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+        </tr>
+        <tr class="srow"
+          data-sym="MANBA" data-indgrp="Finance" data-ind="Non Banking Financial Company (NBFC)"
+          data-close="119.33" data-relvol="402.11" data-rs="52.7">
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3AMANBA" target="_blank" rel="noopener">MANBA</a>
+          </td>
+          <td class="r" style="font-family:var(--mono)">₹119.33</td>
+          <td class="r">
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:80.4%;background:var(--red)"></div></div>
+              <span class="vol-pct" style="color:var(--red)">402.1%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue" style="font-size:.65rem;letter-spacing:.04em">BLUE PPV</span></td>
+          <td class="c"><span class="pill pill-amber" style="font-size:.65rem">🔥 SNORT</span></td>
+          <td class="r"><span class="pill pill-amber">52.7</span></td>
+          <td style="color:var(--muted);font-size:.78rem">Finance</td>
+          <td style="color:var(--subtle);font-size:.74rem">Non Banking Financial Company (NBFC)</td>
+          <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+        </tr>
+        <tr class="srow is-new"
+          data-sym="ARCHIDPLY" data-indgrp="Consumer Durables" data-ind="Plywood Boards/ Laminates"
+          data-close="80.52" data-relvol="394.82" data-rs="39.16">
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3AARCHIDPLY" target="_blank" rel="noopener">ARCHIDPLY <span class="sym-new-star">✦ NEW</span></a>
+          </td>
+          <td class="r" style="font-family:var(--mono)">₹80.52</td>
+          <td class="r">
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:79.0%;background:var(--red)"></div></div>
+              <span class="vol-pct" style="color:var(--red)">394.8%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue" style="font-size:.65rem;letter-spacing:.04em">BLUE PPV</span></td>
+          <td class="c"><span style="color:var(--subtle);font-size:.74rem">—</span></td>
+          <td class="r"><span class="pill pill-amber">39.2</span></td>
+          <td style="color:var(--muted);font-size:.78rem">Consumer Durables</td>
+          <td style="color:var(--subtle);font-size:.74rem">Plywood Boards/ Laminates</td>
+          <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+        </tr>
+        <tr class="srow"
+          data-sym="BCLIND" data-indgrp="Beverages" data-ind="Breweries & Distilleries"
+          data-close="38.14" data-relvol="377.67" data-rs="56.11">
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3ABCLIND" target="_blank" rel="noopener">BCLIND</a>
+          </td>
+          <td class="r" style="font-family:var(--mono)">₹38.14</td>
+          <td class="r">
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:75.5%;background:var(--red)"></div></div>
+              <span class="vol-pct" style="color:var(--red)">377.7%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue" style="font-size:.65rem;letter-spacing:.04em">BLUE PPV</span></td>
+          <td class="c"><span style="color:var(--subtle);font-size:.74rem">—</span></td>
+          <td class="r"><span class="pill pill-amber">56.1</span></td>
+          <td style="color:var(--muted);font-size:.78rem">Beverages</td>
+          <td style="color:var(--subtle);font-size:.74rem">Breweries & Distilleries</td>
+          <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+        </tr>
+        <tr class="srow"
+          data-sym="SOLARA" data-indgrp="Pharmaceuticals & Biotechnology" data-ind="Pharmaceuticals"
+          data-close="580.7" data-relvol="354.29" data-rs="82.46">
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3ASOLARA" target="_blank" rel="noopener">SOLARA</a>
+          </td>
+          <td class="r" style="font-family:var(--mono)">₹580.70</td>
+          <td class="r">
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:70.9%;background:var(--red)"></div></div>
+              <span class="vol-pct" style="color:var(--red)">354.3%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue" style="font-size:.65rem;letter-spacing:.04em">BLUE PPV</span></td>
+          <td class="c"><span style="color:var(--subtle);font-size:.74rem">—</span></td>
+          <td class="r"><span class="pill pill-amber">82.5</span></td>
+          <td style="color:var(--muted);font-size:.78rem">Pharmaceuticals & Biotechnology</td>
+          <td style="color:var(--subtle);font-size:.74rem">Pharmaceuticals</td>
+          <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+        </tr>
+        <tr class="srow"
+          data-sym="KAMDHENU" data-indgrp="Industrial Products" data-ind="Iron & Steel Products"
+          data-close="28.2" data-relvol="349.94" data-rs="47.74">
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3AKAMDHENU" target="_blank" rel="noopener">KAMDHENU</a>
+          </td>
+          <td class="r" style="font-family:var(--mono)">₹28.20</td>
+          <td class="r">
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:70.0%;background:var(--red)"></div></div>
+              <span class="vol-pct" style="color:var(--red)">349.9%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue" style="font-size:.65rem;letter-spacing:.04em">BLUE PPV</span></td>
+          <td class="c"><span class="pill pill-amber" style="font-size:.65rem">🔥 SNORT</span></td>
+          <td class="r"><span class="pill pill-amber">47.7</span></td>
+          <td style="color:var(--muted);font-size:.78rem">Industrial Products</td>
+          <td style="color:var(--subtle);font-size:.74rem">Iron & Steel Products</td>
+          <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+        </tr>
+        <tr class="srow is-new"
+          data-sym="DUGLOBAL" data-indgrp="Leisure Services" data-ind="Tour, Travel Related Services"
+          data-close="33.0" data-relvol="348.58" data-rs="22.84">
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3ADUGLOBAL" target="_blank" rel="noopener">DUGLOBAL <span class="sym-new-star">✦ NEW</span></a>
+          </td>
+          <td class="r" style="font-family:var(--mono)">₹33.00</td>
+          <td class="r">
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:69.7%;background:var(--red)"></div></div>
+              <span class="vol-pct" style="color:var(--red)">348.6%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue" style="font-size:.65rem;letter-spacing:.04em">BLUE PPV</span></td>
+          <td class="c"><span style="color:var(--subtle);font-size:.74rem">—</span></td>
+          <td class="r"><span class="pill pill-amber">22.8</span></td>
+          <td style="color:var(--muted);font-size:.78rem">Leisure Services</td>
+          <td style="color:var(--subtle);font-size:.74rem">Tour, Travel Related Services</td>
+          <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+        </tr>
+        <tr class="srow"
+          data-sym="APARINDS" data-indgrp="Electrical Equipment" data-ind="Other Electrical Equipment"
+          data-close="14551.0" data-relvol="331.54" data-rs="95.28">
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3AAPARINDS" target="_blank" rel="noopener">APARINDS</a>
+          </td>
+          <td class="r" style="font-family:var(--mono)">₹14,551.00</td>
+          <td class="r">
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:66.3%;background:var(--red)"></div></div>
+              <span class="vol-pct" style="color:var(--red)">331.5%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue" style="font-size:.65rem;letter-spacing:.04em">BLUE PPV</span></td>
+          <td class="c"><span style="color:var(--subtle);font-size:.74rem">—</span></td>
+          <td class="r"><span class="pill pill-amber">95.3</span></td>
+          <td style="color:var(--muted);font-size:.78rem">Electrical Equipment</td>
+          <td style="color:var(--subtle);font-size:.74rem">Other Electrical Equipment</td>
+          <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+        </tr>
+        <tr class="srow is-new"
+          data-sym="ABDL" data-indgrp="Beverages" data-ind="Breweries & Distilleries"
+          data-close="608.45" data-relvol="302.38" data-rs="90.26">
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3AABDL" target="_blank" rel="noopener">ABDL <span class="sym-new-star">✦ NEW</span></a>
+          </td>
+          <td class="r" style="font-family:var(--mono)">₹608.45</td>
+          <td class="r">
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:60.5%;background:var(--red)"></div></div>
+              <span class="vol-pct" style="color:var(--red)">302.4%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue" style="font-size:.65rem;letter-spacing:.04em">BLUE PPV</span></td>
+          <td class="c"><span class="pill pill-amber" style="font-size:.65rem">🔥 SNORT</span></td>
+          <td class="r"><span class="pill pill-amber">90.3</span></td>
+          <td style="color:var(--muted);font-size:.78rem">Beverages</td>
+          <td style="color:var(--subtle);font-size:.74rem">Breweries & Distilleries</td>
+          <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+        </tr>
+        <tr class="srow is-new"
+          data-sym="EBGNG" data-indgrp="IT - Hardware" data-ind="Computers Hardware & Equipments"
+          data-close="null" data-relvol="287.83" data-rs="null">
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3AEBGNG" target="_blank" rel="noopener">EBGNG <span class="sym-new-star">✦ NEW</span></a>
+          </td>
+          <td class="r" style="font-family:var(--mono)">N/A</td>
+          <td class="r">
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:57.6%;background:var(--red)"></div></div>
+              <span class="vol-pct" style="color:var(--red)">287.8%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue" style="font-size:.65rem;letter-spacing:.04em">BLUE PPV</span></td>
+          <td class="c"><span style="color:var(--subtle);font-size:.74rem">—</span></td>
+          <td class="r"><span class="pill pill-amber">N/A</span></td>
+          <td style="color:var(--muted);font-size:.78rem">IT - Hardware</td>
+          <td style="color:var(--subtle);font-size:.74rem">Computers Hardware & Equipments</td>
+          <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+        </tr>
+        <tr class="srow"
+          data-sym="BANCOINDIA" data-indgrp="Auto Components" data-ind="Auto Components & Equipments"
+          data-close="668.95" data-relvol="287.55" data-rs="82.76">
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3ABANCOINDIA" target="_blank" rel="noopener">BANCOINDIA</a>
+          </td>
+          <td class="r" style="font-family:var(--mono)">₹668.95</td>
+          <td class="r">
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:57.5%;background:var(--red)"></div></div>
+              <span class="vol-pct" style="color:var(--red)">287.5%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue" style="font-size:.65rem;letter-spacing:.04em">BLUE PPV</span></td>
+          <td class="c"><span style="color:var(--subtle);font-size:.74rem">—</span></td>
+          <td class="r"><span class="pill pill-amber">82.8</span></td>
+          <td style="color:var(--muted);font-size:.78rem">Auto Components</td>
+          <td style="color:var(--subtle);font-size:.74rem">Auto Components & Equipments</td>
+          <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+        </tr>
+        <tr class="srow"
+          data-sym="SHREEJISPG" data-indgrp="Transport Services" data-ind="Shipping"
+          data-close="null" data-relvol="272.83" data-rs="null">
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3ASHREEJISPG" target="_blank" rel="noopener">SHREEJISPG</a>
+          </td>
+          <td class="r" style="font-family:var(--mono)">N/A</td>
+          <td class="r">
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:54.6%;background:var(--red)"></div></div>
+              <span class="vol-pct" style="color:var(--red)">272.8%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue" style="font-size:.65rem;letter-spacing:.04em">BLUE PPV</span></td>
+          <td class="c"><span style="color:var(--subtle);font-size:.74rem">—</span></td>
+          <td class="r"><span class="pill pill-amber">N/A</span></td>
+          <td style="color:var(--muted);font-size:.78rem">Transport Services</td>
+          <td style="color:var(--subtle);font-size:.74rem">Shipping</td>
+          <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+        </tr>
+        <tr class="srow"
+          data-sym="DIFFNKG" data-indgrp="Industrial Products" data-ind="Other Industrial Products"
+          data-close="362.4" data-relvol="271.29" data-rs="79.3">
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3ADIFFNKG" target="_blank" rel="noopener">DIFFNKG</a>
+          </td>
+          <td class="r" style="font-family:var(--mono)">₹362.40</td>
+          <td class="r">
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:54.3%;background:var(--red)"></div></div>
+              <span class="vol-pct" style="color:var(--red)">271.3%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue" style="font-size:.65rem;letter-spacing:.04em">BLUE PPV</span></td>
+          <td class="c"><span style="color:var(--subtle);font-size:.74rem">—</span></td>
+          <td class="r"><span class="pill pill-amber">79.3</span></td>
+          <td style="color:var(--muted);font-size:.78rem">Industrial Products</td>
+          <td style="color:var(--subtle);font-size:.74rem">Other Industrial Products</td>
+          <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+        </tr>
+        <tr class="srow"
+          data-sym="CUPID" data-indgrp="Personal Products" data-ind="Personal Care"
+          data-close="155.18" data-relvol="268.64" data-rs="99.95">
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3ACUPID" target="_blank" rel="noopener">CUPID</a>
+          </td>
+          <td class="r" style="font-family:var(--mono)">₹155.18</td>
+          <td class="r">
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:53.7%;background:var(--red)"></div></div>
+              <span class="vol-pct" style="color:var(--red)">268.6%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue" style="font-size:.65rem;letter-spacing:.04em">BLUE PPV</span></td>
+          <td class="c"><span style="color:var(--subtle);font-size:.74rem">—</span></td>
+          <td class="r"><span class="pill pill-amber">100.0</span></td>
+          <td style="color:var(--muted);font-size:.78rem">Personal Products</td>
+          <td style="color:var(--subtle);font-size:.74rem">Personal Care</td>
+          <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+        </tr>
+        <tr class="srow"
+          data-sym="MODISONLTD" data-indgrp="Electrical Equipment" data-ind="Other Electrical Equipment"
+          data-close="320.95" data-relvol="255.27" data-rs="96.74">
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3AMODISONLTD" target="_blank" rel="noopener">MODISONLTD</a>
+          </td>
+          <td class="r" style="font-family:var(--mono)">₹320.95</td>
+          <td class="r">
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:51.1%;background:var(--red)"></div></div>
+              <span class="vol-pct" style="color:var(--red)">255.3%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue" style="font-size:.65rem;letter-spacing:.04em">BLUE PPV</span></td>
+          <td class="c"><span style="color:var(--subtle);font-size:.74rem">—</span></td>
+          <td class="r"><span class="pill pill-amber">96.7</span></td>
+          <td style="color:var(--muted);font-size:.78rem">Electrical Equipment</td>
+          <td style="color:var(--subtle);font-size:.74rem">Other Electrical Equipment</td>
+          <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+        </tr>
+        <tr class="srow"
+          data-sym="JINDALPOLY" data-indgrp="Industrial Products" data-ind="Packaging"
+          data-close="731.75" data-relvol="254.51" data-rs="82.37">
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3AJINDALPOLY" target="_blank" rel="noopener">JINDALPOLY</a>
+          </td>
+          <td class="r" style="font-family:var(--mono)">₹731.75</td>
+          <td class="r">
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:50.9%;background:var(--red)"></div></div>
+              <span class="vol-pct" style="color:var(--red)">254.5%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue" style="font-size:.65rem;letter-spacing:.04em">BLUE PPV</span></td>
+          <td class="c"><span style="color:var(--subtle);font-size:.74rem">—</span></td>
+          <td class="r"><span class="pill pill-amber">82.4</span></td>
+          <td style="color:var(--muted);font-size:.78rem">Industrial Products</td>
+          <td style="color:var(--subtle);font-size:.74rem">Packaging</td>
+          <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+        </tr>
+        <tr class="srow is-new"
+          data-sym="RPGLIFE" data-indgrp="Pharmaceuticals & Biotechnology" data-ind="Pharmaceuticals"
+          data-close="2199.6" data-relvol="239.11" data-rs="70.29">
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3ARPGLIFE" target="_blank" rel="noopener">RPGLIFE <span class="sym-new-star">✦ NEW</span></a>
+          </td>
+          <td class="r" style="font-family:var(--mono)">₹2,199.60</td>
+          <td class="r">
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:47.8%;background:var(--red)"></div></div>
+              <span class="vol-pct" style="color:var(--red)">239.1%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue" style="font-size:.65rem;letter-spacing:.04em">BLUE PPV</span></td>
+          <td class="c"><span style="color:var(--subtle);font-size:.74rem">—</span></td>
+          <td class="r"><span class="pill pill-amber">70.3</span></td>
+          <td style="color:var(--muted);font-size:.78rem">Pharmaceuticals & Biotechnology</td>
+          <td style="color:var(--subtle);font-size:.74rem">Pharmaceuticals</td>
+          <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+        </tr>
+        <tr class="srow is-new"
+          data-sym="MEDPLUS" data-indgrp="Retailing" data-ind="Pharmacy Retail"
+          data-close="875.85" data-relvol="201.49" data-rs="61.91">
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3AMEDPLUS" target="_blank" rel="noopener">MEDPLUS <span class="sym-new-star">✦ NEW</span></a>
+          </td>
+          <td class="r" style="font-family:var(--mono)">₹875.85</td>
+          <td class="r">
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:40.3%;background:var(--red)"></div></div>
+              <span class="vol-pct" style="color:var(--red)">201.5%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue" style="font-size:.65rem;letter-spacing:.04em">BLUE PPV</span></td>
+          <td class="c"><span style="color:var(--subtle);font-size:.74rem">—</span></td>
+          <td class="r"><span class="pill pill-amber">61.9</span></td>
+          <td style="color:var(--muted);font-size:.78rem">Retailing</td>
+          <td style="color:var(--subtle);font-size:.74rem">Pharmacy Retail</td>
+          <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+        </tr>
+        <tr class="srow"
+          data-sym="TEJASNET" data-indgrp="Telecom -  Equipment & Accessories" data-ind="Telecom -  Equipment & Accessories"
+          data-close="573.5" data-relvol="196.37" data-rs="39.36">
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3ATEJASNET" target="_blank" rel="noopener">TEJASNET</a>
+          </td>
+          <td class="r" style="font-family:var(--mono)">₹573.50</td>
+          <td class="r">
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:39.3%;background:var(--amber)"></div></div>
+              <span class="vol-pct" style="color:var(--amber)">196.4%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue" style="font-size:.65rem;letter-spacing:.04em">BLUE PPV</span></td>
+          <td class="c"><span style="color:var(--subtle);font-size:.74rem">—</span></td>
+          <td class="r"><span class="pill pill-amber">39.4</span></td>
+          <td style="color:var(--muted);font-size:.78rem">Telecom -  Equipment & Accessories</td>
+          <td style="color:var(--subtle);font-size:.74rem">Telecom -  Equipment & Accessories</td>
+          <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+        </tr>
+        <tr class="srow"
+          data-sym="STEL" data-indgrp="Finance" data-ind="Investment Company"
+          data-close="543.8" data-relvol="194.37" data-rs="84.27">
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3ASTEL" target="_blank" rel="noopener">STEL</a>
+          </td>
+          <td class="r" style="font-family:var(--mono)">₹543.80</td>
+          <td class="r">
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:38.9%;background:var(--amber)"></div></div>
+              <span class="vol-pct" style="color:var(--amber)">194.4%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue" style="font-size:.65rem;letter-spacing:.04em">BLUE PPV</span></td>
+          <td class="c"><span style="color:var(--subtle);font-size:.74rem">—</span></td>
+          <td class="r"><span class="pill pill-amber">84.3</span></td>
+          <td style="color:var(--muted);font-size:.78rem">Finance</td>
+          <td style="color:var(--subtle);font-size:.74rem">Investment Company</td>
+          <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+        </tr>
+        <tr class="srow is-new"
+          data-sym="TREJHARA" data-indgrp="IT - Software" data-ind="Computers - Software & Consulting"
+          data-close="135.06" data-relvol="194.02" data-rs="9.25">
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3ATREJHARA" target="_blank" rel="noopener">TREJHARA <span class="sym-new-star">✦ NEW</span></a>
+          </td>
+          <td class="r" style="font-family:var(--mono)">₹135.06</td>
+          <td class="r">
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:38.8%;background:var(--amber)"></div></div>
+              <span class="vol-pct" style="color:var(--amber)">194.0%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue" style="font-size:.65rem;letter-spacing:.04em">BLUE PPV</span></td>
+          <td class="c"><span style="color:var(--subtle);font-size:.74rem">—</span></td>
+          <td class="r"><span class="pill pill-amber">9.3</span></td>
+          <td style="color:var(--muted);font-size:.78rem">IT - Software</td>
+          <td style="color:var(--subtle);font-size:.74rem">Computers - Software & Consulting</td>
+          <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+        </tr>
+        <tr class="srow"
+          data-sym="GICHSGFIN" data-indgrp="Finance" data-ind="Housing Finance Company"
+          data-close="155.57" data-relvol="192.77" data-rs="41.84">
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3AGICHSGFIN" target="_blank" rel="noopener">GICHSGFIN</a>
+          </td>
+          <td class="r" style="font-family:var(--mono)">₹155.57</td>
+          <td class="r">
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:38.6%;background:var(--amber)"></div></div>
+              <span class="vol-pct" style="color:var(--amber)">192.8%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue" style="font-size:.65rem;letter-spacing:.04em">BLUE PPV</span></td>
+          <td class="c"><span style="color:var(--subtle);font-size:.74rem">—</span></td>
+          <td class="r"><span class="pill pill-amber">41.8</span></td>
+          <td style="color:var(--muted);font-size:.78rem">Finance</td>
+          <td style="color:var(--subtle);font-size:.74rem">Housing Finance Company</td>
+          <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+        </tr>
+        <tr class="srow"
+          data-sym="SIGMAADV" data-indgrp="Aerospace & Defense" data-ind="Aerospace & Defense"
+          data-close="482.25" data-relvol="188.28" data-rs="99.85">
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3ASIGMAADV" target="_blank" rel="noopener">SIGMAADV</a>
+          </td>
+          <td class="r" style="font-family:var(--mono)">₹482.25</td>
+          <td class="r">
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:37.7%;background:var(--amber)"></div></div>
+              <span class="vol-pct" style="color:var(--amber)">188.3%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue" style="font-size:.65rem;letter-spacing:.04em">BLUE PPV</span></td>
+          <td class="c"><span style="color:var(--subtle);font-size:.74rem">—</span></td>
+          <td class="r"><span class="pill pill-amber">99.9</span></td>
+          <td style="color:var(--muted);font-size:.78rem">Aerospace & Defense</td>
+          <td style="color:var(--subtle);font-size:.74rem">Aerospace & Defense</td>
+          <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+        </tr>
+        <tr class="srow"
+          data-sym="LORDSCHLO" data-indgrp="Chemicals & Petrochemicals" data-ind="Commodity Chemicals"
+          data-close="133.87" data-relvol="188.06" data-rs="46.81">
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3ALORDSCHLO" target="_blank" rel="noopener">LORDSCHLO</a>
+          </td>
+          <td class="r" style="font-family:var(--mono)">₹133.87</td>
+          <td class="r">
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:37.6%;background:var(--amber)"></div></div>
+              <span class="vol-pct" style="color:var(--amber)">188.1%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue" style="font-size:.65rem;letter-spacing:.04em">BLUE PPV</span></td>
+          <td class="c"><span style="color:var(--subtle);font-size:.74rem">—</span></td>
+          <td class="r"><span class="pill pill-amber">46.8</span></td>
+          <td style="color:var(--muted);font-size:.78rem">Chemicals & Petrochemicals</td>
+          <td style="color:var(--subtle);font-size:.74rem">Commodity Chemicals</td>
+          <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+        </tr>
+        <tr class="srow"
+          data-sym="CEIGALL" data-indgrp="Construction" data-ind="Civil Construction"
+          data-close="369.95" data-relvol="186.96" data-rs="92.11">
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3ACEIGALL" target="_blank" rel="noopener">CEIGALL</a>
+          </td>
+          <td class="r" style="font-family:var(--mono)">₹369.95</td>
+          <td class="r">
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:37.4%;background:var(--amber)"></div></div>
+              <span class="vol-pct" style="color:var(--amber)">187.0%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue" style="font-size:.65rem;letter-spacing:.04em">BLUE PPV</span></td>
+          <td class="c"><span style="color:var(--subtle);font-size:.74rem">—</span></td>
+          <td class="r"><span class="pill pill-amber">92.1</span></td>
+          <td style="color:var(--muted);font-size:.78rem">Construction</td>
+          <td style="color:var(--subtle);font-size:.74rem">Civil Construction</td>
+          <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+        </tr>
+        <tr class="srow is-new"
+          data-sym="SHYAMCENT" data-indgrp="Ferrous Metals" data-ind="Ferro & Silica Manganese"
+          data-close="5.01" data-relvol="174.98" data-rs="18.02">
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3ASHYAMCENT" target="_blank" rel="noopener">SHYAMCENT <span class="sym-new-star">✦ NEW</span></a>
+          </td>
+          <td class="r" style="font-family:var(--mono)">₹5.01</td>
+          <td class="r">
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:35.0%;background:var(--amber)"></div></div>
+              <span class="vol-pct" style="color:var(--amber)">175.0%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue" style="font-size:.65rem;letter-spacing:.04em">BLUE PPV</span></td>
+          <td class="c"><span style="color:var(--subtle);font-size:.74rem">—</span></td>
+          <td class="r"><span class="pill pill-amber">18.0</span></td>
+          <td style="color:var(--muted);font-size:.78rem">Ferrous Metals</td>
+          <td style="color:var(--subtle);font-size:.74rem">Ferro & Silica Manganese</td>
+          <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+        </tr>
+        <tr class="srow"
+          data-sym="AEGISVOPAK" data-indgrp="Oil" data-ind="Oil Storage & Transportation"
+          data-close="199.14" data-relvol="174.15" data-rs="34.78">
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3AAEGISVOPAK" target="_blank" rel="noopener">AEGISVOPAK</a>
+          </td>
+          <td class="r" style="font-family:var(--mono)">₹199.14</td>
+          <td class="r">
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:34.8%;background:var(--amber)"></div></div>
+              <span class="vol-pct" style="color:var(--amber)">174.1%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue" style="font-size:.65rem;letter-spacing:.04em">BLUE PPV</span></td>
+          <td class="c"><span style="color:var(--subtle);font-size:.74rem">—</span></td>
+          <td class="r"><span class="pill pill-amber">34.8</span></td>
+          <td style="color:var(--muted);font-size:.78rem">Oil</td>
+          <td style="color:var(--subtle);font-size:.74rem">Oil Storage & Transportation</td>
+          <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+        </tr>
+        <tr class="srow is-new"
+          data-sym="3IINFOLTD" data-indgrp="IT - Software" data-ind="Computers - Software & Consulting"
+          data-close="17.03" data-relvol="160.22" data-rs="24.16">
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3A3IINFOLTD" target="_blank" rel="noopener">3IINFOLTD <span class="sym-new-star">✦ NEW</span></a>
+          </td>
+          <td class="r" style="font-family:var(--mono)">₹17.03</td>
+          <td class="r">
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:32.0%;background:var(--amber)"></div></div>
+              <span class="vol-pct" style="color:var(--amber)">160.2%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue" style="font-size:.65rem;letter-spacing:.04em">BLUE PPV</span></td>
+          <td class="c"><span style="color:var(--subtle);font-size:.74rem">—</span></td>
+          <td class="r"><span class="pill pill-amber">24.2</span></td>
+          <td style="color:var(--muted);font-size:.78rem">IT - Software</td>
+          <td style="color:var(--subtle);font-size:.74rem">Computers - Software & Consulting</td>
+          <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+        </tr>
+        <tr class="srow"
+          data-sym="SHEMAROO" data-indgrp="Entertainment" data-ind="Media & Entertainment"
+          data-close="114.6" data-relvol="156.14" data-rs="72.33">
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3ASHEMAROO" target="_blank" rel="noopener">SHEMAROO</a>
+          </td>
+          <td class="r" style="font-family:var(--mono)">₹114.60</td>
+          <td class="r">
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:31.2%;background:var(--amber)"></div></div>
+              <span class="vol-pct" style="color:var(--amber)">156.1%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue" style="font-size:.65rem;letter-spacing:.04em">BLUE PPV</span></td>
+          <td class="c"><span style="color:var(--subtle);font-size:.74rem">—</span></td>
+          <td class="r"><span class="pill pill-amber">72.3</span></td>
+          <td style="color:var(--muted);font-size:.78rem">Entertainment</td>
+          <td style="color:var(--subtle);font-size:.74rem">Media & Entertainment</td>
+          <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+        </tr>
+        <tr class="srow is-new"
+          data-sym="MHLXMIRU" data-indgrp="Textiles & Apparels" data-ind="Other Textile Products"
+          data-close="176.35" data-relvol="155.93" data-rs="37.36">
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3AMHLXMIRU" target="_blank" rel="noopener">MHLXMIRU <span class="sym-new-star">✦ NEW</span></a>
+          </td>
+          <td class="r" style="font-family:var(--mono)">₹176.35</td>
+          <td class="r">
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:31.2%;background:var(--amber)"></div></div>
+              <span class="vol-pct" style="color:var(--amber)">155.9%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue" style="font-size:.65rem;letter-spacing:.04em">BLUE PPV</span></td>
+          <td class="c"><span style="color:var(--subtle);font-size:.74rem">—</span></td>
+          <td class="r"><span class="pill pill-amber">37.4</span></td>
+          <td style="color:var(--muted);font-size:.78rem">Textiles & Apparels</td>
+          <td style="color:var(--subtle);font-size:.74rem">Other Textile Products</td>
+          <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+        </tr>
+        <tr class="srow"
+          data-sym="ALGOQUANT" data-indgrp="Finance" data-ind="Other Financial Services"
+          data-close="null" data-relvol="151.5" data-rs="null">
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3AALGOQUANT" target="_blank" rel="noopener">ALGOQUANT</a>
+          </td>
+          <td class="r" style="font-family:var(--mono)">N/A</td>
+          <td class="r">
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:30.3%;background:var(--amber)"></div></div>
+              <span class="vol-pct" style="color:var(--amber)">151.5%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue" style="font-size:.65rem;letter-spacing:.04em">BLUE PPV</span></td>
+          <td class="c"><span style="color:var(--subtle);font-size:.74rem">—</span></td>
+          <td class="r"><span class="pill pill-amber">N/A</span></td>
+          <td style="color:var(--muted);font-size:.78rem">Finance</td>
+          <td style="color:var(--subtle);font-size:.74rem">Other Financial Services</td>
+          <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+        </tr>
+        <tr class="srow"
+          data-sym="NEOGEN" data-indgrp="Chemicals & Petrochemicals" data-ind="Specialty Chemicals"
+          data-close="2028.7" data-relvol="149.7" data-rs="82.17">
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3ANEOGEN" target="_blank" rel="noopener">NEOGEN</a>
+          </td>
+          <td class="r" style="font-family:var(--mono)">₹2,028.70</td>
+          <td class="r">
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:29.9%;background:var(--amber)"></div></div>
+              <span class="vol-pct" style="color:var(--amber)">149.7%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue" style="font-size:.65rem;letter-spacing:.04em">BLUE PPV</span></td>
+          <td class="c"><span style="color:var(--subtle);font-size:.74rem">—</span></td>
+          <td class="r"><span class="pill pill-amber">82.2</span></td>
+          <td style="color:var(--muted);font-size:.78rem">Chemicals & Petrochemicals</td>
+          <td style="color:var(--subtle);font-size:.74rem">Specialty Chemicals</td>
+          <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+        </tr>
+        <tr class="srow"
+          data-sym="RPEL" data-indgrp="Industrial Products" data-ind="Electrodes & Refractories"
+          data-close="1155.6" data-relvol="147.92" data-rs="93.52">
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3ARPEL" target="_blank" rel="noopener">RPEL</a>
+          </td>
+          <td class="r" style="font-family:var(--mono)">₹1,155.60</td>
+          <td class="r">
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:29.6%;background:var(--amber)"></div></div>
+              <span class="vol-pct" style="color:var(--amber)">147.9%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue" style="font-size:.65rem;letter-spacing:.04em">BLUE PPV</span></td>
+          <td class="c"><span style="color:var(--subtle);font-size:.74rem">—</span></td>
+          <td class="r"><span class="pill pill-amber">93.5</span></td>
+          <td style="color:var(--muted);font-size:.78rem">Industrial Products</td>
+          <td style="color:var(--subtle);font-size:.74rem">Electrodes & Refractories</td>
+          <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+        </tr>
+        <tr class="srow is-new"
+          data-sym="VASCONEQ" data-indgrp="Realty" data-ind="Residential, Commercial Projects"
+          data-close="34.69" data-relvol="145.09" data-rs="18.9">
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3AVASCONEQ" target="_blank" rel="noopener">VASCONEQ <span class="sym-new-star">✦ NEW</span></a>
+          </td>
+          <td class="r" style="font-family:var(--mono)">₹34.69</td>
+          <td class="r">
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:29.0%;background:var(--amber)"></div></div>
+              <span class="vol-pct" style="color:var(--amber)">145.1%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue" style="font-size:.65rem;letter-spacing:.04em">BLUE PPV</span></td>
+          <td class="c"><span style="color:var(--subtle);font-size:.74rem">—</span></td>
+          <td class="r"><span class="pill pill-amber">18.9</span></td>
+          <td style="color:var(--muted);font-size:.78rem">Realty</td>
+          <td style="color:var(--subtle);font-size:.74rem">Residential, Commercial Projects</td>
+          <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+        </tr>
+        <tr class="srow is-new"
+          data-sym="ASIANTILES" data-indgrp="Consumer Durables" data-ind="Ceramics"
+          data-close="59.13" data-relvol="144.0" data-rs="62.88">
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3AASIANTILES" target="_blank" rel="noopener">ASIANTILES <span class="sym-new-star">✦ NEW</span></a>
+          </td>
+          <td class="r" style="font-family:var(--mono)">₹59.13</td>
+          <td class="r">
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:28.8%;background:var(--amber)"></div></div>
+              <span class="vol-pct" style="color:var(--amber)">144.0%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue" style="font-size:.65rem;letter-spacing:.04em">BLUE PPV</span></td>
+          <td class="c"><span style="color:var(--subtle);font-size:.74rem">—</span></td>
+          <td class="r"><span class="pill pill-amber">62.9</span></td>
+          <td style="color:var(--muted);font-size:.78rem">Consumer Durables</td>
+          <td style="color:var(--subtle);font-size:.74rem">Ceramics</td>
+          <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+        </tr>
+        <tr class="srow"
+          data-sym="POLYSIL" data-indgrp="Industrial Products" data-ind="Plastic Products - Industrial"
+          data-close="138.0" data-relvol="143.34" data-rs="98.54">
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3APOLYSIL" target="_blank" rel="noopener">POLYSIL</a>
+          </td>
+          <td class="r" style="font-family:var(--mono)">₹138.00</td>
+          <td class="r">
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:28.7%;background:var(--amber)"></div></div>
+              <span class="vol-pct" style="color:var(--amber)">143.3%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue" style="font-size:.65rem;letter-spacing:.04em">BLUE PPV</span></td>
+          <td class="c"><span style="color:var(--subtle);font-size:.74rem">—</span></td>
+          <td class="r"><span class="pill pill-amber">98.5</span></td>
+          <td style="color:var(--muted);font-size:.78rem">Industrial Products</td>
+          <td style="color:var(--subtle);font-size:.74rem">Plastic Products - Industrial</td>
+          <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+        </tr>
+        <tr class="srow"
+          data-sym="COOLCAPS" data-indgrp="Industrial Products" data-ind="Packaging"
+          data-close="25.45" data-relvol="139.84" data-rs="0.05">
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3ACOOLCAPS" target="_blank" rel="noopener">COOLCAPS</a>
+          </td>
+          <td class="r" style="font-family:var(--mono)">₹25.45</td>
+          <td class="r">
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:28.0%;background:var(--amber)"></div></div>
+              <span class="vol-pct" style="color:var(--amber)">139.8%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue" style="font-size:.65rem;letter-spacing:.04em">BLUE PPV</span></td>
+          <td class="c"><span style="color:var(--subtle);font-size:.74rem">—</span></td>
+          <td class="r"><span class="pill pill-amber">0.0</span></td>
+          <td style="color:var(--muted);font-size:.78rem">Industrial Products</td>
+          <td style="color:var(--subtle);font-size:.74rem">Packaging</td>
+          <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+        </tr>
+        <tr class="srow is-new"
+          data-sym="RELIABLE" data-indgrp="Finance" data-ind="Other Financial Services"
+          data-close="144.79" data-relvol="138.43" data-rs="95.76">
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3ARELIABLE" target="_blank" rel="noopener">RELIABLE <span class="sym-new-star">✦ NEW</span></a>
+          </td>
+          <td class="r" style="font-family:var(--mono)">₹144.79</td>
+          <td class="r">
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:27.7%;background:var(--amber)"></div></div>
+              <span class="vol-pct" style="color:var(--amber)">138.4%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue" style="font-size:.65rem;letter-spacing:.04em">BLUE PPV</span></td>
+          <td class="c"><span style="color:var(--subtle);font-size:.74rem">—</span></td>
+          <td class="r"><span class="pill pill-amber">95.8</span></td>
+          <td style="color:var(--muted);font-size:.78rem">Finance</td>
+          <td style="color:var(--subtle);font-size:.74rem">Other Financial Services</td>
+          <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+        </tr>
+        <tr class="srow"
+          data-sym="AAATECH" data-indgrp="Commercial Services & Supplies" data-ind="Consulting Services"
+          data-close="98.14" data-relvol="132.73" data-rs="76.28">
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3AAAATECH" target="_blank" rel="noopener">AAATECH</a>
+          </td>
+          <td class="r" style="font-family:var(--mono)">₹98.14</td>
+          <td class="r">
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:26.5%;background:var(--amber)"></div></div>
+              <span class="vol-pct" style="color:var(--amber)">132.7%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue" style="font-size:.65rem;letter-spacing:.04em">BLUE PPV</span></td>
+          <td class="c"><span style="color:var(--subtle);font-size:.74rem">—</span></td>
+          <td class="r"><span class="pill pill-amber">76.3</span></td>
+          <td style="color:var(--muted);font-size:.78rem">Commercial Services & Supplies</td>
+          <td style="color:var(--subtle);font-size:.74rem">Consulting Services</td>
+          <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+        </tr>
+        <tr class="srow"
+          data-sym="VADILALIND" data-indgrp="Food Products" data-ind="Dairy Products"
+          data-close="5940.9" data-relvol="129.41" data-rs="74.82">
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3AVADILALIND" target="_blank" rel="noopener">VADILALIND</a>
+          </td>
+          <td class="r" style="font-family:var(--mono)">₹5,940.90</td>
+          <td class="r">
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:25.9%;background:var(--amber)"></div></div>
+              <span class="vol-pct" style="color:var(--amber)">129.4%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue" style="font-size:.65rem;letter-spacing:.04em">BLUE PPV</span></td>
+          <td class="c"><span style="color:var(--subtle);font-size:.74rem">—</span></td>
+          <td class="r"><span class="pill pill-amber">74.8</span></td>
+          <td style="color:var(--muted);font-size:.78rem">Food Products</td>
+          <td style="color:var(--subtle);font-size:.74rem">Dairy Products</td>
+          <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+        </tr>
+        <tr class="srow is-new"
+          data-sym="DBREALTY" data-indgrp="Leisure Services" data-ind="Hotels & Resorts"
+          data-close="109.3" data-relvol="128.1" data-rs="6.04">
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3ADBREALTY" target="_blank" rel="noopener">DBREALTY <span class="sym-new-star">✦ NEW</span></a>
+          </td>
+          <td class="r" style="font-family:var(--mono)">₹109.30</td>
+          <td class="r">
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:25.6%;background:var(--amber)"></div></div>
+              <span class="vol-pct" style="color:var(--amber)">128.1%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue" style="font-size:.65rem;letter-spacing:.04em">BLUE PPV</span></td>
+          <td class="c"><span style="color:var(--subtle);font-size:.74rem">—</span></td>
+          <td class="r"><span class="pill pill-amber">6.0</span></td>
+          <td style="color:var(--muted);font-size:.78rem">Leisure Services</td>
+          <td style="color:var(--subtle);font-size:.74rem">Hotels & Resorts</td>
+          <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+        </tr>
+        <tr class="srow is-new"
+          data-sym="MBEL" data-indgrp="Construction" data-ind="Civil Construction"
+          data-close="null" data-relvol="126.98" data-rs="null">
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3AMBEL" target="_blank" rel="noopener">MBEL <span class="sym-new-star">✦ NEW</span></a>
+          </td>
+          <td class="r" style="font-family:var(--mono)">N/A</td>
+          <td class="r">
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:25.4%;background:var(--amber)"></div></div>
+              <span class="vol-pct" style="color:var(--amber)">127.0%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue" style="font-size:.65rem;letter-spacing:.04em">BLUE PPV</span></td>
+          <td class="c"><span style="color:var(--subtle);font-size:.74rem">—</span></td>
+          <td class="r"><span class="pill pill-amber">N/A</span></td>
+          <td style="color:var(--muted);font-size:.78rem">Construction</td>
+          <td style="color:var(--subtle);font-size:.74rem">Civil Construction</td>
+          <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+        </tr>
+        <tr class="srow"
+          data-sym="TATACHEM" data-indgrp="Chemicals & Petrochemicals" data-ind="Commodity Chemicals"
+          data-close="741.2" data-relvol="124.45" data-rs="38.38">
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3ATATACHEM" target="_blank" rel="noopener">TATACHEM</a>
+          </td>
+          <td class="r" style="font-family:var(--mono)">₹741.20</td>
+          <td class="r">
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:24.9%;background:var(--amber)"></div></div>
+              <span class="vol-pct" style="color:var(--amber)">124.4%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue" style="font-size:.65rem;letter-spacing:.04em">BLUE PPV</span></td>
+          <td class="c"><span style="color:var(--subtle);font-size:.74rem">—</span></td>
+          <td class="r"><span class="pill pill-amber">38.4</span></td>
+          <td style="color:var(--muted);font-size:.78rem">Chemicals & Petrochemicals</td>
+          <td style="color:var(--subtle);font-size:.74rem">Commodity Chemicals</td>
+          <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+        </tr>
+        <tr class="srow"
+          data-sym="SSFL" data-indgrp="Food Products" data-ind="Other Food Products"
+          data-close="223.2" data-relvol="121.66" data-rs="89.43">
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3ASSFL" target="_blank" rel="noopener">SSFL</a>
+          </td>
+          <td class="r" style="font-family:var(--mono)">₹223.20</td>
+          <td class="r">
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:24.3%;background:var(--amber)"></div></div>
+              <span class="vol-pct" style="color:var(--amber)">121.7%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue" style="font-size:.65rem;letter-spacing:.04em">BLUE PPV</span></td>
+          <td class="c"><span style="color:var(--subtle);font-size:.74rem">—</span></td>
+          <td class="r"><span class="pill pill-amber">89.4</span></td>
+          <td style="color:var(--muted);font-size:.78rem">Food Products</td>
+          <td style="color:var(--subtle);font-size:.74rem">Other Food Products</td>
+          <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+        </tr>
+        <tr class="srow"
+          data-sym="SHRIPISTON" data-indgrp="Auto Components" data-ind="Auto Components & Equipments"
+          data-close="3501.2" data-relvol="111.24" data-rs="90.11">
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3ASHRIPISTON" target="_blank" rel="noopener">SHRIPISTON</a>
+          </td>
+          <td class="r" style="font-family:var(--mono)">₹3,501.20</td>
+          <td class="r">
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:22.2%;background:var(--amber)"></div></div>
+              <span class="vol-pct" style="color:var(--amber)">111.2%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue" style="font-size:.65rem;letter-spacing:.04em">BLUE PPV</span></td>
+          <td class="c"><span style="color:var(--subtle);font-size:.74rem">—</span></td>
+          <td class="r"><span class="pill pill-amber">90.1</span></td>
+          <td style="color:var(--muted);font-size:.78rem">Auto Components</td>
+          <td style="color:var(--subtle);font-size:.74rem">Auto Components & Equipments</td>
+          <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+        </tr>
+        <tr class="srow"
+          data-sym="ANLON" data-indgrp="Commercial Services & Supplies" data-ind="Diversified Commercial Services"
+          data-close="699.35" data-relvol="109.36" data-rs="96.3">
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3AANLON" target="_blank" rel="noopener">ANLON</a>
+          </td>
+          <td class="r" style="font-family:var(--mono)">₹699.35</td>
+          <td class="r">
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:21.9%;background:var(--amber)"></div></div>
+              <span class="vol-pct" style="color:var(--amber)">109.4%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue" style="font-size:.65rem;letter-spacing:.04em">BLUE PPV</span></td>
+          <td class="c"><span style="color:var(--subtle);font-size:.74rem">—</span></td>
+          <td class="r"><span class="pill pill-amber">96.3</span></td>
+          <td style="color:var(--muted);font-size:.78rem">Commercial Services & Supplies</td>
+          <td style="color:var(--subtle);font-size:.74rem">Diversified Commercial Services</td>
+          <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+        </tr>
+        <tr class="srow"
+          data-sym="ASTERDM" data-indgrp="Healthcare Services" data-ind="Hospital"
+          data-close="813.75" data-relvol="107.31" data-rs="90.31">
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3AASTERDM" target="_blank" rel="noopener">ASTERDM</a>
+          </td>
+          <td class="r" style="font-family:var(--mono)">₹813.75</td>
+          <td class="r">
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:21.5%;background:var(--amber)"></div></div>
+              <span class="vol-pct" style="color:var(--amber)">107.3%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue" style="font-size:.65rem;letter-spacing:.04em">BLUE PPV</span></td>
+          <td class="c"><span style="color:var(--subtle);font-size:.74rem">—</span></td>
+          <td class="r"><span class="pill pill-amber">90.3</span></td>
+          <td style="color:var(--muted);font-size:.78rem">Healthcare Services</td>
+          <td style="color:var(--subtle);font-size:.74rem">Hospital</td>
+          <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+        </tr>
+        <tr class="srow"
+          data-sym="TBOTEK" data-indgrp="Leisure Services" data-ind="Tour, Travel Related Services"
+          data-close="1255.6" data-relvol="106.22" data-rs="61.18">
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3ATBOTEK" target="_blank" rel="noopener">TBOTEK</a>
+          </td>
+          <td class="r" style="font-family:var(--mono)">₹1,255.60</td>
+          <td class="r">
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:21.2%;background:var(--amber)"></div></div>
+              <span class="vol-pct" style="color:var(--amber)">106.2%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue" style="font-size:.65rem;letter-spacing:.04em">BLUE PPV</span></td>
+          <td class="c"><span style="color:var(--subtle);font-size:.74rem">—</span></td>
+          <td class="r"><span class="pill pill-amber">61.2</span></td>
+          <td style="color:var(--muted);font-size:.78rem">Leisure Services</td>
+          <td style="color:var(--subtle);font-size:.74rem">Tour, Travel Related Services</td>
+          <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+        </tr>
+        <tr class="srow is-new"
+          data-sym="CEATLTD" data-indgrp="Auto Components" data-ind="Tyres & Rubber Products"
+          data-close="3149.0" data-relvol="101.78" data-rs="45.3">
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3ACEATLTD" target="_blank" rel="noopener">CEATLTD <span class="sym-new-star">✦ NEW</span></a>
+          </td>
+          <td class="r" style="font-family:var(--mono)">₹3,149.00</td>
+          <td class="r">
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:20.4%;background:var(--amber)"></div></div>
+              <span class="vol-pct" style="color:var(--amber)">101.8%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue" style="font-size:.65rem;letter-spacing:.04em">BLUE PPV</span></td>
+          <td class="c"><span style="color:var(--subtle);font-size:.74rem">—</span></td>
+          <td class="r"><span class="pill pill-amber">45.3</span></td>
+          <td style="color:var(--muted);font-size:.78rem">Auto Components</td>
+          <td style="color:var(--subtle);font-size:.74rem">Tyres & Rubber Products</td>
+          <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+        </tr>
+        <tr class="srow is-new"
+          data-sym="KRYSTAL" data-indgrp="Commercial Services & Supplies" data-ind="Diversified Commercial Services"
+          data-close="575.4" data-relvol="87.07" data-rs="58.6">
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3AKRYSTAL" target="_blank" rel="noopener">KRYSTAL <span class="sym-new-star">✦ NEW</span></a>
+          </td>
+          <td class="r" style="font-family:var(--mono)">₹575.40</td>
+          <td class="r">
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:17.4%;background:var(--emerald)"></div></div>
+              <span class="vol-pct" style="color:var(--emerald)">87.1%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue" style="font-size:.65rem;letter-spacing:.04em">BLUE PPV</span></td>
+          <td class="c"><span style="color:var(--subtle);font-size:.74rem">—</span></td>
+          <td class="r"><span class="pill pill-amber">58.6</span></td>
+          <td style="color:var(--muted);font-size:.78rem">Commercial Services & Supplies</td>
+          <td style="color:var(--subtle);font-size:.74rem">Diversified Commercial Services</td>
+          <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+        </tr>
+        <tr class="srow"
+          data-sym="VTL" data-indgrp="Textiles & Apparels" data-ind="Other Textile Products"
+          data-close="614.45" data-relvol="76.54" data-rs="85.24">
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3AVTL" target="_blank" rel="noopener">VTL</a>
+          </td>
+          <td class="r" style="font-family:var(--mono)">₹614.45</td>
+          <td class="r">
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:15.3%;background:var(--emerald)"></div></div>
+              <span class="vol-pct" style="color:var(--emerald)">76.5%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue" style="font-size:.65rem;letter-spacing:.04em">BLUE PPV</span></td>
+          <td class="c"><span style="color:var(--subtle);font-size:.74rem">—</span></td>
+          <td class="r"><span class="pill pill-amber">85.2</span></td>
+          <td style="color:var(--muted);font-size:.78rem">Textiles & Apparels</td>
+          <td style="color:var(--subtle);font-size:.74rem">Other Textile Products</td>
+          <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+        </tr>
+        <tr class="srow"
+          data-sym="QUESS" data-indgrp="Commercial Services & Supplies" data-ind="Diversified Commercial Services"
+          data-close="242.12" data-relvol="76.47" data-rs="42.04">
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3AQUESS" target="_blank" rel="noopener">QUESS</a>
+          </td>
+          <td class="r" style="font-family:var(--mono)">₹242.12</td>
+          <td class="r">
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:15.3%;background:var(--emerald)"></div></div>
+              <span class="vol-pct" style="color:var(--emerald)">76.5%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue" style="font-size:.65rem;letter-spacing:.04em">BLUE PPV</span></td>
+          <td class="c"><span style="color:var(--subtle);font-size:.74rem">—</span></td>
+          <td class="r"><span class="pill pill-amber">42.0</span></td>
+          <td style="color:var(--muted);font-size:.78rem">Commercial Services & Supplies</td>
+          <td style="color:var(--subtle);font-size:.74rem">Diversified Commercial Services</td>
+          <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+        </tr>
+        <tr class="srow is-new"
+          data-sym="APTUS" data-indgrp="Finance" data-ind="Housing Finance Company"
+          data-close="258.45" data-relvol="64.31" data-rs="40.09">
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3AAPTUS" target="_blank" rel="noopener">APTUS <span class="sym-new-star">✦ NEW</span></a>
+          </td>
+          <td class="r" style="font-family:var(--mono)">₹258.45</td>
+          <td class="r">
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:12.9%;background:var(--emerald)"></div></div>
+              <span class="vol-pct" style="color:var(--emerald)">64.3%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue" style="font-size:.65rem;letter-spacing:.04em">BLUE PPV</span></td>
+          <td class="c"><span style="color:var(--subtle);font-size:.74rem">—</span></td>
+          <td class="r"><span class="pill pill-amber">40.1</span></td>
+          <td style="color:var(--muted);font-size:.78rem">Finance</td>
+          <td style="color:var(--subtle);font-size:.74rem">Housing Finance Company</td>
+          <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+        </tr>
+        <tr class="srow"
+          data-sym="GREENPLY" data-indgrp="Consumer Durables" data-ind="Plywood Boards/ Laminates"
+          data-close="292.5" data-relvol="48.99" data-rs="61.57">
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3AGREENPLY" target="_blank" rel="noopener">GREENPLY</a>
+          </td>
+          <td class="r" style="font-family:var(--mono)">₹292.50</td>
+          <td class="r">
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:9.8%;background:var(--emerald)"></div></div>
+              <span class="vol-pct" style="color:var(--emerald)">49.0%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue" style="font-size:.65rem;letter-spacing:.04em">BLUE PPV</span></td>
+          <td class="c"><span style="color:var(--subtle);font-size:.74rem">—</span></td>
+          <td class="r"><span class="pill pill-amber">61.6</span></td>
+          <td style="color:var(--muted);font-size:.78rem">Consumer Durables</td>
+          <td style="color:var(--subtle);font-size:.74rem">Plywood Boards/ Laminates</td>
+          <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+        </tr>
+        <tr class="srow is-new"
+          data-sym="UNIVPHOTO" data-indgrp="Consumer Durables" data-ind="Consumer Electronics"
+          data-close="365.85" data-relvol="46.64" data-rs="90.5">
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3AUNIVPHOTO" target="_blank" rel="noopener">UNIVPHOTO <span class="sym-new-star">✦ NEW</span></a>
+          </td>
+          <td class="r" style="font-family:var(--mono)">₹365.85</td>
+          <td class="r">
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:9.3%;background:var(--emerald)"></div></div>
+              <span class="vol-pct" style="color:var(--emerald)">46.6%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue" style="font-size:.65rem;letter-spacing:.04em">BLUE PPV</span></td>
+          <td class="c"><span style="color:var(--subtle);font-size:.74rem">—</span></td>
+          <td class="r"><span class="pill pill-amber">90.5</span></td>
+          <td style="color:var(--muted);font-size:.78rem">Consumer Durables</td>
+          <td style="color:var(--subtle);font-size:.74rem">Consumer Electronics</td>
+          <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+        </tr></tbody>
+    </table>
+  </div>
+</div>
+
+<footer>Data: NSE India &amp; Yahoo Finance · Generated 11 Jun 2026 · For informational purposes only · Not financial advice</footer>
+
+<script>
+
+function filterRows() {
+  const q = document.getElementById('searchInput').value.toLowerCase();
+  document.querySelectorAll('#tableBody .srow').forEach(r => {
+    const sym    = (r.dataset.sym    || '').toLowerCase();
+    const indgrp = (r.dataset.indgrp || '').toLowerCase();
+    const ind    = (r.dataset.ind    || '').toLowerCase();
+    r.style.display = (sym.includes(q)||indgrp.includes(q)||ind.includes(q)) ? '' : 'none';
+  });
+}
+
+
+let sortCol = null, sortAsc = true;
+document.querySelectorAll('#mainTable thead th').forEach(th => {
+  th.addEventListener('click', () => {
+    const col  = th.dataset.col;
+    const type = th.dataset.type;
+    if (!col) return;
+    sortAsc = (sortCol === col) ? !sortAsc : true;
+    sortCol = col;
+    document.querySelectorAll('#mainTable thead th')
+      .forEach(h => h.classList.remove('sort-asc','sort-desc'));
+    th.classList.add(sortAsc ? 'sort-asc' : 'sort-desc');
+    const tbody = document.getElementById('tableBody');
+    Array.from(tbody.querySelectorAll('.srow'))
+      .sort((a, b) => {
+        let av = a.dataset[col], bv = b.dataset[col];
+        if (type === 'num') {
+          av = parseFloat(av); bv = parseFloat(bv);
+          if (isNaN(av)) av = -Infinity;
+          if (isNaN(bv)) bv = -Infinity;
+          return sortAsc ? av - bv : bv - av;
+        }
+        return sortAsc ? av.localeCompare(bv) : bv.localeCompare(av);
+      })
+      .forEach(r => tbody.appendChild(r));
+  });
+});
+
+</script>
+</body></html>
