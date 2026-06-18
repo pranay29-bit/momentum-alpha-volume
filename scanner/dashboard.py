@@ -1053,8 +1053,17 @@ new Chart(document.getElementById('tvChart'), {{
 # ─────────────────────────────────────────────────────────────────────────────
 #  VOLUME ACTION DASHBOARD
 # ─────────────────────────────────────────────────────────────────────────────
-def build_volume_action_dashboard(volume_df, out_path, date_str, known_symbols=known_symbols):
+# ─────────────────────────────────────────────────────────────────────────────
+#  VOLUME ACTION DASHBOARD
+# ─────────────────────────────────────────────────────────────────────────────
+def build_volume_action_dashboard(
+    volume_df: pd.DataFrame,
+    out_path: Path,
+    date_str: str,
+    known_symbols: set[str] | None = None,
+) -> None:
     date_display = datetime.strptime(date_str, "%Y%m%d").strftime("%d %b %Y")
+    known = known_symbols or set()
 
     # Ensure bull_snort exists and is boolean, then sort so snort stocks
     # are grouped together at the top, with relative_volume as the tiebreaker.
@@ -1064,38 +1073,151 @@ def build_volume_action_dashboard(volume_df, out_path, date_str, known_symbols=k
         ["bull_snort", "relative_volume"], ascending=[False, False]
     )
 
-    rows = ""
+    n_total   = len(sorted_df)
+    n_snort   = int(sorted_df["bull_snort"].sum())
+    avg_rv_s  = f"{sorted_df['relative_volume'].dropna().mean():.1f}%" \
+                if "relative_volume" in sorted_df.columns and not sorted_df["relative_volume"].dropna().empty \
+                else "N/A"
+
+    rows_html = ""
     for _, row in sorted_df.iterrows():
-        sym = str(row.get("symbol", "")).replace(".NS", "")
-        res_date = row.get("result_date", "N/A")
-        is_snort = bool(row.get("bull_snort", False))
-        rows += f"""
-        <tr class='srow'>
-            <td><a class='sym-tag' href='{_tv_link(sym)}' target='_blank'>{sym}</a></td>
-            <td class='r'>{round(float(row.get('close',0)),2)}</td>
-            <td class='r'>{round(float(row.get('relative_volume',0)),1)}%</td>
-            <td class='c'><span class='badge' style='background:var(--blue-bg);color:var(--blue);border-color:var(--blue-mid);'>BLUE PPV</span></td>
-            <td class='c'>{'🔥' if is_snort else '-'}</td>
-            <td class='r'><span class='rs-tag'>{round(float(row.get('rs_percentile',0)),1)}</span></td>
-            <td class='c'><span class="badge" style="background:#fffbeb;color:#b45309;border-color:#fde68a">{res_date}</span></td>
-        </tr>
-        """
+        sym       = str(row.get("symbol", "")).replace(".NS", "")
+        link      = _tv_link(row.get("symbol", sym))
+        is_new    = sym not in known
+        new_cls   = " is-new" if is_new else ""
+        close     = row.get("close", np.nan)
+        relvol    = row.get("relative_volume", np.nan)
+        rs        = row.get("rs_percentile", np.nan)
+        is_snort  = bool(row.get("bull_snort", False))
+        snort_flag = 1 if is_snort else 0
+        result_date = str(row.get("result_date", "—"))
 
-    html = _html_head("Volume Action Dashboard") + f"""
-    <header>
-      <div><div class='logo-line'><span class='logo-dot' style='background:var(--blue)'></span><span class='logo-tag'>Momentum Alpha</span></div>
-      <h1>Volume Action</h1><div class='sub'>Pocket Pivot / Blue Volume Stocks • {date_display}</div></div>
-      <div class='date-chip' style='border-color:var(--blue-mid);background:var(--blue-bg);color:var(--blue);'>{len(volume_df)} Stocks</div>
-    </header>
-    <section class='table-section'>
-    <div class='tbl-wrap'>
-    <table>
-    <thead><tr><th>Symbol</th><th class='r'>Close</th><th class='r'>Rel Volume</th><th class='c'>Signal</th><th class='c'>Bull Snort</th><th class='r'>RS</th><th class='c'>Result Date</th></tr></thead>
-    <tbody>{rows}</tbody></table></div></section></body></html>
-    """
-    out_path.write_text(html, encoding='utf-8')
-    logger.info("Volume action dashboard → %s", out_path)
+        close_s  = f"₹{float(close):,.2f}" if _safe(close) else "N/A"
+        rs_s     = f"{float(rs):.1f}"       if _safe(rs)    else "N/A"
 
+        try:
+            rv_f    = float(relvol)
+            rv_s    = f"{rv_f:.1f}%"
+            bar_w   = max(0, min(150, rv_f))  # cap the bar visually at 150%
+            bar_col = "var(--emerald)" if rv_f >= 100 else ("var(--amber)" if rv_f >= 50 else "var(--blue)")
+        except Exception:
+            rv_f = -1; rv_s = "N/A"; bar_w = 0; bar_col = "var(--subtle)"
+
+        snort_html = (
+            '<span class="pill pill-amber">🔥 Snort</span>' if is_snort
+            else '<span class="pill pill-muted">—</span>'
+        )
+
+        rows_html += f"""
+        <tr class="srow{new_cls}"
+          data-sym="{sym}" data-close="{_r(close)}" data-relvol="{_r(relvol)}"
+          data-snort="{snort_flag}" data-rs="{_r(rs)}" data-result="{result_date}">
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="{link}" target="_blank" rel="noopener">{sym}{_new_star(is_new)}</a>
+          </td>
+          <td class="r" style="font-family:var(--mono)">{close_s}</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:{(bar_w/150)*100}%;background:{bar_col}"></div></div>
+              <span class="vol-pct" style="color:{bar_col}">{rv_s}</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c">{snort_html}</td>
+          <td class="r"><span class="pill pill-amber">{rs_s}</span></td>
+          <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">{result_date}</td>
+        </tr>"""
+
+    n_new = sum(1 for _, r in sorted_df.iterrows()
+                if str(r.get("symbol","")).replace(".NS","") not in known)
+
+    html  = _html_head(f"Momentum Alpha — Volume Action — {date_display}",
+                       "var(--blue)", "var(--indigo)")
+    html += f"""
+<header>
+  <div class="hdr-left">
+    <div class="brand">
+      <div class="brand-dot" style="background:var(--blue)"></div>
+      <span class="brand-name">Momentum Alpha · Volume Action</span>
+    </div>
+    <h1>Pocket Pivot / Blue Volume</h1>
+    <p class="hdr-sub">Institutional accumulation signals · NSE India · {date_display}</p>
+    <div class="badge-row">
+      <span class="hdr-badge" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)">✓ Blue Volume Pivot</span>
+      {"<span class='hdr-badge' style='background:var(--new-bg);border-color:var(--new-border);color:var(--new-text)'>✦ " + str(n_new) + " New Stocks</span>" if n_new else ""}
+    </div>
+  </div>
+  <div class="date-pill" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)">{date_display}</div>
+</header>
+
+<div class="kpi-strip">
+  <div class="kpi" style="--accent:var(--blue)">
+    <div class="kpi-lbl">Volume Signals</div>
+    <div class="kpi-val">{n_total}</div>
+    <div class="kpi-hint">blue volume / pocket pivot</div>
+  </div>
+  <div class="kpi" style="--accent:var(--amber)">
+    <div class="kpi-lbl">Bull Snort</div>
+    <div class="kpi-val">{n_snort}</div>
+    <div class="kpi-hint">snort confirmed signals</div>
+  </div>
+  <div class="kpi" style="--accent:var(--indigo)">
+    <div class="kpi-lbl">Avg Relative Volume</div>
+    <div class="kpi-val">{avg_rv_s}</div>
+    <div class="kpi-hint">vs. average volume</div>
+  </div>
+  {"<div class='kpi' style='--accent:var(--new-text)'><div class='kpi-lbl'>New Appearances</div><div class='kpi-val'>" + str(n_new) + "</div><div class='kpi-hint'>first time in 10 days</div></div>" if n_new else ""}
+</div>
+
+<div class="callout">
+  <strong style="color:var(--blue)">Pocket Pivot / Blue Volume:</strong>
+  Up-day volume exceeding the highest down-day volume of the last 10 sessions, signaling
+  institutional accumulation. <strong style="color:var(--amber)">🔥 Bull Snort</strong> stocks are listed first —
+  these show an additional sharp volume/price confirmation on top of the base pivot signal.
+</div>
+
+<div class="table-sec">
+  <div class="tbl-head">
+    <div>
+      <span class="tbl-title">Volume Action Detail</span>
+      <span class="tbl-count tbl-title">[{n_total}]</span>
+    </div>
+    <div class="controls">
+      <div class="legend-row">
+        <div class="leg"><div class="leg-dot" style="background:var(--amber)"></div>🔥 Bull Snort</div>
+        <div class="leg"><div class="leg-dot" style="background:var(--new-border)"></div>✦ New (10-day)</div>
+      </div>
+      <input class="search" id="searchInput" type="text"
+             placeholder="Search symbol…" oninput="filterRows()"/>
+    </div>
+  </div>
+  <div class="tbl-outer">
+    <table id="mainTable">
+      <thead><tr>
+        <th data-col="sym"    data-type="str">Symbol<i class="si"></i></th>
+        <th class="r" data-col="close"  data-type="num">Close ₹<i class="si"></i></th>
+        <th class="r" data-col="relvol" data-type="num">Rel Volume<i class="si"></i></th>
+        <th class="c">Signal</th>
+        <th class="c" data-col="snort"  data-type="num">Bull Snort<i class="si"></i></th>
+        <th class="r" data-col="rs"     data-type="num">RS %ile<i class="si"></i></th>
+        <th class="r" data-col="result" data-type="str">Result Date<i class="si"></i></th>
+      </tr></thead>
+      <tbody id="tableBody">{rows_html}</tbody>
+    </table>
+  </div>
+</div>
+
+<footer>Data: NSE India &amp; Yahoo Finance · Generated {date_display} · For informational purposes only · Not financial advice</footer>
+
+<script>
+{_FILTER_JS}
+{_TABLE_SORT_JS}
+</script>
+</body></html>"""
+
+    out_path.write_text(html, encoding="utf-8")
+    logger.info("Volume action dashboard → %s  (%d stocks, %d snort)", out_path, n_total, n_snort)
 
 # ─────────────────────────────────────────────────────────────────────────────
 #  ROCKET DASHBOARD
