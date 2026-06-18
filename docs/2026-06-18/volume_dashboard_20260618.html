@@ -1,0 +1,1917 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Momentum Alpha — Volume Action — 18 Jun 2026</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+:root { --ACCENT1:var(--blue); --ACCENT2:var(--indigo); }
+
+:root {
+  /* Surfaces */
+  --bg:         #f7f8fc;
+  --surface:    #ffffff;
+  --surface2:   #f1f3f9;
+  --surface3:   #e8ebf5;
+  --border:     #e2e6f0;
+  --border2:    #ccd1e4;
+
+  /* Text */
+  --text:       #0f1629;
+  --muted:      #5a6282;
+  --subtle:     #8b93b5;
+
+  /* Brand accents */
+  --indigo:     #4f46e5;
+  --indigo-lt:  #eef0fd;
+  --indigo-mid: #c7d2fe;
+  --emerald:    #059669;
+  --emerald-lt: #ecfdf5;
+  --emerald-mid:#a7f3d0;
+  --blue:       #2563eb;
+  --blue-lt:    #eff6ff;
+  --blue-mid:   #bfdbfe;
+  --amber:      #d97706;
+  --amber-lt:   #fffbeb;
+  --amber-mid:  #fde68a;
+  --red:        #dc2626;
+  --red-lt:     #fef2f2;
+  --violet:     #7c3aed;
+  --violet-lt:  #f5f3ff;
+  --violet-mid: #ddd6fe;
+
+  /* NEW badge */
+  --new-bg:     #fdf4ff;
+  --new-border: #d946ef;
+  --new-text:   #a21caf;
+  --new-row:    #fdf4ff;
+
+  /* Type */
+  --sans:  'Outfit', system-ui, sans-serif;
+  --mono:  'DM Mono', 'Courier New', monospace;
+
+  /* Radii */
+  --r:   8px;
+  --rl:  12px;
+  --rxl: 16px;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 14px; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--sans);
+  line-height: 1.6;
+  min-height: 100vh;
+}
+a { color: inherit; text-decoration: none; }
+
+/* ── Topbar ── */
+.topbar {
+  height: 3px;
+  background: linear-gradient(90deg, var(--ACCENT1) 0%, var(--ACCENT2) 100%);
+}
+
+/* ── Header ── */
+header {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 1.6rem 2.5rem;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+.hdr-left { display: flex; flex-direction: column; gap: .2rem; }
+.brand {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  margin-bottom: .25rem;
+}
+.brand-dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+}
+.brand-name {
+  font-family: var(--mono);
+  font-size: .65rem;
+  font-weight: 500;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+header h1 {
+  font-size: clamp(1.35rem, 2.5vw, 1.9rem);
+  font-weight: 700;
+  letter-spacing: -.03em;
+  line-height: 1.1;
+  color: var(--text);
+}
+.hdr-sub {
+  font-size: .8rem;
+  color: var(--muted);
+  margin-top: .15rem;
+}
+.badge-row { display: flex; gap: .45rem; margin-top: .5rem; flex-wrap: wrap; }
+.hdr-badge {
+  font-size: .64rem;
+  font-weight: 600;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  border-radius: 999px;
+  padding: .22rem .75rem;
+  border: 1px solid;
+}
+.date-pill {
+  font-family: var(--mono);
+  font-size: .72rem;
+  font-weight: 500;
+  padding: .4rem 1.1rem;
+  border-radius: 999px;
+  border: 1px solid;
+  white-space: nowrap;
+  letter-spacing: .04em;
+  align-self: flex-start;
+  margin-top: .25rem;
+}
+
+/* ── CSV bar ── */
+.csv-bar {
+  display: flex;
+  align-items: center;
+  gap: .6rem;
+  padding: .6rem 2.5rem;
+  background: var(--surface2);
+  border-bottom: 1px solid var(--border);
+  flex-wrap: wrap;
+}
+.csv-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: .35rem .95rem;
+  font-family: var(--mono);
+  font-size: .7rem;
+  font-weight: 500;
+  border-radius: var(--r);
+  border: 1px solid;
+  cursor: pointer;
+  transition: background .14s;
+  letter-spacing: .03em;
+}
+.csv-primary {
+  background: var(--emerald-lt);
+  border-color: var(--emerald-mid);
+  color: var(--emerald);
+}
+.csv-primary:hover { background: #d1fae5; }
+.csv-secondary {
+  background: var(--blue-lt);
+  border-color: var(--blue-mid);
+  color: var(--blue);
+}
+.csv-secondary:hover { background: #dbeafe; }
+.csv-label {
+  font-family: var(--mono);
+  font-size: .67rem;
+  color: var(--subtle);
+  margin-left: auto;
+}
+
+/* ── KPI strip ── */
+.kpi-strip {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  border-bottom: 1px solid var(--border);
+}
+.kpi {
+  background: var(--surface);
+  padding: 1.1rem 1.6rem;
+  border-right: 1px solid var(--border);
+  position: relative;
+}
+.kpi:last-child { border-right: none; }
+.kpi::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  border-radius: 0 0 2px 2px;
+  background: var(--accent);
+}
+.kpi-lbl {
+  font-size: .62rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .11em;
+  color: var(--muted);
+  margin-bottom: .35rem;
+}
+.kpi-val {
+  font-size: clamp(1.1rem, 2vw, 1.65rem);
+  font-weight: 700;
+  letter-spacing: -.02em;
+  line-height: 1;
+  color: var(--accent);
+}
+.kpi-hint {
+  font-size: .67rem;
+  color: var(--subtle);
+  margin-top: .25rem;
+}
+
+/* ── Charts area ── */
+.charts-area {
+  padding: 1.1rem 2.5rem;
+  display: grid;
+  gap: .85rem;
+}
+.chart-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--rl);
+  padding: 1.1rem 1.3rem .9rem;
+}
+.chart-lbl {
+  font-size: .62rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .11em;
+  color: var(--muted);
+  margin-bottom: .8rem;
+}
+.chart-wrap { position: relative; height: 220px; }
+
+/* ── Table section ── */
+.table-sec { padding: 0 2.5rem 3rem; }
+.tbl-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: .9rem 0 .7rem;
+  flex-wrap: wrap;
+  gap: .6rem;
+}
+.tbl-title {
+  font-size: .62rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .12em;
+  color: var(--muted);
+}
+.tbl-count { color: var(--ACCENT1); margin-left: .4rem; }
+.controls { display: flex; align-items: center; gap: .85rem; flex-wrap: wrap; }
+.search {
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-radius: var(--r);
+  color: var(--text);
+  font-family: var(--sans);
+  font-size: .82rem;
+  padding: .38rem .9rem;
+  outline: none;
+  width: 210px;
+  transition: border-color .16s, box-shadow .16s;
+}
+.search::placeholder { color: var(--subtle); }
+.search:focus {
+  border-color: var(--ACCENT1);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--ACCENT1) 12%, transparent);
+}
+.legend-row { display: flex; gap: .9rem; align-items: center; flex-wrap: wrap; }
+.leg { display: flex; align-items: center; gap: .3rem; font-size: .68rem; color: var(--muted); }
+.leg-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+
+/* ── Table ── */
+.tbl-outer {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--rl);
+  overflow: hidden;
+}
+table { width: 100%; border-collapse: collapse; font-size: .82rem; white-space: nowrap; }
+thead tr {
+  background: var(--surface2);
+  border-bottom: 1px solid var(--border);
+  position: sticky; top: 0; z-index: 2;
+}
+th {
+  font-size: .62rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .1em;
+  color: var(--muted);
+  padding: .68rem 1rem;
+  text-align: left;
+  cursor: pointer;
+  user-select: none;
+  transition: background .12s;
+  white-space: nowrap;
+}
+th:hover { background: var(--surface3); }
+th.r { text-align: right; } th.c { text-align: center; }
+th .si { margin-left: .25rem; opacity: .3; font-style: normal; font-size: .65rem; }
+th.sort-asc  .si::after { content: '▲'; opacity: 1; color: var(--ACCENT1); }
+th.sort-desc .si::after { content: '▼'; opacity: 1; color: var(--ACCENT1); }
+th:not(.sort-asc):not(.sort-desc) .si::after { content: '⇅'; }
+.srow { border-bottom: 1px solid var(--border); transition: background .1s; }
+.srow:last-child { border-bottom: none; }
+.srow:hover { background: var(--bg); }
+td { padding: .65rem 1rem; vertical-align: middle; }
+td.r { text-align: right; } td.c { text-align: center; }
+
+/* ── NEW-stock highlight row ── */
+.srow.is-new { background: var(--new-row); }
+.srow.is-new:hover { background: #fae8ff; }
+
+/* ── Symbol tags ── */
+.sym-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: .35rem;
+  font-family: var(--mono);
+  font-weight: 500;
+  font-size: .72rem;
+  padding: .2rem .6rem;
+  border-radius: 6px;
+  letter-spacing: .05em;
+  border: 1px solid;
+  transition: filter .12s;
+}
+.sym-tag:hover { filter: brightness(.93); }
+.sym-new-star {
+  font-size: .55rem;
+  background: var(--new-bg);
+  border: 1px solid var(--new-border);
+  color: var(--new-text);
+  border-radius: 999px;
+  padding: .1rem .38rem;
+  font-weight: 700;
+  letter-spacing: .04em;
+  white-space: nowrap;
+}
+
+/* ── Value pills ── */
+.pill {
+  display: inline-block;
+  font-family: var(--mono);
+  font-size: .71rem;
+  font-weight: 500;
+  padding: .18rem .55rem;
+  border-radius: 999px;
+  border: 1px solid transparent;
+}
+.pill-green  { background: var(--emerald-lt); border-color: var(--emerald-mid); color: var(--emerald); }
+.pill-red    { background: var(--red-lt);     border-color: #fca5a5;            color: var(--red); }
+.pill-amber  { background: var(--amber-lt);   border-color: var(--amber-mid);   color: var(--amber); }
+.pill-indigo { background: var(--indigo-lt);  border-color: var(--indigo-mid);  color: var(--indigo); }
+.pill-blue   { background: var(--blue-lt);    border-color: var(--blue-mid);    color: var(--blue); }
+.pill-muted  { background: var(--surface2);   border-color: var(--border2);     color: var(--muted); }
+.pill-violet { background: var(--violet-lt);  border-color: var(--violet-mid);  color: var(--violet); }
+
+/* ── Volume bar ── */
+.vol-wrap { display: flex; align-items: center; gap: .5rem; min-width: 130px; }
+.vol-bg   { flex: 1; height: 4px; background: var(--surface3); border-radius: 99px; overflow: hidden; }
+.vol-fill { height: 100%; border-radius: 99px; }
+.vol-pct  { font-family: var(--mono); font-size: .7rem; font-weight: 600; min-width: 42px; text-align: right; }
+
+/* ── IB badge ── */
+.ib-badge {
+  display: inline-block;
+  font-family: var(--mono);
+  font-size: .58rem;
+  font-weight: 600;
+  background: var(--amber-lt);
+  border: 1px solid var(--amber-mid);
+  color: var(--amber);
+  padding: .1rem .4rem;
+  border-radius: 4px;
+  margin-left: .3rem;
+  letter-spacing: .04em;
+  vertical-align: middle;
+}
+
+/* ── No-data row ── */
+.no-data {
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--muted);
+  font-size: .82rem;
+}
+
+/* ── Info callout ── */
+.callout {
+  padding: .6rem 2.5rem;
+  font-size: .78rem;
+  color: var(--muted);
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+}
+
+/* ── Footer ── */
+footer {
+  text-align: center;
+  padding: 1rem;
+  font-size: .68rem;
+  color: var(--subtle);
+  border-top: 1px solid var(--border);
+  background: var(--surface);
+  font-family: var(--mono);
+  letter-spacing: .04em;
+}
+
+</style>
+</head>
+<body>
+<div class="topbar"></div>
+
+<header>
+  <div class="hdr-left">
+    <div class="brand">
+      <div class="brand-dot" style="background:var(--blue)"></div>
+      <span class="brand-name">Momentum Alpha · Volume Action</span>
+    </div>
+    <h1>Pocket Pivot / Blue Volume</h1>
+    <p class="hdr-sub">Institutional accumulation signals · NSE India · 18 Jun 2026</p>
+    <div class="badge-row">
+      <span class="hdr-badge" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)">✓ Blue Volume Pivot</span>
+      <span class='hdr-badge' style='background:var(--new-bg);border-color:var(--new-border);color:var(--new-text)'>✦ 18 New Stocks</span>
+    </div>
+  </div>
+  <div class="date-pill" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)">18 Jun 2026</div>
+</header>
+
+<div class="kpi-strip">
+  <div class="kpi" style="--accent:var(--blue)">
+    <div class="kpi-lbl">Volume Signals</div>
+    <div class="kpi-val">72</div>
+    <div class="kpi-hint">blue volume / pocket pivot</div>
+  </div>
+  <div class="kpi" style="--accent:var(--amber)">
+    <div class="kpi-lbl">Bull Snort</div>
+    <div class="kpi-val">17</div>
+    <div class="kpi-hint">snort confirmed signals</div>
+  </div>
+  <div class="kpi" style="--accent:var(--indigo)">
+    <div class="kpi-lbl">Avg Relative Volume</div>
+    <div class="kpi-val">354.3%</div>
+    <div class="kpi-hint">vs. average volume</div>
+  </div>
+  <div class='kpi' style='--accent:var(--new-text)'><div class='kpi-lbl'>New Appearances</div><div class='kpi-val'>18</div><div class='kpi-hint'>first time in 10 days</div></div>
+</div>
+
+<div class="callout">
+  <strong style="color:var(--blue)">Pocket Pivot / Blue Volume:</strong>
+  Up-day volume exceeding the highest down-day volume of the last 10 sessions, signaling
+  institutional accumulation. <strong style="color:var(--amber)">🔥 Bull Snort</strong> stocks are listed first —
+  these show an additional sharp volume/price confirmation on top of the base pivot signal.
+</div>
+
+<div class="table-sec">
+  <div class="tbl-head">
+    <div>
+      <span class="tbl-title">Volume Action Detail</span>
+      <span class="tbl-count tbl-title">[72]</span>
+    </div>
+    <div class="controls">
+      <div class="legend-row">
+        <div class="leg"><div class="leg-dot" style="background:var(--amber)"></div>🔥 Bull Snort</div>
+        <div class="leg"><div class="leg-dot" style="background:var(--new-border)"></div>✦ New (10-day)</div>
+      </div>
+      <input class="search" id="searchInput" type="text"
+             placeholder="Search symbol…" oninput="filterRows()"/>
+    </div>
+  </div>
+  <div class="tbl-outer">
+    <table id="mainTable">
+      <thead><tr>
+        <th data-col="sym"    data-type="str">Symbol<i class="si"></i></th>
+        <th class="r" data-col="close"  data-type="num">Close ₹<i class="si"></i></th>
+        <th class="r" data-col="relvol" data-type="num">Rel Volume<i class="si"></i></th>
+        <th class="c">Signal</th>
+        <th class="c" data-col="snort"  data-type="num">Bull Snort<i class="si"></i></th>
+        <th class="r" data-col="rs"     data-type="num">RS %ile<i class="si"></i></th>
+        <th class="r" data-col="result" data-type="str">Result Date<i class="si"></i></th>
+      </tr></thead>
+      <tbody id="tableBody">
+        <tr class="srow"
+          data-sym="BOSCH-HCIL" data-close="1325.3" data-relvol="1706.7"
+          data-snort="1" data-rs="29.24" data-result="—">
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3ABOSCH-HCIL" target="_blank" rel="noopener">BOSCH-HCIL</a>
+          </td>
+          <td class="r" style="font-family:var(--mono)">₹1,325.30</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:100.0%;background:var(--emerald)"></div></div>
+              <span class="vol-pct" style="color:var(--emerald)">1706.7%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-amber">🔥 Snort</span></td>
+          <td class="r"><span class="pill pill-amber">29.2</span></td>
+          <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+        </tr>
+        <tr class="srow"
+          data-sym="FINOPB" data-close="157.73" data-relvol="1005.19"
+          data-snort="1" data-rs="6.51" data-result="—">
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3AFINOPB" target="_blank" rel="noopener">FINOPB</a>
+          </td>
+          <td class="r" style="font-family:var(--mono)">₹157.73</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:100.0%;background:var(--emerald)"></div></div>
+              <span class="vol-pct" style="color:var(--emerald)">1005.2%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-amber">🔥 Snort</span></td>
+          <td class="r"><span class="pill pill-amber">6.5</span></td>
+          <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+        </tr>
+        <tr class="srow"
+          data-sym="NIACL" data-close="186.19" data-relvol="825.7"
+          data-snort="1" data-rs="61.34" data-result="—">
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3ANIACL" target="_blank" rel="noopener">NIACL</a>
+          </td>
+          <td class="r" style="font-family:var(--mono)">₹186.19</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:100.0%;background:var(--emerald)"></div></div>
+              <span class="vol-pct" style="color:var(--emerald)">825.7%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-amber">🔥 Snort</span></td>
+          <td class="r"><span class="pill pill-amber">61.3</span></td>
+          <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+        </tr>
+        <tr class="srow"
+          data-sym="AEROENTER" data-close="125.32" data-relvol="720.82"
+          data-snort="1" data-rs="87.08" data-result="—">
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3AAEROENTER" target="_blank" rel="noopener">AEROENTER</a>
+          </td>
+          <td class="r" style="font-family:var(--mono)">₹125.32</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:100.0%;background:var(--emerald)"></div></div>
+              <span class="vol-pct" style="color:var(--emerald)">720.8%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-amber">🔥 Snort</span></td>
+          <td class="r"><span class="pill pill-amber">87.1</span></td>
+          <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+        </tr>
+        <tr class="srow is-new"
+          data-sym="GANDHAR" data-close="180.0" data-relvol="717.42"
+          data-snort="1" data-rs="66.63" data-result="—">
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3AGANDHAR" target="_blank" rel="noopener">GANDHAR <span class="sym-new-star">✦ NEW</span></a>
+          </td>
+          <td class="r" style="font-family:var(--mono)">₹180.00</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:100.0%;background:var(--emerald)"></div></div>
+              <span class="vol-pct" style="color:var(--emerald)">717.4%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-amber">🔥 Snort</span></td>
+          <td class="r"><span class="pill pill-amber">66.6</span></td>
+          <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+        </tr>
+        <tr class="srow"
+          data-sym="SAHANA" data-close="936.8" data-relvol="632.93"
+          data-snort="1" data-rs="8.55" data-result="—">
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3ASAHANA" target="_blank" rel="noopener">SAHANA</a>
+          </td>
+          <td class="r" style="font-family:var(--mono)">₹936.80</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:100.0%;background:var(--emerald)"></div></div>
+              <span class="vol-pct" style="color:var(--emerald)">632.9%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-amber">🔥 Snort</span></td>
+          <td class="r"><span class="pill pill-amber">8.5</span></td>
+          <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+        </tr>
+        <tr class="srow is-new"
+          data-sym="NITCO" data-close="107.38" data-relvol="599.41"
+          data-snort="1" data-rs="34.82" data-result="—">
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3ANITCO" target="_blank" rel="noopener">NITCO <span class="sym-new-star">✦ NEW</span></a>
+          </td>
+          <td class="r" style="font-family:var(--mono)">₹107.38</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:100.0%;background:var(--emerald)"></div></div>
+              <span class="vol-pct" style="color:var(--emerald)">599.4%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-amber">🔥 Snort</span></td>
+          <td class="r"><span class="pill pill-amber">34.8</span></td>
+          <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+        </tr>
+        <tr class="srow"
+          data-sym="WTICAB" data-close="111.0" data-relvol="557.31"
+          data-snort="1" data-rs="34.39" data-result="—">
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3AWTICAB" target="_blank" rel="noopener">WTICAB</a>
+          </td>
+          <td class="r" style="font-family:var(--mono)">₹111.00</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:100.0%;background:var(--emerald)"></div></div>
+              <span class="vol-pct" style="color:var(--emerald)">557.3%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-amber">🔥 Snort</span></td>
+          <td class="r"><span class="pill pill-amber">34.4</span></td>
+          <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+        </tr>
+        <tr class="srow"
+          data-sym="SPAL" data-close="908.85" data-relvol="533.09"
+          data-snort="1" data-rs="76.3" data-result="—">
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3ASPAL" target="_blank" rel="noopener">SPAL</a>
+          </td>
+          <td class="r" style="font-family:var(--mono)">₹908.85</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:100.0%;background:var(--emerald)"></div></div>
+              <span class="vol-pct" style="color:var(--emerald)">533.1%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-amber">🔥 Snort</span></td>
+          <td class="r"><span class="pill pill-amber">76.3</span></td>
+          <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+        </tr>
+        <tr class="srow"
+          data-sym="MAITHANALL" data-close="1189.5" data-relvol="460.74"
+          data-snort="1" data-rs="64.16" data-result="—">
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3AMAITHANALL" target="_blank" rel="noopener">MAITHANALL</a>
+          </td>
+          <td class="r" style="font-family:var(--mono)">₹1,189.50</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:100.0%;background:var(--emerald)"></div></div>
+              <span class="vol-pct" style="color:var(--emerald)">460.7%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-amber">🔥 Snort</span></td>
+          <td class="r"><span class="pill pill-amber">64.2</span></td>
+          <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+        </tr>
+        <tr class="srow is-new"
+          data-sym="VISHNUINFR" data-close="169.65" data-relvol="432.25"
+          data-snort="1" data-rs="49.93" data-result="—">
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3AVISHNUINFR" target="_blank" rel="noopener">VISHNUINFR <span class="sym-new-star">✦ NEW</span></a>
+          </td>
+          <td class="r" style="font-family:var(--mono)">₹169.65</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:100.0%;background:var(--emerald)"></div></div>
+              <span class="vol-pct" style="color:var(--emerald)">432.3%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-amber">🔥 Snort</span></td>
+          <td class="r"><span class="pill pill-amber">49.9</span></td>
+          <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+        </tr>
+        <tr class="srow"
+          data-sym="BEPL" data-close="109.49" data-relvol="386.63"
+          data-snort="1" data-rs="60.47" data-result="—">
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3ABEPL" target="_blank" rel="noopener">BEPL</a>
+          </td>
+          <td class="r" style="font-family:var(--mono)">₹109.49</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:100.0%;background:var(--emerald)"></div></div>
+              <span class="vol-pct" style="color:var(--emerald)">386.6%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-amber">🔥 Snort</span></td>
+          <td class="r"><span class="pill pill-amber">60.5</span></td>
+          <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+        </tr>
+        <tr class="srow"
+          data-sym="STARHEALTH" data-close="567.4" data-relvol="374.35"
+          data-snort="1" data-rs="81.98" data-result="—">
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3ASTARHEALTH" target="_blank" rel="noopener">STARHEALTH</a>
+          </td>
+          <td class="r" style="font-family:var(--mono)">₹567.40</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:100.0%;background:var(--emerald)"></div></div>
+              <span class="vol-pct" style="color:var(--emerald)">374.3%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-amber">🔥 Snort</span></td>
+          <td class="r"><span class="pill pill-amber">82.0</span></td>
+          <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+        </tr>
+        <tr class="srow"
+          data-sym="VIPULLTD" data-close="10.12" data-relvol="366.26"
+          data-snort="1" data-rs="41.43" data-result="—">
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3AVIPULLTD" target="_blank" rel="noopener">VIPULLTD</a>
+          </td>
+          <td class="r" style="font-family:var(--mono)">₹10.12</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:100.0%;background:var(--emerald)"></div></div>
+              <span class="vol-pct" style="color:var(--emerald)">366.3%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-amber">🔥 Snort</span></td>
+          <td class="r"><span class="pill pill-amber">41.4</span></td>
+          <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+        </tr>
+        <tr class="srow"
+          data-sym="COMMITTED" data-close="279.15" data-relvol="355.03"
+          data-snort="1" data-rs="70.86" data-result="—">
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3ACOMMITTED" target="_blank" rel="noopener">COMMITTED</a>
+          </td>
+          <td class="r" style="font-family:var(--mono)">₹279.15</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:100.0%;background:var(--emerald)"></div></div>
+              <span class="vol-pct" style="color:var(--emerald)">355.0%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-amber">🔥 Snort</span></td>
+          <td class="r"><span class="pill pill-amber">70.9</span></td>
+          <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+        </tr>
+        <tr class="srow"
+          data-sym="GOKEX" data-close="764.85" data-relvol="319.73"
+          data-snort="1" data-rs="40.12" data-result="—">
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3AGOKEX" target="_blank" rel="noopener">GOKEX</a>
+          </td>
+          <td class="r" style="font-family:var(--mono)">₹764.85</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:100.0%;background:var(--emerald)"></div></div>
+              <span class="vol-pct" style="color:var(--emerald)">319.7%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-amber">🔥 Snort</span></td>
+          <td class="r"><span class="pill pill-amber">40.1</span></td>
+          <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+        </tr>
+        <tr class="srow is-new"
+          data-sym="GSMFOILS" data-close="218.7" data-relvol="300.83"
+          data-snort="1" data-rs="88.68" data-result="—">
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3AGSMFOILS" target="_blank" rel="noopener">GSMFOILS <span class="sym-new-star">✦ NEW</span></a>
+          </td>
+          <td class="r" style="font-family:var(--mono)">₹218.70</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:100.0%;background:var(--emerald)"></div></div>
+              <span class="vol-pct" style="color:var(--emerald)">300.8%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-amber">🔥 Snort</span></td>
+          <td class="r"><span class="pill pill-amber">88.7</span></td>
+          <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+        </tr>
+        <tr class="srow"
+          data-sym="EIFFL" data-close="343.0" data-relvol="980.79"
+          data-snort="0" data-rs="92.03" data-result="—">
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3AEIFFL" target="_blank" rel="noopener">EIFFL</a>
+          </td>
+          <td class="r" style="font-family:var(--mono)">₹343.00</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:100.0%;background:var(--emerald)"></div></div>
+              <span class="vol-pct" style="color:var(--emerald)">980.8%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-muted">—</span></td>
+          <td class="r"><span class="pill pill-amber">92.0</span></td>
+          <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+        </tr>
+        <tr class="srow"
+          data-sym="SICALLOG" data-close="99.5" data-relvol="948.1"
+          data-snort="0" data-rs="54.78" data-result="—">
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3ASICALLOG" target="_blank" rel="noopener">SICALLOG</a>
+          </td>
+          <td class="r" style="font-family:var(--mono)">₹99.50</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:100.0%;background:var(--emerald)"></div></div>
+              <span class="vol-pct" style="color:var(--emerald)">948.1%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-muted">—</span></td>
+          <td class="r"><span class="pill pill-amber">54.8</span></td>
+          <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+        </tr>
+        <tr class="srow is-new"
+          data-sym="ZODIACLOTH" data-close="79.9" data-relvol="833.81"
+          data-snort="0" data-rs="23.26" data-result="—">
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3AZODIACLOTH" target="_blank" rel="noopener">ZODIACLOTH <span class="sym-new-star">✦ NEW</span></a>
+          </td>
+          <td class="r" style="font-family:var(--mono)">₹79.90</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:100.0%;background:var(--emerald)"></div></div>
+              <span class="vol-pct" style="color:var(--emerald)">833.8%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-muted">—</span></td>
+          <td class="r"><span class="pill pill-amber">23.3</span></td>
+          <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+        </tr>
+        <tr class="srow"
+          data-sym="SARTELE" data-close="160.65" data-relvol="717.48"
+          data-snort="0" data-rs="16.08" data-result="—">
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3ASARTELE" target="_blank" rel="noopener">SARTELE</a>
+          </td>
+          <td class="r" style="font-family:var(--mono)">₹160.65</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:100.0%;background:var(--emerald)"></div></div>
+              <span class="vol-pct" style="color:var(--emerald)">717.5%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-muted">—</span></td>
+          <td class="r"><span class="pill pill-amber">16.1</span></td>
+          <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+        </tr>
+        <tr class="srow"
+          data-sym="KIRLOSIND" data-close="3787.6" data-relvol="494.09"
+          data-snort="0" data-rs="63.77" data-result="—">
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3AKIRLOSIND" target="_blank" rel="noopener">KIRLOSIND</a>
+          </td>
+          <td class="r" style="font-family:var(--mono)">₹3,787.60</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:100.0%;background:var(--emerald)"></div></div>
+              <span class="vol-pct" style="color:var(--emerald)">494.1%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-muted">—</span></td>
+          <td class="r"><span class="pill pill-amber">63.8</span></td>
+          <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+        </tr>
+        <tr class="srow"
+          data-sym="CARBORUNIV" data-close="1193.4" data-relvol="468.19"
+          data-snort="0" data-rs="82.22" data-result="—">
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3ACARBORUNIV" target="_blank" rel="noopener">CARBORUNIV</a>
+          </td>
+          <td class="r" style="font-family:var(--mono)">₹1,193.40</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:100.0%;background:var(--emerald)"></div></div>
+              <span class="vol-pct" style="color:var(--emerald)">468.2%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-muted">—</span></td>
+          <td class="r"><span class="pill pill-amber">82.2</span></td>
+          <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+        </tr>
+        <tr class="srow"
+          data-sym="QUESTLAB" data-close="116.25" data-relvol="426.88"
+          data-snort="0" data-rs="81.25" data-result="—">
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3AQUESTLAB" target="_blank" rel="noopener">QUESTLAB</a>
+          </td>
+          <td class="r" style="font-family:var(--mono)">₹116.25</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:100.0%;background:var(--emerald)"></div></div>
+              <span class="vol-pct" style="color:var(--emerald)">426.9%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-muted">—</span></td>
+          <td class="r"><span class="pill pill-amber">81.3</span></td>
+          <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+        </tr>
+        <tr class="srow"
+          data-sym="BLUSPRING" data-close="115.51" data-relvol="416.76"
+          data-snort="0" data-rs="90.53" data-result="—">
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3ABLUSPRING" target="_blank" rel="noopener">BLUSPRING</a>
+          </td>
+          <td class="r" style="font-family:var(--mono)">₹115.51</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:100.0%;background:var(--emerald)"></div></div>
+              <span class="vol-pct" style="color:var(--emerald)">416.8%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-muted">—</span></td>
+          <td class="r"><span class="pill pill-amber">90.5</span></td>
+          <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+        </tr>
+        <tr class="srow"
+          data-sym="NILKAMAL" data-close="1332.0" data-relvol="304.33"
+          data-snort="0" data-rs="29.92" data-result="—">
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3ANILKAMAL" target="_blank" rel="noopener">NILKAMAL</a>
+          </td>
+          <td class="r" style="font-family:var(--mono)">₹1,332.00</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:100.0%;background:var(--emerald)"></div></div>
+              <span class="vol-pct" style="color:var(--emerald)">304.3%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-muted">—</span></td>
+          <td class="r"><span class="pill pill-amber">29.9</span></td>
+          <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+        </tr>
+        <tr class="srow is-new"
+          data-sym="GEECEE" data-close="362.6" data-relvol="292.17"
+          data-snort="0" data-rs="52.89" data-result="—">
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3AGEECEE" target="_blank" rel="noopener">GEECEE <span class="sym-new-star">✦ NEW</span></a>
+          </td>
+          <td class="r" style="font-family:var(--mono)">₹362.60</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:100.0%;background:var(--emerald)"></div></div>
+              <span class="vol-pct" style="color:var(--emerald)">292.2%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-muted">—</span></td>
+          <td class="r"><span class="pill pill-amber">52.9</span></td>
+          <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+        </tr>
+        <tr class="srow"
+          data-sym="VIMTALABS" data-close="579.0" data-relvol="289.48"
+          data-snort="0" data-rs="78.78" data-result="—">
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3AVIMTALABS" target="_blank" rel="noopener">VIMTALABS</a>
+          </td>
+          <td class="r" style="font-family:var(--mono)">₹579.00</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:100.0%;background:var(--emerald)"></div></div>
+              <span class="vol-pct" style="color:var(--emerald)">289.5%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-muted">—</span></td>
+          <td class="r"><span class="pill pill-amber">78.8</span></td>
+          <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+        </tr>
+        <tr class="srow"
+          data-sym="RPTECH" data-close="708.75" data-relvol="287.41"
+          data-snort="0" data-rs="97.57" data-result="—">
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3ARPTECH" target="_blank" rel="noopener">RPTECH</a>
+          </td>
+          <td class="r" style="font-family:var(--mono)">₹708.75</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:100.0%;background:var(--emerald)"></div></div>
+              <span class="vol-pct" style="color:var(--emerald)">287.4%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-muted">—</span></td>
+          <td class="r"><span class="pill pill-amber">97.6</span></td>
+          <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+        </tr>
+        <tr class="srow is-new"
+          data-sym="GOCLCORP" data-close="437.0" data-relvol="286.45"
+          data-snort="0" data-rs="75.52" data-result="—">
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3AGOCLCORP" target="_blank" rel="noopener">GOCLCORP <span class="sym-new-star">✦ NEW</span></a>
+          </td>
+          <td class="r" style="font-family:var(--mono)">₹437.00</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:100.0%;background:var(--emerald)"></div></div>
+              <span class="vol-pct" style="color:var(--emerald)">286.4%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-muted">—</span></td>
+          <td class="r"><span class="pill pill-amber">75.5</span></td>
+          <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+        </tr>
+        <tr class="srow"
+          data-sym="BAJAJHCARE" data-close="321.0" data-relvol="280.44"
+          data-snort="0" data-rs="12.29" data-result="—">
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3ABAJAJHCARE" target="_blank" rel="noopener">BAJAJHCARE</a>
+          </td>
+          <td class="r" style="font-family:var(--mono)">₹321.00</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:100.0%;background:var(--emerald)"></div></div>
+              <span class="vol-pct" style="color:var(--emerald)">280.4%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-muted">—</span></td>
+          <td class="r"><span class="pill pill-amber">12.3</span></td>
+          <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+        </tr>
+        <tr class="srow"
+          data-sym="BHARATCOAL" data-close="null" data-relvol="277.7"
+          data-snort="0" data-rs="null" data-result="—">
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3ABHARATCOAL" target="_blank" rel="noopener">BHARATCOAL</a>
+          </td>
+          <td class="r" style="font-family:var(--mono)">N/A</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:100.0%;background:var(--emerald)"></div></div>
+              <span class="vol-pct" style="color:var(--emerald)">277.7%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-muted">—</span></td>
+          <td class="r"><span class="pill pill-amber">N/A</span></td>
+          <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+        </tr>
+        <tr class="srow is-new"
+          data-sym="ANTHEM" data-close="null" data-relvol="272.95"
+          data-snort="0" data-rs="null" data-result="—">
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3AANTHEM" target="_blank" rel="noopener">ANTHEM <span class="sym-new-star">✦ NEW</span></a>
+          </td>
+          <td class="r" style="font-family:var(--mono)">N/A</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:100.0%;background:var(--emerald)"></div></div>
+              <span class="vol-pct" style="color:var(--emerald)">272.9%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-muted">—</span></td>
+          <td class="r"><span class="pill pill-amber">N/A</span></td>
+          <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+        </tr>
+        <tr class="srow"
+          data-sym="IRISDOREME" data-close="40.57" data-relvol="272.48"
+          data-snort="0" data-rs="20.88" data-result="—">
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3AIRISDOREME" target="_blank" rel="noopener">IRISDOREME</a>
+          </td>
+          <td class="r" style="font-family:var(--mono)">₹40.57</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:100.0%;background:var(--emerald)"></div></div>
+              <span class="vol-pct" style="color:var(--emerald)">272.5%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-muted">—</span></td>
+          <td class="r"><span class="pill pill-amber">20.9</span></td>
+          <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+        </tr>
+        <tr class="srow"
+          data-sym="BAHETI" data-close="627.4" data-relvol="267.26"
+          data-snort="0" data-rs="69.21" data-result="—">
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3ABAHETI" target="_blank" rel="noopener">BAHETI</a>
+          </td>
+          <td class="r" style="font-family:var(--mono)">₹627.40</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:100.0%;background:var(--emerald)"></div></div>
+              <span class="vol-pct" style="color:var(--emerald)">267.3%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-muted">—</span></td>
+          <td class="r"><span class="pill pill-amber">69.2</span></td>
+          <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+        </tr>
+        <tr class="srow"
+          data-sym="PARAS" data-close="1302.55" data-relvol="267.16"
+          data-snort="0" data-rs="92.42" data-result="—">
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3APARAS" target="_blank" rel="noopener">PARAS</a>
+          </td>
+          <td class="r" style="font-family:var(--mono)">₹1,302.55</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:100.0%;background:var(--emerald)"></div></div>
+              <span class="vol-pct" style="color:var(--emerald)">267.2%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-muted">—</span></td>
+          <td class="r"><span class="pill pill-amber">92.4</span></td>
+          <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+        </tr>
+        <tr class="srow"
+          data-sym="SINTERCOM" data-close="78.83" data-relvol="264.71"
+          data-snort="0" data-rs="9.47" data-result="—">
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3ASINTERCOM" target="_blank" rel="noopener">SINTERCOM</a>
+          </td>
+          <td class="r" style="font-family:var(--mono)">₹78.83</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:100.0%;background:var(--emerald)"></div></div>
+              <span class="vol-pct" style="color:var(--emerald)">264.7%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-muted">—</span></td>
+          <td class="r"><span class="pill pill-amber">9.5</span></td>
+          <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+        </tr>
+        <tr class="srow"
+          data-sym="CDSL" data-close="1386.0" data-relvol="257.16"
+          data-snort="0" data-rs="38.27" data-result="—">
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3ACDSL" target="_blank" rel="noopener">CDSL</a>
+          </td>
+          <td class="r" style="font-family:var(--mono)">₹1,386.00</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:100.0%;background:var(--emerald)"></div></div>
+              <span class="vol-pct" style="color:var(--emerald)">257.2%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-muted">—</span></td>
+          <td class="r"><span class="pill pill-amber">38.3</span></td>
+          <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+        </tr>
+        <tr class="srow"
+          data-sym="WALCHANNAG" data-close="304.55" data-relvol="252.47"
+          data-snort="0" data-rs="81.59" data-result="—">
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3AWALCHANNAG" target="_blank" rel="noopener">WALCHANNAG</a>
+          </td>
+          <td class="r" style="font-family:var(--mono)">₹304.55</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:100.0%;background:var(--emerald)"></div></div>
+              <span class="vol-pct" style="color:var(--emerald)">252.5%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-muted">—</span></td>
+          <td class="r"><span class="pill pill-amber">81.6</span></td>
+          <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+        </tr>
+        <tr class="srow"
+          data-sym="WELSPUNLIV" data-close="152.12" data-relvol="244.64"
+          data-snort="0" data-rs="76.01" data-result="—">
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3AWELSPUNLIV" target="_blank" rel="noopener">WELSPUNLIV</a>
+          </td>
+          <td class="r" style="font-family:var(--mono)">₹152.12</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:100.0%;background:var(--emerald)"></div></div>
+              <span class="vol-pct" style="color:var(--emerald)">244.6%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-muted">—</span></td>
+          <td class="r"><span class="pill pill-amber">76.0</span></td>
+          <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+        </tr>
+        <tr class="srow is-new"
+          data-sym="HIMATSEIDE" data-close="83.6" data-relvol="236.59"
+          data-snort="0" data-rs="8.64" data-result="—">
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3AHIMATSEIDE" target="_blank" rel="noopener">HIMATSEIDE <span class="sym-new-star">✦ NEW</span></a>
+          </td>
+          <td class="r" style="font-family:var(--mono)">₹83.60</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:100.0%;background:var(--emerald)"></div></div>
+              <span class="vol-pct" style="color:var(--emerald)">236.6%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-muted">—</span></td>
+          <td class="r"><span class="pill pill-amber">8.6</span></td>
+          <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+        </tr>
+        <tr class="srow is-new"
+          data-sym="ALEMBICLTD" data-close="93.87" data-relvol="227.34"
+          data-snort="0" data-rs="39.29" data-result="—">
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3AALEMBICLTD" target="_blank" rel="noopener">ALEMBICLTD <span class="sym-new-star">✦ NEW</span></a>
+          </td>
+          <td class="r" style="font-family:var(--mono)">₹93.87</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:100.0%;background:var(--emerald)"></div></div>
+              <span class="vol-pct" style="color:var(--emerald)">227.3%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-muted">—</span></td>
+          <td class="r"><span class="pill pill-amber">39.3</span></td>
+          <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+        </tr>
+        <tr class="srow"
+          data-sym="JMA" data-close="97.38" data-relvol="202.95"
+          data-snort="0" data-rs="65.76" data-result="—">
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3AJMA" target="_blank" rel="noopener">JMA</a>
+          </td>
+          <td class="r" style="font-family:var(--mono)">₹97.38</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:100.0%;background:var(--emerald)"></div></div>
+              <span class="vol-pct" style="color:var(--emerald)">202.9%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-muted">—</span></td>
+          <td class="r"><span class="pill pill-amber">65.8</span></td>
+          <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+        </tr>
+        <tr class="srow"
+          data-sym="LLOYDSENT" data-close="77.0" data-relvol="200.83"
+          data-snort="0" data-rs="65.91" data-result="—">
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3ALLOYDSENT" target="_blank" rel="noopener">LLOYDSENT</a>
+          </td>
+          <td class="r" style="font-family:var(--mono)">₹77.00</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:100.0%;background:var(--emerald)"></div></div>
+              <span class="vol-pct" style="color:var(--emerald)">200.8%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-muted">—</span></td>
+          <td class="r"><span class="pill pill-amber">65.9</span></td>
+          <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+        </tr>
+        <tr class="srow is-new"
+          data-sym="KNRCON" data-close="138.31" data-relvol="193.51"
+          data-snort="0" data-rs="14.91" data-result="—">
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3AKNRCON" target="_blank" rel="noopener">KNRCON <span class="sym-new-star">✦ NEW</span></a>
+          </td>
+          <td class="r" style="font-family:var(--mono)">₹138.31</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:100.0%;background:var(--emerald)"></div></div>
+              <span class="vol-pct" style="color:var(--emerald)">193.5%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-muted">—</span></td>
+          <td class="r"><span class="pill pill-amber">14.9</span></td>
+          <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+        </tr>
+        <tr class="srow"
+          data-sym="CORONA" data-close="null" data-relvol="192.9"
+          data-snort="0" data-rs="null" data-result="—">
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3ACORONA" target="_blank" rel="noopener">CORONA</a>
+          </td>
+          <td class="r" style="font-family:var(--mono)">N/A</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:100.0%;background:var(--emerald)"></div></div>
+              <span class="vol-pct" style="color:var(--emerald)">192.9%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-muted">—</span></td>
+          <td class="r"><span class="pill pill-amber">N/A</span></td>
+          <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+        </tr>
+        <tr class="srow"
+          data-sym="DCW" data-close="51.4" data-relvol="192.21"
+          data-snort="0" data-rs="15.35" data-result="—">
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3ADCW" target="_blank" rel="noopener">DCW</a>
+          </td>
+          <td class="r" style="font-family:var(--mono)">₹51.40</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:100.0%;background:var(--emerald)"></div></div>
+              <span class="vol-pct" style="color:var(--emerald)">192.2%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-muted">—</span></td>
+          <td class="r"><span class="pill pill-amber">15.3</span></td>
+          <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+        </tr>
+        <tr class="srow is-new"
+          data-sym="SUYOG" data-close="811.05" data-relvol="191.36"
+          data-snort="0" data-rs="39.78" data-result="—">
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3ASUYOG" target="_blank" rel="noopener">SUYOG <span class="sym-new-star">✦ NEW</span></a>
+          </td>
+          <td class="r" style="font-family:var(--mono)">₹811.05</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:100.0%;background:var(--emerald)"></div></div>
+              <span class="vol-pct" style="color:var(--emerald)">191.4%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-muted">—</span></td>
+          <td class="r"><span class="pill pill-amber">39.8</span></td>
+          <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+        </tr>
+        <tr class="srow"
+          data-sym="REDINGTON" data-close="256.99" data-relvol="187.71"
+          data-snort="0" data-rs="45.51" data-result="—">
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3AREDINGTON" target="_blank" rel="noopener">REDINGTON</a>
+          </td>
+          <td class="r" style="font-family:var(--mono)">₹256.99</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:100.0%;background:var(--emerald)"></div></div>
+              <span class="vol-pct" style="color:var(--emerald)">187.7%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-muted">—</span></td>
+          <td class="r"><span class="pill pill-amber">45.5</span></td>
+          <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+        </tr>
+        <tr class="srow"
+          data-sym="DEN" data-close="30.95" data-relvol="187.5"
+          data-snort="0" data-rs="37.83" data-result="—">
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3ADEN" target="_blank" rel="noopener">DEN</a>
+          </td>
+          <td class="r" style="font-family:var(--mono)">₹30.95</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:100.0%;background:var(--emerald)"></div></div>
+              <span class="vol-pct" style="color:var(--emerald)">187.5%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-muted">—</span></td>
+          <td class="r"><span class="pill pill-amber">37.8</span></td>
+          <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+        </tr>
+        <tr class="srow"
+          data-sym="CENTRUM" data-close="22.16" data-relvol="176.51"
+          data-snort="0" data-rs="20.45" data-result="—">
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3ACENTRUM" target="_blank" rel="noopener">CENTRUM</a>
+          </td>
+          <td class="r" style="font-family:var(--mono)">₹22.16</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:100.0%;background:var(--emerald)"></div></div>
+              <span class="vol-pct" style="color:var(--emerald)">176.5%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-muted">—</span></td>
+          <td class="r"><span class="pill pill-amber">20.4</span></td>
+          <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+        </tr>
+        <tr class="srow is-new"
+          data-sym="MIRZAINT" data-close="32.38" data-relvol="174.09"
+          data-snort="0" data-rs="66.97" data-result="—">
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3AMIRZAINT" target="_blank" rel="noopener">MIRZAINT <span class="sym-new-star">✦ NEW</span></a>
+          </td>
+          <td class="r" style="font-family:var(--mono)">₹32.38</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:100.0%;background:var(--emerald)"></div></div>
+              <span class="vol-pct" style="color:var(--emerald)">174.1%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-muted">—</span></td>
+          <td class="r"><span class="pill pill-amber">67.0</span></td>
+          <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+        </tr>
+        <tr class="srow"
+          data-sym="DUGLOBAL" data-close="32.3" data-relvol="172.41"
+          data-snort="0" data-rs="19.48" data-result="—">
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3ADUGLOBAL" target="_blank" rel="noopener">DUGLOBAL</a>
+          </td>
+          <td class="r" style="font-family:var(--mono)">₹32.30</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:100.0%;background:var(--emerald)"></div></div>
+              <span class="vol-pct" style="color:var(--emerald)">172.4%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-muted">—</span></td>
+          <td class="r"><span class="pill pill-amber">19.5</span></td>
+          <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+        </tr>
+        <tr class="srow is-new"
+          data-sym="VILAS" data-close="392.65" data-relvol="157.95"
+          data-snort="0" data-rs="12.24" data-result="—">
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3AVILAS" target="_blank" rel="noopener">VILAS <span class="sym-new-star">✦ NEW</span></a>
+          </td>
+          <td class="r" style="font-family:var(--mono)">₹392.65</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:100.0%;background:var(--emerald)"></div></div>
+              <span class="vol-pct" style="color:var(--emerald)">158.0%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-muted">—</span></td>
+          <td class="r"><span class="pill pill-amber">12.2</span></td>
+          <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+        </tr>
+        <tr class="srow"
+          data-sym="DENORA" data-close="832.0" data-relvol="157.18"
+          data-snort="0" data-rs="51.72" data-result="—">
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3ADENORA" target="_blank" rel="noopener">DENORA</a>
+          </td>
+          <td class="r" style="font-family:var(--mono)">₹832.00</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:100.0%;background:var(--emerald)"></div></div>
+              <span class="vol-pct" style="color:var(--emerald)">157.2%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-muted">—</span></td>
+          <td class="r"><span class="pill pill-amber">51.7</span></td>
+          <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+        </tr>
+        <tr class="srow"
+          data-sym="PANACHE" data-close="423.0" data-relvol="154.73"
+          data-snort="0" data-rs="97.77" data-result="—">
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3APANACHE" target="_blank" rel="noopener">PANACHE</a>
+          </td>
+          <td class="r" style="font-family:var(--mono)">₹423.00</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:100.0%;background:var(--emerald)"></div></div>
+              <span class="vol-pct" style="color:var(--emerald)">154.7%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-muted">—</span></td>
+          <td class="r"><span class="pill pill-amber">97.8</span></td>
+          <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+        </tr>
+        <tr class="srow is-new"
+          data-sym="SARVESHWAR" data-close="4.05" data-relvol="150.9"
+          data-snort="0" data-rs="7.04" data-result="—">
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3ASARVESHWAR" target="_blank" rel="noopener">SARVESHWAR <span class="sym-new-star">✦ NEW</span></a>
+          </td>
+          <td class="r" style="font-family:var(--mono)">₹4.05</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:100.0%;background:var(--emerald)"></div></div>
+              <span class="vol-pct" style="color:var(--emerald)">150.9%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-muted">—</span></td>
+          <td class="r"><span class="pill pill-amber">7.0</span></td>
+          <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+        </tr>
+        <tr class="srow"
+          data-sym="KANORICHEM" data-close="114.98" data-relvol="143.16"
+          data-snort="0" data-rs="79.55" data-result="—">
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3AKANORICHEM" target="_blank" rel="noopener">KANORICHEM</a>
+          </td>
+          <td class="r" style="font-family:var(--mono)">₹114.98</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:95.43797220359306%;background:var(--emerald)"></div></div>
+              <span class="vol-pct" style="color:var(--emerald)">143.2%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-muted">—</span></td>
+          <td class="r"><span class="pill pill-amber">79.6</span></td>
+          <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+        </tr>
+        <tr class="srow"
+          data-sym="TITAGARH" data-close="944.45" data-relvol="137.68"
+          data-snort="0" data-rs="66.83" data-result="—">
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3ATITAGARH" target="_blank" rel="noopener">TITAGARH</a>
+          </td>
+          <td class="r" style="font-family:var(--mono)">₹944.45</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:91.78832643346112%;background:var(--emerald)"></div></div>
+              <span class="vol-pct" style="color:var(--emerald)">137.7%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-muted">—</span></td>
+          <td class="r"><span class="pill pill-amber">66.8</span></td>
+          <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+        </tr>
+        <tr class="srow"
+          data-sym="SHEMAROO" data-close="134.8" data-relvol="131.25"
+          data-snort="0" data-rs="80.14" data-result="—">
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3ASHEMAROO" target="_blank" rel="noopener">SHEMAROO</a>
+          </td>
+          <td class="r" style="font-family:var(--mono)">₹134.80</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:87.50289843639814%;background:var(--emerald)"></div></div>
+              <span class="vol-pct" style="color:var(--emerald)">131.3%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-muted">—</span></td>
+          <td class="r"><span class="pill pill-amber">80.1</span></td>
+          <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+        </tr>
+        <tr class="srow"
+          data-sym="AVANTEL" data-close="184.31" data-relvol="130.11"
+          data-snort="0" data-rs="77.56" data-result="—">
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3AAVANTEL" target="_blank" rel="noopener">AVANTEL</a>
+          </td>
+          <td class="r" style="font-family:var(--mono)">₹184.31</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:86.73927364259437%;background:var(--emerald)"></div></div>
+              <span class="vol-pct" style="color:var(--emerald)">130.1%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-muted">—</span></td>
+          <td class="r"><span class="pill pill-amber">77.6</span></td>
+          <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+        </tr>
+        <tr class="srow"
+          data-sym="CUPID" data-close="169.79" data-relvol="129.01"
+          data-snort="0" data-rs="99.95" data-result="—">
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3ACUPID" target="_blank" rel="noopener">CUPID</a>
+          </td>
+          <td class="r" style="font-family:var(--mono)">₹169.79</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:86.00404327061698%;background:var(--emerald)"></div></div>
+              <span class="vol-pct" style="color:var(--emerald)">129.0%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-muted">—</span></td>
+          <td class="r"><span class="pill pill-amber">100.0</span></td>
+          <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+        </tr>
+        <tr class="srow"
+          data-sym="OLECTRA" data-close="1412.4" data-relvol="110.42"
+          data-snort="0" data-rs="78.73" data-result="—">
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3AOLECTRA" target="_blank" rel="noopener">OLECTRA</a>
+          </td>
+          <td class="r" style="font-family:var(--mono)">₹1,412.40</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:73.61039188383523%;background:var(--emerald)"></div></div>
+              <span class="vol-pct" style="color:var(--emerald)">110.4%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-muted">—</span></td>
+          <td class="r"><span class="pill pill-amber">78.7</span></td>
+          <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+        </tr>
+        <tr class="srow"
+          data-sym="ZENTEC" data-close="1950.2" data-relvol="106.97"
+          data-snort="0" data-rs="59.4" data-result="—">
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3AZENTEC" target="_blank" rel="noopener">ZENTEC</a>
+          </td>
+          <td class="r" style="font-family:var(--mono)">₹1,950.20</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:71.31094517823492%;background:var(--emerald)"></div></div>
+              <span class="vol-pct" style="color:var(--emerald)">107.0%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-muted">—</span></td>
+          <td class="r"><span class="pill pill-amber">59.4</span></td>
+          <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+        </tr>
+        <tr class="srow is-new"
+          data-sym="SWANCORP" data-close="319.65" data-relvol="104.27"
+          data-snort="0" data-rs="25.84" data-result="—">
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3ASWANCORP" target="_blank" rel="noopener">SWANCORP <span class="sym-new-star">✦ NEW</span></a>
+          </td>
+          <td class="r" style="font-family:var(--mono)">₹319.65</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:69.5156408542458%;background:var(--emerald)"></div></div>
+              <span class="vol-pct" style="color:var(--emerald)">104.3%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-muted">—</span></td>
+          <td class="r"><span class="pill pill-amber">25.8</span></td>
+          <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+        </tr>
+        <tr class="srow"
+          data-sym="NIVABUPA" data-close="87.19" data-relvol="101.41"
+          data-snort="0" data-rs="68.29" data-result="—">
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3ANIVABUPA" target="_blank" rel="noopener">NIVABUPA</a>
+          </td>
+          <td class="r" style="font-family:var(--mono)">₹87.19</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:67.60996224032647%;background:var(--emerald)"></div></div>
+              <span class="vol-pct" style="color:var(--emerald)">101.4%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-muted">—</span></td>
+          <td class="r"><span class="pill pill-amber">68.3</span></td>
+          <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+        </tr>
+        <tr class="srow"
+          data-sym="AURUM" data-close="203.27" data-relvol="92.71"
+          data-snort="0" data-rs="56.53" data-result="—">
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3AAURUM" target="_blank" rel="noopener">AURUM</a>
+          </td>
+          <td class="r" style="font-family:var(--mono)">₹203.27</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:61.80798412641379%;background:var(--amber)"></div></div>
+              <span class="vol-pct" style="color:var(--amber)">92.7%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-muted">—</span></td>
+          <td class="r"><span class="pill pill-amber">56.5</span></td>
+          <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+        </tr>
+        <tr class="srow"
+          data-sym="MMTC" data-close="76.43" data-relvol="53.22"
+          data-snort="0" data-rs="72.46" data-result="—">
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3AMMTC" target="_blank" rel="noopener">MMTC</a>
+          </td>
+          <td class="r" style="font-family:var(--mono)">₹76.43</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:35.47685023196404%;background:var(--amber)"></div></div>
+              <span class="vol-pct" style="color:var(--amber)">53.2%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-muted">—</span></td>
+          <td class="r"><span class="pill pill-amber">72.5</span></td>
+          <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+        </tr>
+        <tr class="srow"
+          data-sym="KIRLFER" data-close="null" data-relvol="null"
+          data-snort="0" data-rs="null" data-result="—">
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3AKIRLFER" target="_blank" rel="noopener">KIRLFER</a>
+          </td>
+          <td class="r" style="font-family:var(--mono)">N/A</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:100.0%;background:var(--blue)"></div></div>
+              <span class="vol-pct" style="color:var(--blue)">nan%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-muted">—</span></td>
+          <td class="r"><span class="pill pill-amber">N/A</span></td>
+          <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+        </tr>
+        <tr class="srow is-new"
+          data-sym="FEDDERSHOL" data-close="null" data-relvol="null"
+          data-snort="0" data-rs="null" data-result="—">
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3AFEDDERSHOL" target="_blank" rel="noopener">FEDDERSHOL <span class="sym-new-star">✦ NEW</span></a>
+          </td>
+          <td class="r" style="font-family:var(--mono)">N/A</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:100.0%;background:var(--blue)"></div></div>
+              <span class="vol-pct" style="color:var(--blue)">nan%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-muted">—</span></td>
+          <td class="r"><span class="pill pill-amber">N/A</span></td>
+          <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+        </tr>
+        <tr class="srow is-new"
+          data-sym="KANCHI" data-close="null" data-relvol="null"
+          data-snort="0" data-rs="null" data-result="—">
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3AKANCHI" target="_blank" rel="noopener">KANCHI <span class="sym-new-star">✦ NEW</span></a>
+          </td>
+          <td class="r" style="font-family:var(--mono)">N/A</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:100.0%;background:var(--blue)"></div></div>
+              <span class="vol-pct" style="color:var(--blue)">nan%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-muted">—</span></td>
+          <td class="r"><span class="pill pill-amber">N/A</span></td>
+          <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+        </tr>
+        <tr class="srow"
+          data-sym="ZSARACOM" data-close="null" data-relvol="null"
+          data-snort="0" data-rs="null" data-result="—">
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3AZSARACOM" target="_blank" rel="noopener">ZSARACOM</a>
+          </td>
+          <td class="r" style="font-family:var(--mono)">N/A</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:100.0%;background:var(--blue)"></div></div>
+              <span class="vol-pct" style="color:var(--blue)">nan%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-muted">—</span></td>
+          <td class="r"><span class="pill pill-amber">N/A</span></td>
+          <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">—</td>
+        </tr></tbody>
+    </table>
+  </div>
+</div>
+
+<footer>Data: NSE India &amp; Yahoo Finance · Generated 18 Jun 2026 · For informational purposes only · Not financial advice</footer>
+
+<script>
+
+function filterRows() {
+  const q = document.getElementById('searchInput').value.toLowerCase();
+  document.querySelectorAll('#tableBody .srow').forEach(r => {
+    const sym    = (r.dataset.sym    || '').toLowerCase();
+    const indgrp = (r.dataset.indgrp || '').toLowerCase();
+    const ind    = (r.dataset.ind    || '').toLowerCase();
+    r.style.display = (sym.includes(q)||indgrp.includes(q)||ind.includes(q)) ? '' : 'none';
+  });
+}
+
+
+let sortCol = null, sortAsc = true;
+document.querySelectorAll('#mainTable thead th').forEach(th => {
+  th.addEventListener('click', () => {
+    const col  = th.dataset.col;
+    const type = th.dataset.type;
+    if (!col) return;
+    sortAsc = (sortCol === col) ? !sortAsc : true;
+    sortCol = col;
+    document.querySelectorAll('#mainTable thead th')
+      .forEach(h => h.classList.remove('sort-asc','sort-desc'));
+    th.classList.add(sortAsc ? 'sort-asc' : 'sort-desc');
+    const tbody = document.getElementById('tableBody');
+    Array.from(tbody.querySelectorAll('.srow'))
+      .sort((a, b) => {
+        let av = a.dataset[col], bv = b.dataset[col];
+        if (type === 'num') {
+          av = parseFloat(av); bv = parseFloat(bv);
+          if (isNaN(av)) av = -Infinity;
+          if (isNaN(bv)) bv = -Infinity;
+          return sortAsc ? av - bv : bv - av;
+        }
+        return sortAsc ? av.localeCompare(bv) : bv.localeCompare(av);
+      })
+      .forEach(r => tbody.appendChild(r));
+  });
+});
+
+</script>
+</body></html>
