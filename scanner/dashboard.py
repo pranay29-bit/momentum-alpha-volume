@@ -1053,7 +1053,7 @@ new Chart(document.getElementById('tvChart'), {{
 # ─────────────────────────────────────────────────────────────────────────────
 #  VOLUME ACTION DASHBOARD
 # ─────────────────────────────────────────────────────────────────────────────
-def build_volume_action_dashboard(volume_df: pd.DataFrame, out_path: Path, date_str: str) -> None:
+def build_volume_action_dashboard(volume_df, out_path, date_str, known_symbols=known_symbols)
     date_display = datetime.strptime(date_str, "%Y%m%d").strftime("%d %b %Y")
 
     # Ensure bull_snort exists and is boolean, then sort so snort stocks
