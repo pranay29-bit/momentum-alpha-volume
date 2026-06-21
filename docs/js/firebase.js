@@ -16,13 +16,13 @@ import {
 from "https://www.gstatic.com/firebasejs/11.9.0/firebase-auth.js";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyAEiHgA339Dtry7r5mL2zo4bXU_N9cLyjA",
-  authDomain: "momentum-alpha-volume-test.firebaseapp.com",
-  projectId: "momentum-alpha-volume-test",
-  storageBucket: "momentum-alpha-volume-test.firebasestorage.app",
-  messagingSenderId: "391686611939",
-  appId: "1:391686611939:web:a5b1fac37c80a43d97f6d6",
-  measurementId: "G-MCHKXZRP0E"
+  apiKey: "AIzaSyAvvNeoppjA5xIzjOiLkBI7-OlgSwQhXu8",
+  authDomain: "momentum-alpha-volume-67cb8.firebaseapp.com",
+  projectId: "momentum-alpha-volume-67cb8",
+  storageBucket: "momentum-alpha-volume-67cb8.firebasestorage.app",
+  messagingSenderId: "726943825444",
+  appId: "1:726943825444:web:0a77e1668f161ec60822b1",
+  measurementId: "G-27K7DB5WK8"
 };
 
 export const app = initializeApp(firebaseConfig);
