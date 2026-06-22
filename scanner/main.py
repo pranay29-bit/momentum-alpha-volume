@@ -491,7 +491,8 @@ def _update_index(today_str: str, out_dir: Path, n_passing: int, n_elite: int, s
       <p>Daily Minervini trend-template scans · Free-float &amp; liquidity data · NSE India</p>
     </div>
     <div class="top-buttons">
-      <a href="portfolio.html" class="btn-link green">📊 Portfolio Tracker</a>
+      <a href="position-size.html" class="btn-link green">📐 Position Size Calculator</a>
+      <a href="position-tracker.html" class="btn-link blue">📊 Position Tracker</a>
     </div>
   </div>
 </header>
