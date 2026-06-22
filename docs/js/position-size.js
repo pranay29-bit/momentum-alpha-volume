@@ -6,8 +6,6 @@ import {
   serverTimestamp
 } from "https://www.gstatic.com/firebasejs/11.9.0/firebase-firestore.js";
 
-const positionsRef = collection(db, "positions");
-
 const loginBtn = document.getElementById("loginBtn");
 const addBtn = document.getElementById("addBtn");
 const addStatus = document.getElementById("addStatus");
@@ -104,6 +102,9 @@ addBtn.onclick = async () => {
   addStatus.textContent = "";
 
   try {
+    // Private subcollection — only this user can ever read or write here.
+    const positionsRef = collection(db, "users", auth.currentUser.uid, "positions");
+
     await addDoc(positionsRef, {
       symbol,
       entry: Number(entryInput.value),
@@ -111,9 +112,7 @@ addBtn.onclick = async () => {
       qty: result.qty,
       riskPerShare: result.riskPerShare,
       riskAmount: result.riskAmount,
-      currentPrice: Number(entryInput.value), // starting point; updated later on the Position Tracker page
-      ownerUid: auth.currentUser.uid,
-      ownerName: auth.currentUser.displayName || auth.currentUser.email,
+      currentPrice: Number(entryInput.value),
       createdAt: serverTimestamp()
     });
 
