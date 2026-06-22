@@ -99,8 +99,17 @@ async function updateAllPrices() {
   const bySymbol = new Map(); // symbol -> [{uid, docId}]
 
   positionsSnap.forEach((posDoc) => {
+    // Skip anything that isn't actually under users/{uid}/positions —
+    // e.g. leftover docs in an old top-level "positions" collection from
+    // a previous version of this app. Those have no grandparent, so
+    // parent.parent is null instead of a uid.
+    const uid = posDoc.ref.parent.parent?.id;
+    if (!uid) {
+      console.warn(`Skipping ${posDoc.ref.path} — not under users/{uid}/positions`);
+      return;
+    }
+
     const symbol = posDoc.data().symbol;
-    const uid = posDoc.ref.parent.parent.id; // users/{uid}/positions/{docId} -> uid
     if (!bySymbol.has(symbol)) bySymbol.set(symbol, []);
     bySymbol.get(symbol).push({ uid, docId: posDoc.id });
   });
