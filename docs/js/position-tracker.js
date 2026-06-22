@@ -10,9 +10,6 @@ import {
   onSnapshot
 } from "https://www.gstatic.com/firebasejs/11.9.0/firebase-firestore.js";
 
-const positionsRef = collection(db, "positions");
-const positionsQuery = query(positionsRef, orderBy("createdAt", "desc"));
-
 let positions = [];
 let unsubscribe = null;
 
@@ -39,7 +36,7 @@ onAuthStateChanged(auth, (user) => {
 
   if (user) {
     loginBtn.textContent = `Logout (${user.displayName || user.email})`;
-    subscribeToPositions();
+    subscribeToPositions(user.uid);
   } else {
     loginBtn.textContent = "Login with Google";
     positions = [];
@@ -47,14 +44,16 @@ onAuthStateChanged(auth, (user) => {
   }
 });
 
-function subscribeToPositions() {
+function subscribeToPositions(uid) {
   const tbody = document.getElementById("positionsTable");
-  tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;color:var(--subtle)">Loading…</td></tr>`;
+  tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;color:var(--subtle)">Loading…</td></tr>`;
 
-  // Prices are now updated server-side by the updatePricesScheduled Cloud
-  // Function (every 5 min) and written directly to Firestore. This
-  // listener just picks up whatever the latest value is — no browser-side
-  // fetching, no CORS proxy, no per-user tab dependency.
+  // Private subcollection — this only ever returns YOUR OWN positions.
+  // Firestore rules also enforce this server-side, so even if this query
+  // were changed to look elsewhere, it would simply be denied.
+  const positionsRef = collection(db, "users", uid, "positions");
+  const positionsQuery = query(positionsRef, orderBy("createdAt", "desc"));
+
   unsubscribe = onSnapshot(
     positionsQuery,
     (snap) => {
@@ -63,7 +62,7 @@ function subscribeToPositions() {
     },
     (err) => {
       console.error(err);
-      tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;color:var(--subtle)">Could not load positions.</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;color:var(--subtle)">Could not load positions.</td></tr>`;
     }
   );
 }
@@ -73,7 +72,7 @@ function renderAll() {
   tbody.innerHTML = "";
 
   if (positions.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;color:var(--subtle)">No open positions</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;color:var(--subtle)">No open positions</td></tr>`;
   } else {
     positions.forEach(renderRow);
   }
@@ -102,41 +101,35 @@ function renderRow(p) {
   const tr = document.createElement("tr");
   tr.dataset.id = p.id;
 
-  const isOwner = auth.currentUser && p.ownerUid === auth.currentUser.uid;
   const { currentPrice, pnlPct, rMultiple } = metrics(p);
 
   tr.innerHTML = `
     <td>${escapeHtml(p.symbol)}</td>
-    <td>${escapeHtml(p.ownerName || "unknown")}</td>
     <td>${p.entry}</td>
     <td>${p.stop}</td>
     <td>${p.qty}</td>
     <td>
       ${currentPrice.toFixed(2)}
-      ${isOwner ? `<input type="number" class="price-input" placeholder="override" data-id="${p.id}"/>` : ""}
+      <input type="number" class="price-input" placeholder="override" data-id="${p.id}"/>
     </td>
     <td class="${pnlClass(pnlPct)}">${pnlPct.toFixed(2)}%</td>
     <td class="${pnlClass(rMultiple)}">${rMultiple.toFixed(2)}R</td>
-    <td>${isOwner ? `<button data-id="${p.id}" class="deleteBtn">❌</button>` : ""}</td>
+    <td><button data-id="${p.id}" class="deleteBtn">❌</button></td>
   `;
   tbody.appendChild(tr);
 
-  if (isOwner) {
-    // Manual override: lets the owner correct a price between scheduled
-    // server-side refreshes, e.g. right after an intraday move.
-    const priceInput = tr.querySelector(".price-input");
-    priceInput.addEventListener("change", () => updateCurrentPrice(p.id, priceInput.value));
-    const delBtn = tr.querySelector(".deleteBtn");
-    delBtn.onclick = () => deletePosition(p.id, tr);
-  }
+  const priceInput = tr.querySelector(".price-input");
+  priceInput.addEventListener("change", () => updateCurrentPrice(p.id, priceInput.value));
+  const delBtn = tr.querySelector(".deleteBtn");
+  delBtn.onclick = () => deletePosition(p.id, tr);
 }
 
 async function updateCurrentPrice(id, value) {
   const price = Number(value);
-  if (!(price > 0)) return;
+  if (!(price > 0) || !auth.currentUser) return;
 
   try {
-    await updateDoc(doc(db, "positions", id), { currentPrice: price });
+    await updateDoc(doc(db, "users", auth.currentUser.uid, "positions", id), { currentPrice: price });
   } catch (err) {
     console.error(err);
     alert("Could not update price. Please try again.");
@@ -144,9 +137,10 @@ async function updateCurrentPrice(id, value) {
 }
 
 async function deletePosition(id, rowEl) {
+  if (!auth.currentUser) return;
   rowEl.style.opacity = "0.4";
   try {
-    await deleteDoc(doc(db, "positions", id));
+    await deleteDoc(doc(db, "users", auth.currentUser.uid, "positions", id));
   } catch (err) {
     console.error(err);
     rowEl.style.opacity = "1";
