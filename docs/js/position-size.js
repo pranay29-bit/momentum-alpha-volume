@@ -3,12 +3,16 @@ import { db, auth, login, logout, onAuthStateChanged } from "./firebase.js";
 import {
   collection,
   addDoc,
+  doc,
+  getDoc,
+  setDoc,
   serverTimestamp
 } from "https://www.gstatic.com/firebasejs/11.9.0/firebase-firestore.js";
 
 const loginBtn = document.getElementById("loginBtn");
 const addBtn = document.getElementById("addBtn");
 const addStatus = document.getElementById("addStatus");
+const settingsStatus = document.getElementById("settingsStatus");
 
 const portfolioSizeInput = document.getElementById("portfolioSize");
 const riskTypeSelect = document.getElementById("riskType");
@@ -20,8 +24,11 @@ const stopInput = document.getElementById("stop");
 const previewBox = document.getElementById("previewBox");
 const previewRiskAmount = document.getElementById("previewRiskAmount");
 const previewRiskPerShare = document.getElementById("previewRiskPerShare");
+const previewRiskPct = document.getElementById("previewRiskPct");
 const previewQty = document.getElementById("previewQty");
 const previewCapital = document.getElementById("previewCapital");
+
+let settingsSaveTimer = null;
 
 loginBtn.onclick = async () => {
   if (auth.currentUser) {
@@ -36,10 +43,56 @@ loginBtn.onclick = async () => {
   }
 };
 
-onAuthStateChanged(auth, (user) => {
-  loginBtn.textContent = user
-    ? `Logout (${user.displayName || user.email})`
-    : "Login with Google";
+onAuthStateChanged(auth, async (user) => {
+  if (user) {
+    loginBtn.textContent = `Logout (${user.displayName || user.email})`;
+    await loadSettings(user.uid);
+  } else {
+    loginBtn.textContent = "Login with Google";
+  }
+});
+
+// ── Persistent settings: portfolio size & risk type/value stay fixed
+// until you explicitly change them — saved to Firestore so they also
+// show up on the Position Tracker page and persist across sessions. ─────
+async function loadSettings(uid) {
+  try {
+    const snap = await getDoc(doc(db, "users", uid));
+    if (snap.exists()) {
+      const data = snap.data();
+      if (data.portfolioSize) portfolioSizeInput.value = data.portfolioSize;
+      if (data.riskType) riskTypeSelect.value = data.riskType;
+      if (data.riskValue) riskValueInput.value = data.riskValue;
+      settingsStatus.textContent = "Loaded your saved portfolio settings.";
+      calculate();
+    }
+  } catch (err) {
+    console.error(err);
+  }
+}
+
+function saveSettingsDebounced() {
+  if (!auth.currentUser) return;
+  clearTimeout(settingsSaveTimer);
+  settingsStatus.textContent = "Saving…";
+  settingsSaveTimer = setTimeout(async () => {
+    try {
+      await setDoc(doc(db, "users", auth.currentUser.uid), {
+        portfolioSize: Number(portfolioSizeInput.value) || 0,
+        riskType: riskTypeSelect.value,
+        riskValue: Number(riskValueInput.value) || 0,
+        updatedAt: serverTimestamp()
+      }, { merge: true });
+      settingsStatus.textContent = "Saved — this stays fixed until you change it again.";
+    } catch (err) {
+      console.error(err);
+      settingsStatus.textContent = "Could not save settings.";
+    }
+  }, 600); // debounce so we don't write on every keystroke
+}
+
+[portfolioSizeInput, riskTypeSelect, riskValueInput].forEach((el) => {
+  el.addEventListener("input", saveSettingsDebounced);
 });
 
 // ── Live calculation, recomputed on every keystroke ──────────────────────
@@ -60,16 +113,18 @@ function calculate() {
     : riskValue;
 
   const riskPerShare = entry - stop;
+  const riskPct = (riskPerShare / entry) * 100; // Entry-SL distance, in %
   const qty = Math.floor(riskAmount / riskPerShare);
   const capitalRequired = qty * entry;
 
   previewBox.style.display = "flex";
   previewRiskAmount.textContent = formatINR(riskAmount);
   previewRiskPerShare.textContent = riskPerShare.toFixed(2);
+  previewRiskPct.textContent = riskPct.toFixed(2) + "%";
   previewQty.textContent = qty;
   previewCapital.textContent = formatINR(capitalRequired);
 
-  return { riskAmount, riskPerShare, qty, capitalRequired };
+  return { riskAmount, riskPerShare, riskPct, qty, capitalRequired };
 }
 
 [portfolioSizeInput, riskTypeSelect, riskValueInput, entryInput, stopInput]
@@ -102,7 +157,6 @@ addBtn.onclick = async () => {
   addStatus.textContent = "";
 
   try {
-    // Private subcollection — only this user can ever read or write here.
     const positionsRef = collection(db, "users", auth.currentUser.uid, "positions");
 
     await addDoc(positionsRef, {
@@ -112,6 +166,7 @@ addBtn.onclick = async () => {
       qty: result.qty,
       riskPerShare: result.riskPerShare,
       riskAmount: result.riskAmount,
+      riskPct: result.riskPct,
       currentPrice: Number(entryInput.value),
       createdAt: serverTimestamp()
     });
