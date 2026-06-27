@@ -27,6 +27,7 @@ from .dashboard   import build_passing_dashboard, build_passing_ema10_dashboard,
 from .result_calendar import get_result_date
 from .indicators  import get_market_sentiment
 from . import net_new_highs as nnh
+from . import holidays as nse_holidays
 
 # ── Logging ───────────────────────────────────────────────────────────────────
 logging.basicConfig(
@@ -53,18 +54,27 @@ def run() -> None:
     today_str    = today.strftime("%Y%m%d")
     date_display = today.strftime("%Y-%m-%d")
 
-    # ── Weekend guard ─────────────────────────────────────────────────────────
-    # NSE markets are closed on Saturday (5) and Sunday (6).
-    # Skip the scan entirely if today is a weekend day.
-    weekday = today.weekday()  # Monday=0 … Sunday=6
-    if weekday >= 5:
-        day_name = today.strftime("%A")
+    # ── Weekend / holiday guard ───────────────────────────────────────────────
+    # NSE is closed on Saturdays, Sundays, and the official 2026 holiday list
+    # (see scanner/holidays.py + data/nse_holidays_2026.csv). The scan still
+    # RUNS on these days (so a daily cron/GitHub Action never errors out),
+    # but the "date" used for the data/output folder is pinned to the most
+    # recent real trading day — so weekend/holiday runs never advance the
+    # date or overwrite a trading day's data with empty/duplicate data.
+    holidays_set = nse_holidays.load_holidays()
+    is_holiday   = nse_holidays.is_market_holiday(today.date(), holidays_set)
+    if is_holiday:
+        trading_date = nse_holidays.last_trading_day(today.date(), holidays_set)
         logger.warning(
-            "Today is %s (%s) — NSE markets are closed on weekends. "
-            "Scan skipped. No data will be generated.",
-            day_name, date_display,
+            "Today is %s (%s) — NSE market holiday/weekend. "
+            "Re-using last trading day %s; data will not be updated for a new date.",
+            today.strftime("%A"), today.strftime("%Y-%m-%d"), trading_date,
         )
-        sys.exit(0)
+        today_str    = trading_date.strftime("%Y%m%d")
+        date_display = trading_date.strftime("%Y-%m-%d")
+    else:
+        today_str    = today.strftime("%Y%m%d")
+        date_display = today.strftime("%Y-%m-%d")
 
     # ── Output directory (GitHub Pages root + dated sub-folder) ──────────────
     out_dir = Path(DOCS_DIR) / date_display
