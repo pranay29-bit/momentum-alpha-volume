@@ -66,10 +66,14 @@ def compute_today_counts(df: pd.DataFrame) -> dict:
 def _load_history() -> pd.DataFrame:
     if HISTORY_PATH.exists():
         try:
-            return pd.read_csv(HISTORY_PATH, parse_dates=["date"])
+            df = pd.read_csv(HISTORY_PATH)
+            df["date"] = pd.to_datetime(df["date"])
+            return df
         except Exception as exc:
             logger.warning("Could not read NNH history (%s) — starting fresh.", exc)
-    return pd.DataFrame(columns=["date", "new_highs", "new_lows", "net", "total"])
+    empty = pd.DataFrame(columns=["date", "new_highs", "new_lows", "net", "total"])
+    empty["date"] = pd.to_datetime(empty["date"])
+    return empty
 
 
 def _save_history(hist: pd.DataFrame) -> None:
@@ -94,6 +98,7 @@ def update_history(date_str: str, counts: dict) -> pd.DataFrame:
         "total":     counts["total"],
     }])
     hist = pd.concat([hist, new_row], ignore_index=True).sort_values("date").reset_index(drop=True)
+    hist["date"] = pd.to_datetime(hist["date"])
     _save_history(hist)
     return hist
 
