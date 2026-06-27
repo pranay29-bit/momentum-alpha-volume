@@ -32,9 +32,23 @@ jobs:
 
       - name: Commit & push history file
         run: |
-          git config user.name  "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          # Update local branch first
+          git fetch origin
+          git checkout main
+          git reset --hard origin/main
+
+          # Stage the generated file
           git add data/net_new_highs_history.csv
-          git diff --cached --quiet || git commit -m "chore: backfill Net New Highs history"
-          git pull --rebase origin main
-          git push
+
+          # Exit if nothing changed
+          if git diff --cached --quiet; then
+            echo "No changes to commit."
+            exit 0
+          fi
+
+          # Commit and push
+          git commit -m "chore: backfill Net New Highs history"
+          git push origin main
