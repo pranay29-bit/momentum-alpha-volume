@@ -202,6 +202,160 @@
   </div>
 </div>
 
+
+<div class="sentiment-section">
+  <div style="display:flex;align-items:center;gap:1rem;margin-bottom:.25rem;">
+    <h2 class="section-title" style="margin-bottom:0">Net New Highs</h2>
+    <span class="overall-badge mixed">🟡 Neutral</span>
+  </div>
+  <p style="font-size:.8rem;color:var(--muted);margin-bottom:.75rem;">
+    NSE stocks making new 52-week highs minus new 52-week lows &middot;
+    background shows bias confirmed after 3 consecutive days &middot;
+    smoothed with a 10-day SMA.
+  </p>
+
+  <div class="sentiment-card" style="margin-bottom:1.1rem;">
+    <div class="sentiment-card-header">
+      <span class="sentiment-index-name">Net New Highs &nbsp;
+        <strong style="color:var(--emerald)">+37</strong>
+      </span>
+      <span class="overall-badge bullish">10-SMA +37.0 &middot; 🟢 Bullish</span>
+    </div>
+    <div class="close-val" style="margin-bottom:.6rem;">
+      <span style="color:var(--emerald)">71 new highs</span> &nbsp;/&nbsp;
+      <span style="color:var(--red)">34 new lows</span> &nbsp;
+      of 2323 stocks &nbsp;
+      <span style="color:var(--muted);font-size:.8rem;">
+        (3.1% / 1.5%)
+      </span>
+    </div>
+    <div style="position:relative;height:220px;">
+      <canvas id="nnhChart"></canvas>
+    </div>
+    <div class="sentiment-legend" style="margin-top:.5rem;">
+      Green/red background = sticky 3-day-confirmed bullish/bearish bias &middot;
+      bars = daily Net New Highs &middot; amber line = 10-day SMA
+    </div>
+  </div>
+
+  <div class="sentiment-card" style="max-width:640px;">
+    <div class="sentiment-card-header">
+      <button onclick="toggleMonth(this)" aria-expanded="false"
+        style="background:none;border:none;cursor:pointer;padding:0;font:inherit;color:var(--text);font-weight:600;">
+        📋 New Highs / New Lows table (last 20 sessions) ▾
+      </button>
+    </div>
+    <div class="month-body">
+      <table style="width:100%;font-size:.82rem;border-collapse:collapse;">
+        <thead>
+          <tr style="text-align:left;border-bottom:1px solid var(--border);">
+            <th style="padding:.35rem .5rem;">Date</th>
+            <th style="padding:.35rem .5rem;">New Highs</th>
+            <th style="padding:.35rem .5rem;">New Lows</th>
+            <th style="padding:.35rem .5rem;">Net</th>
+          </tr>
+        </thead>
+        <tbody><tr><td>2026-06-25</td><td style='color:var(--emerald)'>71</td><td style='color:var(--red)'>34</td><td style='color:var(--emerald)'>+37</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
+<script>
+(function() {
+  const nnhData = [{"date": "2026-06-25", "net": 37, "sma": 37.0, "bias": "neutral", "new_highs": 71, "new_lows": 34}];
+  if (!nnhData.length) return;
+
+  const labels = nnhData.map(d => d.date);
+  const netVals = nnhData.map(d => d.net);
+  const smaVals = nnhData.map(d => d.sma);
+  const barColors = netVals.map(v => v >= 0 ? 'rgba(5,150,105,0.85)' : 'rgba(220,38,38,0.85)');
+
+  // Background shading plugin — draws bullish/bearish zones behind the bars
+  const biasBackgroundPlugin = {
+    id: 'biasBackground',
+    beforeDatasetsDraw(chart) {
+      const {ctx, chartArea, scales} = chart;
+      if (!chartArea) return;
+      const xScale = scales.x;
+      ctx.save();
+      let segStart = 0;
+      for (let i = 0; i <= nnhData.length; i++) {
+        const curBias = i < nnhData.length ? nnhData[i].bias : null;
+        const prevBias = i > 0 ? nnhData[i - 1].bias : null;
+        if (curBias !== prevBias) {
+          if (prevBias && prevBias !== 'neutral') {
+            const xStart = xScale.getPixelForValue(segStart) - (xScale.getPixelForValue(1) - xScale.getPixelForValue(0)) / 2;
+            const xEnd   = xScale.getPixelForValue(i - 1) + (xScale.getPixelForValue(1) - xScale.getPixelForValue(0)) / 2;
+            ctx.fillStyle = prevBias === 'bullish' ? 'rgba(5,150,105,0.10)' : 'rgba(220,38,38,0.10)';
+            ctx.fillRect(xStart, chartArea.top, xEnd - xStart, chartArea.bottom - chartArea.top);
+          }
+          segStart = i;
+        }
+      }
+      ctx.restore();
+    }
+  };
+
+  new Chart(document.getElementById('nnhChart'), {
+    type: 'bar',
+    data: {
+      labels: labels,
+      datasets: [
+        {
+          type: 'bar',
+          label: 'Net New Highs',
+          data: netVals,
+          backgroundColor: barColors,
+          borderWidth: 0,
+          barPercentage: 0.9,
+          categoryPercentage: 0.9,
+          order: 2,
+        },
+        {
+          type: 'line',
+          label: '10-day SMA',
+          data: smaVals,
+          borderColor: '#d97706',
+          borderWidth: 1.5,
+          pointRadius: 0,
+          tension: 0.25,
+          order: 1,
+        },
+      ],
+    },
+    plugins: [biasBackgroundPlugin],
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            footer: (items) => {
+              const d = nnhData[items[0].dataIndex];
+              return `Highs: ${d.new_highs}  Lows: ${d.new_lows}  Bias: ${d.bias}`;
+            }
+          }
+        },
+      },
+      scales: {
+        x: {
+          ticks: { maxTicksLimit: 10, font: { size: 10 } },
+          grid: { display: false },
+        },
+        y: {
+          ticks: { font: { size: 10 } },
+          grid: { color: 'rgba(0,0,0,0.05)' },
+        },
+      },
+    },
+  });
+})();
+</script>
+
 <div class="container">
   <h2 class="section-title">Scan History</h2>
   
