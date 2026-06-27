@@ -36,7 +36,6 @@
   .container{max-width:1120px;margin:2rem auto;padding:0 1.5rem;}
   h2.section-title{font-family:var(--sans);font-size:1.05rem;font-weight:700;
                     letter-spacing:-.01em;margin-bottom:1rem;color:var(--text);}
-  /* Month accordion */
   .month-group{margin-bottom:1.1rem;}
   .month-accordion{
     width:100%;display:flex;align-items:center;gap:.75rem;
@@ -69,7 +68,6 @@
     border-bottom-left-radius:10px;border-bottom-right-radius:10px;
   }
   .month-body:not(.open){max-height:0;opacity:0;border-color:transparent;}
-  /* Scan history table */
   table.history-table{width:100%;border-collapse:collapse;background:var(--surface);overflow:hidden;}
   .history-table th{font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;
       color:var(--muted);padding:.7rem 1.1rem;text-align:left;
@@ -92,8 +90,6 @@
   footer{text-align:center;padding:1.5rem;font-family:var(--mono);font-size:.68rem;
           color:var(--subtle);border-top:1px solid var(--border);
           background:var(--surface);letter-spacing:.04em;margin-top:3rem;}
-
-  /* ── Market Sentiment ── */
   .sentiment-section{max-width:1120px;margin:0 auto 2rem;padding:0 1.5rem;}
   .sentiment-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:1.1rem;margin-top:.85rem;}
   .sentiment-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;
@@ -119,12 +115,8 @@
   .close-val{font-family:var(--mono);font-size:.77rem;color:var(--muted);margin-bottom:.7rem;}
   .close-val strong{color:var(--text);}
   .sentiment-legend{font-family:var(--mono);font-size:.67rem;color:var(--subtle);margin-top:.55rem;}
-
-  /* ── Horizontal scroll wrapper so history tables don't break mobile layout ── */
   .tbl-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;border-radius:0 0 10px 10px;}
   table.history-table{min-width:560px;}
-
-  /* ── Mobile responsiveness ── */
   @media (max-width: 768px){
     header{padding:1.4rem 1.2rem 1.2rem;}
     .header-row{flex-direction:column;align-items:stretch;}
@@ -261,18 +253,23 @@
   </div>
 </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
+<script src="js/chart.umd.js"></script>
 <script>
 (function() {
   const nnhData = [{"date": "2026-06-25", "net": 37, "sma": 37.0, "bias": "neutral", "new_highs": 71, "new_lows": 34}];
   if (!nnhData.length) return;
+  if (typeof Chart === 'undefined') {
+    const el = document.getElementById('nnhChart');
+    if (el && el.parentElement) {
+      el.parentElement.innerHTML = '<div style="font-size:.8rem;color:var(--muted);padding:1rem 0;">Chart library failed to load — make sure docs/js/chart.umd.js exists in the repo.</div>';
+    }
+  } else {
 
   const labels = nnhData.map(d => d.date);
   const netVals = nnhData.map(d => d.net);
   const smaVals = nnhData.map(d => d.sma);
   const barColors = netVals.map(v => v >= 0 ? 'rgba(5,150,105,0.85)' : 'rgba(220,38,38,0.85)');
 
-  // Background shading plugin — draws bullish/bearish zones behind the bars
   const biasBackgroundPlugin = {
     id: 'biasBackground',
     beforeDatasetsDraw(chart) {
@@ -353,6 +350,8 @@
       },
     },
   });
+
+  }
 })();
 </script>
 
