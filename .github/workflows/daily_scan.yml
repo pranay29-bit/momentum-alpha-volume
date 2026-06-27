@@ -43,12 +43,28 @@ jobs:
 
       - name: Commit & push docs
         run: |
-          git config user.name  "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
+          set -e
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          # Sync with latest main BEFORE committing
+          git fetch origin
+          git checkout main
+          git reset --hard origin/main
+
+          # Stage generated files
           git add docs/
-          git diff --cached --quiet || git commit -m "chore: scan results $(date -u +'%Y-%m-%d')"
-          git pull --rebase origin main
-          git push
+
+          # Exit if nothing changed
+          if git diff --cached --quiet; then
+            echo "No documentation changes."
+            exit 0
+          fi
+
+          git commit -m "chore: scan results $(date -u +'%Y-%m-%d')"
+
+          git push origin main
 
   deploy:
     needs: scan
