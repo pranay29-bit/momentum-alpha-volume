@@ -310,7 +310,7 @@ def build_html(stats: dict) -> str:
   </div>
 </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="js/chart.umd.js"></script>
 <script>
 (function() {{
   const nnhData = {chart_data};
