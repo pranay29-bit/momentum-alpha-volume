@@ -310,11 +310,18 @@ def build_html(stats: dict) -> str:
   </div>
 </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script>
 (function() {{
   const nnhData = {chart_data};
   if (!nnhData.length) return;
+  if (typeof Chart === 'undefined') {{
+    const el = document.getElementById('nnhChart');
+    if (el && el.parentElement) {{
+      el.parentElement.innerHTML = '<div style="font-size:.8rem;color:var(--muted);padding:1rem 0;">Chart library failed to load — check your internet connection or ad-blocker.</div>';
+    }}
+    return;
+  }}
 
   const labels = nnhData.map(d => d.date);
   const netVals = nnhData.map(d => d.net);
