@@ -92,6 +92,18 @@ def run() -> None:
         sys.exit(1)
     logger.info("Collected rows for %d symbols.", len(df))
 
+    latest_data_date = pd.to_datetime(df["date"]).max().date()
+    today = datetime.today().date()
+
+    logger.info("Latest market data: %s", latest_data_date)
+
+    if latest_data_date < today:
+      logger.warning(
+        "Market data is stale! Latest=%s Today=%s",
+        latest_data_date,
+        today,
+    )
+
     # ── 3. RS percentile + condition flags ────────────────────────────────────
     df["rs_percentile"]        = df["12m_return_pct"].rank(pct=True) * 100.0
     df["cond8_rs_at_least_70"] = df["rs_percentile"] >= 70.0
