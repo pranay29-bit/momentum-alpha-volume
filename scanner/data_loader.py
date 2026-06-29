@@ -95,8 +95,11 @@ def _process_symbol(sym: str, data: pd.DataFrame, is_multi: bool) -> dict | None
         is_52w_high_close = bool(close_series.iloc[-1] >= close_roll_max.iloc[-1])
         is_52w_low_close  = bool(close_series.iloc[-1] <= close_roll_min.iloc[-1])
 
+        last_date = df_sym.index[-1]
+        
         return {
             "symbol":  sym,
+            "date": last_date.strftime("%Y-%m-%d"),
             "close":   tpl["close"],
             "MA12":    tpl["MA12"],  "MA36":  tpl["MA36"],
             "MA50":    tpl["MA50"],  "MA150": tpl["MA150"],
