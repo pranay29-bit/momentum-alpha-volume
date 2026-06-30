@@ -196,10 +196,7 @@ function renderRow(p) {
   tr.innerHTML = `
     <td>${escapeHtml(p.symbol)}</td>
     <td>${formatDate(p.dateBought)}</td>
-    <td>
-      ${p.entry}
-      <input type="number" class="price-input entry-input" placeholder="override" data-id="${p.id}"/>
-    </td>
+    <td>${p.entry}</td>
     <td>${p.stop}</td>
     <td>${riskPctDisplay}</td>
     <td>
@@ -228,10 +225,6 @@ function renderRow(p) {
   updateQty(p.id, e.target.value)
   );
 
-  const currentPriceInput = tr.querySelector(".current-price-input");
-  currentPriceInput.addEventListener("change", (e) =>
-  updateCurrentPrice(p.id, e.target.value)
-  );
   const delBtn = tr.querySelector(".deleteBtn");
   delBtn.onclick = () => deletePosition(p.id, tr);
   const bookBtn = tr.querySelector(".bookBtn");
