@@ -196,7 +196,10 @@ function renderRow(p) {
   tr.innerHTML = `
     <td>${escapeHtml(p.symbol)}</td>
     <td>${formatDate(p.dateBought)}</td>
-    <td>${p.entry}</td>
+    <td>
+      ${p.entry}
+      <input type="number" class="price-input qty-input" placeholder="override" data-id="${p.id}"/>
+    </td>
     <td>${p.stop}</td>
     <td>${riskPctDisplay}</td>
     <td>
