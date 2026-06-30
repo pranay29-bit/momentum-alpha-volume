@@ -1,7 +1,7 @@
 """
 scanner/config.py
 -----------------
-All tuneable parameters for the Momentum Alpha scanner.
+All tuneable parameters for the Alpha Momentum scanner.
 Override any value via environment variables before running.
 """
 
