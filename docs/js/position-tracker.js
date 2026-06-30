@@ -27,6 +27,14 @@ const tabBookedBtn = document.getElementById("tabBookedBtn");
 const openPanel = document.getElementById("openPanel");
 const bookedPanel = document.getElementById("bookedPanel");
 
+const bookModalOverlay = document.getElementById("bookModalOverlay");
+const bookModalSymbol = document.getElementById("bookModalSymbol");
+const bookExitPrice = document.getElementById("bookExitPrice");
+const bookDateSold = document.getElementById("bookDateSold");
+const bookModalCancel = document.getElementById("bookModalCancel");
+const bookModalConfirm = document.getElementById("bookModalConfirm");
+let pendingBookPosition = null;
+
 tabOpenBtn.onclick = () => switchTab("open");
 tabBookedBtn.onclick = () => switchTab("booked");
 
@@ -93,7 +101,7 @@ async function loadSettings(uid) {
 
 function subscribeToPositions(uid) {
   const tbody = document.getElementById("positionsTable");
-  tbody.innerHTML = `<tr><td colspan="11" style="text-align:center;color:var(--subtle)">Loading…</td></tr>`;
+  tbody.innerHTML = `<tr><td colspan="12" style="text-align:center;color:var(--subtle)">Loading…</td></tr>`;
 
   const positionsRef = collection(db, "users", uid, "positions");
   const positionsQuery = query(positionsRef, orderBy("createdAt", "desc"));
@@ -136,7 +144,7 @@ function renderAll() {
   tbody.innerHTML = "";
 
   if (positions.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="11"><div class="empty-state"><span class="icon">📭</span>No open positions yet — add one from the Position Size Calculator.</div></td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="12"><div class="empty-state"><span class="icon">📭</span>No open positions yet — add one from the Position Size Calculator.</div></td></tr>`;
   } else {
     positions.forEach(renderRow);
   }
@@ -187,6 +195,7 @@ function renderRow(p) {
 
   tr.innerHTML = `
     <td>${escapeHtml(p.symbol)}</td>
+    <td>${formatDate(p.dateBought)}</td>
     <td>${p.entry}</td>
     <td>${p.stop}</td>
     <td>${riskPctDisplay}</td>
@@ -236,22 +245,45 @@ async function deletePosition(id, rowEl) {
 }
 
 function promptBookPosition(p) {
-  const defaultExit = p.currentPrice ?? p.entry;
-  const input = window.prompt(
-    `Booking ${p.symbol} — enter the actual EXIT price you sold at:`,
-    String(defaultExit)
-  );
-  if (input === null) return; // cancelled
+  pendingBookPosition = p;
+  bookModalSymbol.textContent = p.symbol;
+  bookExitPrice.value = p.currentPrice ?? p.entry;
+  bookDateSold.value = new Date().toISOString().slice(0, 10);
+  bookModalOverlay.style.display = "flex";
+  bookExitPrice.focus();
+}
 
-  const exitPrice = Number(input);
+function closeBookModal() {
+  bookModalOverlay.style.display = "none";
+  pendingBookPosition = null;
+}
+
+bookModalCancel.onclick = closeBookModal;
+bookModalOverlay.addEventListener("click", (e) => {
+  if (e.target === bookModalOverlay) closeBookModal();
+});
+
+bookModalConfirm.onclick = () => {
+  if (!pendingBookPosition) return;
+
+  const exitPrice = Number(bookExitPrice.value);
   if (!(exitPrice > 0)) {
     alert("Please enter a valid exit price greater than 0.");
     return;
   }
-  bookPosition(p, exitPrice);
-}
 
-async function bookPosition(p, exitPrice) {
+  const dateSold = bookDateSold.value;
+  if (!dateSold) {
+    alert("Please select the date you sold.");
+    return;
+  }
+
+  const p = pendingBookPosition;
+  closeBookModal();
+  bookPosition(p, exitPrice, dateSold);
+};
+
+async function bookPosition(p, exitPrice, dateSold) {
   if (!auth.currentUser) return;
   const uid = auth.currentUser.uid;
 
@@ -273,8 +305,9 @@ async function bookPosition(p, exitPrice) {
     impactAbs,
     impactPct,
     portfolioSizeAtBooking: portfolioSize,
-    dateBought: p.createdAt ?? null,
-    dateSold: serverTimestamp(),
+    dateBought: p.dateBought ?? null,   // entered manually on the Calculator page
+    dateSold,                            // entered manually when booking, e.g. "2026-06-30"
+    bookedAt: serverTimestamp(),         // internal metadata only, not shown
   };
 
   try {
