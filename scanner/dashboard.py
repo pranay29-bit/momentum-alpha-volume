@@ -702,7 +702,7 @@ def build_passing_dashboard(
     n_new = sum(1 for _, r in passing.iterrows()
                 if str(r.get("symbol","")).replace(".NS","") not in known)
 
-    html  = _html_head(f"Momentum Alpha — Passing Stocks — {date_display}",
+    html  = _html_head(f"Alpha Momentum — Passing Stocks — {date_display}",
                        "var(--indigo)", "var(--blue)")
     html += _csv_bar_passing(date_str)
     html += f"""
@@ -710,7 +710,7 @@ def build_passing_dashboard(
   <div class="hdr-left">
     <div class="brand">
       <div class="brand-dot" style="background:var(--indigo)"></div>
-      <span class="brand-name">Momentum Alpha · NSE Scanner</span>
+      <span class="brand-name">Alpha Momentum · NSE Scanner</span>
     </div>
     <h1>Minervini Trend Template</h1>
     <p class="hdr-sub">All 8 Minervini conditions passing · NSE India · {date_display}</p>
@@ -943,7 +943,7 @@ def build_passing_ema10_dashboard(
     n_new = sum(1 for _, r in df.iterrows()
                 if str(r.get("symbol","")).replace(".NS","") not in known)
 
-    html  = _html_head(f"Momentum Alpha — Elite Stocks — {date_display}",
+    html  = _html_head(f"Alpha Momentum — Elite Stocks — {date_display}",
                        "var(--emerald)", "var(--blue)")
     html += _csv_bar_elite(date_str)
     html += f"""
@@ -951,7 +951,7 @@ def build_passing_ema10_dashboard(
   <div class="hdr-left">
     <div class="brand">
       <div class="brand-dot" style="background:var(--emerald)"></div>
-      <span class="brand-name">Momentum Alpha · Elite Filter</span>
+      <span class="brand-name">Alpha Momentum · Elite Filter</span>
     </div>
     <h1>Passing Stocks Above EMA10</h1>
     <p class="hdr-sub">All 8 Minervini conditions + Close &gt; 10-period EMA · NSE India · {date_display}</p>
@@ -1175,14 +1175,14 @@ def build_volume_action_dashboard(
     n_new = sum(1 for _, r in sorted_df.iterrows()
                 if str(r.get("symbol","")).replace(".NS","") not in known)
 
-    html  = _html_head(f"Momentum Alpha — Volume Action — {date_display}",
+    html  = _html_head(f"Alpha Momentum — Volume Action — {date_display}",
                        "var(--blue)", "var(--indigo)")
     html += f"""
 <header>
   <div class="hdr-left">
     <div class="brand">
       <div class="brand-dot" style="background:var(--blue)"></div>
-      <span class="brand-name">Momentum Alpha · Volume Action</span>
+      <span class="brand-name">Alpha Momentum · Volume Action</span>
     </div>
     <h1>Pocket Pivot / Blue Volume</h1>
     <p class="hdr-sub">Institutional accumulation signals · NSE India · {date_display}</p>
@@ -1335,14 +1335,14 @@ def build_rocket_dashboard(
                 if str(r.get("symbol","")).replace(".NS","") not in known) if n_rocket > 0 else 0
     hit_rate = f"{100*n_rocket/n_passing:.1f}%" if n_passing > 0 else "N/A"
 
-    html  = _html_head(f"Momentum Alpha — Rocket Stocks — {date_display}",
+    html  = _html_head(f"Alpha Momentum — Rocket Stocks — {date_display}",
                        "var(--amber)", "var(--red)")
     html += f"""
 <header>
   <div class="hdr-left">
     <div class="brand">
       <div class="brand-dot" style="background:var(--amber)"></div>
-      <span class="brand-name">Momentum Alpha · Rocket Stocks</span>
+      <span class="brand-name">Alpha Momentum · Rocket Stocks</span>
     </div>
     <h1>Rocket Stocks</h1>
     <p class="hdr-sub">All 8 Minervini conditions + Inside Bar coiling setup · NSE India · {date_display}</p>
@@ -1439,7 +1439,7 @@ def build_main_index(
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>Momentum Alpha Dashboard</title>
+<title>Alpha Momentum Dashboard</title>
 <link href="{_GOOGLE_FONTS}" rel="stylesheet"/>
 <style>
 :root {{
@@ -1475,7 +1475,7 @@ h1{{font-size:1.7rem;font-weight:700;letter-spacing:-.03em;margin-bottom:.35rem}
 </head>
 <body>
 <div class="topbar"></div>
-<h1>Momentum Alpha</h1>
+<h1>Alpha Momentum</h1>
 <p class="sub">// NSE Minervini Trend Scanner · India</p>
 <div class="grid">
   <div class="card" style="--c:#4f46e5">
