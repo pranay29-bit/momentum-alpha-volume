@@ -206,7 +206,10 @@ function renderRow(p) {
       ${p.qty}
       <input type="number" class="price-input qty-input" placeholder="override" data-id="${p.id}"/>
     </td>
-    <td>${currentPrice.toFixed(2)}</td>
+    <td>
+      ${currentPrice.toFixed(2)}
+      <input type="number" class="price-input current-price-input" placeholder="override" data-id="${p.id}"/>
+    </td>
     <td class="${pnlClass(pnlPct)}">${pnlPct.toFixed(2)}%</td>
     <td class="${pnlClass(rMultiple)}">${rMultiple.toFixed(2)}R</td>
     <td class="${pnlClass(impactAbs)}">${formatINR(impactAbs)} (${impactPct.toFixed(2)}%)</td>
@@ -225,25 +228,25 @@ function renderRow(p) {
   updateQty(p.id, e.target.value)
   );
 
+  const currentPriceInput = tr.querySelector(".current-price-input");
+  currentPriceInput.addEventListener("change", (e) =>
+  updateCurrentPrice(p.id, e.target.value)
+  );
   const delBtn = tr.querySelector(".deleteBtn");
   delBtn.onclick = () => deletePosition(p.id, tr);
   const bookBtn = tr.querySelector(".bookBtn");
   bookBtn.onclick = () => promptBookPosition(p);
 }
 
-async function updateEntry(id, value) {
-  const entry = Number(value);
-
-  if (!(entry > 0) || !Number.isFinite(entry) || !auth.currentUser) {
-    alert("Please enter a valid entry price.");
-    return;
-  }
+async function updateCurrentPrice(id, value) {
+  const price = Number(value);
+  if (!(price > 0) || !auth.currentUser) return;
 
   try {
-    await updateDoc(doc(db, "users", auth.currentUser.uid, "positions", id), { entry });
+    await updateDoc(doc(db, "users", auth.currentUser.uid, "positions", id), { currentPrice: price });
   } catch (err) {
     console.error(err);
-    alert("Could not update entry.");
+    alert("Could not update price. Please try again.");
   }
 }
 
