@@ -198,7 +198,7 @@ function renderRow(p) {
     <td>${formatDate(p.dateBought)}</td>
     <td>
       ${p.entry}
-      <input type="number" class="price-input qty-input" placeholder="override" data-id="${p.id}"/>
+      <input type="number" class="price-input entry-input" placeholder="override" data-id="${p.id}"/>
     </td>
     <td>${p.stop}</td>
     <td>${riskPctDisplay}</td>
@@ -218,6 +218,8 @@ function renderRow(p) {
   `;
   tbody.appendChild(tr);
 
+  const entryInput = tr.querySelector(".entry-input");
+  entryInput.addEventListener("change", () => updateEntry(p.id, entryInput.value));
   const qtyInput = tr.querySelector(".qty-input");
   qtyInput.addEventListener("change", () => updateQty(p.id, qtyInput.value));
   const priceInput = tr.querySelector(".price-input:not(.qty-input)");
