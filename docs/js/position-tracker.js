@@ -208,7 +208,7 @@ function renderRow(p) {
     </td>
     <td>
       ${currentPrice.toFixed(2)}
-      <input type="number" class="price-input" placeholder="override" data-id="${p.id}"/>
+      <input type="number" class="price-input current-price-input" placeholder="override" data-id="${p.id}"/>
     </td>
     <td class="${pnlClass(pnlPct)}">${pnlPct.toFixed(2)}%</td>
     <td class="${pnlClass(rMultiple)}">${rMultiple.toFixed(2)}R</td>
@@ -219,11 +219,19 @@ function renderRow(p) {
   tbody.appendChild(tr);
 
   const entryInput = tr.querySelector(".entry-input");
-  entryInput.addEventListener("change", () => updateEntry(p.id, entryInput.value));
+  entryInput.addEventListener("change", (e) =>
+  updateEntry(p.id, e.target.value)
+  );
+
   const qtyInput = tr.querySelector(".qty-input");
-  qtyInput.addEventListener("change", () => updateQty(p.id, qtyInput.value));
-  const priceInput = tr.querySelector(".price-input:not(.qty-input)");
-  priceInput.addEventListener("change", () => updateCurrentPrice(p.id, priceInput.value));
+  qtyInput.addEventListener("change", (e) =>
+  updateQty(p.id, e.target.value)
+  );
+
+  const currentPriceInput = tr.querySelector(".current-price-input");
+  currentPriceInput.addEventListener("change", (e) =>
+  updateCurrentPrice(p.id, e.target.value)
+  );
   const delBtn = tr.querySelector(".deleteBtn");
   delBtn.onclick = () => deletePosition(p.id, tr);
   const bookBtn = tr.querySelector(".bookBtn");
