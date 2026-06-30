@@ -238,15 +238,19 @@ function renderRow(p) {
   bookBtn.onclick = () => promptBookPosition(p);
 }
 
-async function updateCurrentPrice(id, value) {
-  const price = Number(value);
-  if (!(price > 0) || !auth.currentUser) return;
+async function updateEntry(id, value) {
+  const entry = Number(value);
+
+  if (!(entry > 0) || !Number.isFinite(entry) || !auth.currentUser) {
+    alert("Please enter a valid entry price.");
+    return;
+  }
 
   try {
-    await updateDoc(doc(db, "users", auth.currentUser.uid, "positions", id), { currentPrice: price });
+    await updateDoc(doc(db, "users", auth.currentUser.uid, "positions", id), { entry });
   } catch (err) {
     console.error(err);
-    alert("Could not update price. Please try again.");
+    alert("Could not update entry.");
   }
 }
 
