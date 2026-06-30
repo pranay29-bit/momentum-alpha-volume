@@ -95,7 +95,7 @@ function renderAll() {
   tbody.innerHTML = "";
 
   if (positions.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="10" style="text-align:center;color:var(--subtle)">No open positions</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="10"><div class="empty-state"><span class="icon">📭</span>No open positions yet — add one from the Position Size Calculator.</div></td></tr>`;
   } else {
     positions.forEach(renderRow);
   }
