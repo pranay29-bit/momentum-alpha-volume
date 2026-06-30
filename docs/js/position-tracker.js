@@ -199,7 +199,10 @@ function renderRow(p) {
     <td>${p.entry}</td>
     <td>${p.stop}</td>
     <td>${riskPctDisplay}</td>
-    <td>${p.qty}</td>
+    <td>
+      ${p.qty}
+      <input type="number" class="price-input qty-input" placeholder="override" data-id="${p.id}"/>
+    </td>
     <td>
       ${currentPrice.toFixed(2)}
       <input type="number" class="price-input" placeholder="override" data-id="${p.id}"/>
@@ -212,7 +215,9 @@ function renderRow(p) {
   `;
   tbody.appendChild(tr);
 
-  const priceInput = tr.querySelector(".price-input");
+  const qtyInput = tr.querySelector(".qty-input");
+  qtyInput.addEventListener("change", () => updateQty(p.id, qtyInput.value));
+  const priceInput = tr.querySelector(".price-input:not(.qty-input)");
   priceInput.addEventListener("change", () => updateCurrentPrice(p.id, priceInput.value));
   const delBtn = tr.querySelector(".deleteBtn");
   delBtn.onclick = () => deletePosition(p.id, tr);
@@ -229,6 +234,21 @@ async function updateCurrentPrice(id, value) {
   } catch (err) {
     console.error(err);
     alert("Could not update price. Please try again.");
+  }
+}
+
+async function updateQty(id, value) {
+  const qty = Number(value);
+  if (!(qty > 0) || !Number.isFinite(qty) || !auth.currentUser) {
+    alert("Please enter a valid quantity greater than 0.");
+    return;
+  }
+
+  try {
+    await updateDoc(doc(db, "users", auth.currentUser.uid, "positions", id), { qty });
+  } catch (err) {
+    console.error(err);
+    alert("Could not update quantity. Please try again.");
   }
 }
 
