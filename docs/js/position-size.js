@@ -18,8 +18,12 @@ const portfolioSizeInput = document.getElementById("portfolioSize");
 const riskTypeSelect = document.getElementById("riskType");
 const riskValueInput = document.getElementById("riskValue");
 const symbolInput = document.getElementById("symbol");
+const dateBoughtInput = document.getElementById("dateBought");
 const entryInput = document.getElementById("entry");
 const stopInput = document.getElementById("stop");
+
+// Default Date Bought to today, but the user can change it freely.
+dateBoughtInput.value = new Date().toISOString().slice(0, 10);
 
 const previewBox = document.getElementById("previewBox");
 const previewRiskAmount = document.getElementById("previewRiskAmount");
@@ -141,6 +145,11 @@ addBtn.onclick = async () => {
     alert("Enter a symbol");
     return;
   }
+  const dateBought = dateBoughtInput.value;
+  if (!dateBought) {
+    alert("Enter the date you bought this position");
+    return;
+  }
 
   const result = calculate();
   if (!result) {
@@ -161,6 +170,7 @@ addBtn.onclick = async () => {
 
     await addDoc(positionsRef, {
       symbol,
+      dateBought,
       entry: Number(entryInput.value),
       stop: Number(stopInput.value),
       qty: result.qty,
@@ -175,6 +185,7 @@ addBtn.onclick = async () => {
     symbolInput.value = "";
     entryInput.value = "";
     stopInput.value = "";
+    dateBoughtInput.value = new Date().toISOString().slice(0, 10);
     previewBox.style.display = "none";
   } catch (err) {
     console.error(err);
