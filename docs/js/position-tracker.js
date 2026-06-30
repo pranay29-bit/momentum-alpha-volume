@@ -196,17 +196,17 @@ function renderRow(p) {
   tr.innerHTML = `
     <td>${escapeHtml(p.symbol)}</td>
     <td>${formatDate(p.dateBought)}</td>
-    <td>${p.entry}</td>
+    <td>
+      ${p.entry}
+      <input type="number" class="price-input entry-input" placeholder="override" data-id="${p.id}"/>
+    </td>
     <td>${p.stop}</td>
     <td>${riskPctDisplay}</td>
     <td>
       ${p.qty}
       <input type="number" class="price-input qty-input" placeholder="override" data-id="${p.id}"/>
     </td>
-    <td>
-      ${currentPrice.toFixed(2)}
-      <input type="number" class="price-input current-price-input" placeholder="override" data-id="${p.id}"/>
-    </td>
+    <td>${currentPrice.toFixed(2)}</td>
     <td class="${pnlClass(pnlPct)}">${pnlPct.toFixed(2)}%</td>
     <td class="${pnlClass(rMultiple)}">${rMultiple.toFixed(2)}R</td>
     <td class="${pnlClass(impactAbs)}">${formatINR(impactAbs)} (${impactPct.toFixed(2)}%)</td>
