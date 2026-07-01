@@ -34,104 +34,128 @@ def add_indicators(df: pd.DataFrame) -> pd.DataFrame:
     df["inside_bar"] = (df["High"] < df["High"].shift(1)) & (df["Low"] > df["Low"].shift(1))  # ← ADD THIS
     return df
 
-def get_market_sentiment() -> dict:
+def get_market_sentiment(df: pd.DataFrame | None = None) -> dict:
     """
-    Fetch CNXSMALLCAP and NIFTYSMLCAP250 index data from yfinance,
-    compute EMA10 / EMA20, and return a sentiment dict with red/green signals.
-    """
-    import yfinance as yf
+    Compute NSE market breadth sentiment from the scan results DataFrame.
 
-    # Multiple fallback tickers per index — Yahoo Finance changes these silently
-    TICKERS = {
-        "cnxsmallcap": {
-            "name": "CNX Smallcap",
-            "candidates": ["^CNXSC", "NIFTYSMLCAP250.NS"]
-        },
-        "niftysmlcap250": {
-            "name": "Nifty Smallcap 250",
-            "candidates": ["^NSMIDCP250", "NIFTYSMLCAP250.NS"],
-        },
+    Rather than fetching index prices via Yahoo Finance (which fails silently
+    when those specific tickers are unavailable), we derive sentiment directly
+    from the EMA10 / EMA20 flags already computed for every stock in the scan.
+
+    Returns two "panels" styled like the old index cards:
+      • "All NSE"   — breadth across every stock in the scan universe
+      • "Trend Pass" — breadth only across stocks that pass the Minervini
+                       trend template (more refined signal)
+
+    Each panel shows:
+      • pct_above_ema10  / pct_above_ema20
+      • above_ema10 / above_ema20 booleans (True = majority above)
+    """
+    empty = lambda name: {
+        "close": None, "ema10": None, "ema20": None,
+        "above_ema10": None, "above_ema20": None, "name": name,
+        "pct_above_ema10": None, "pct_above_ema20": None,
+        "count": 0,
     }
 
     result: dict = {
-        "cnxsmallcap":    {"close": None, "ema10": None, "ema20": None,
-                           "above_ema10": None, "above_ema20": None, "name": "CNX Smallcap"},
-        "niftysmlcap250": {"close": None, "ema10": None, "ema20": None,
-                           "above_ema10": None, "above_ema20": None, "name": "Nifty Smallcap 250"},
+        "cnxsmallcap":    empty("NSE Breadth — All Stocks"),
+        "niftysmlcap250": empty("NSE Breadth — Trend Template Stocks"),
         "overall": "unavailable",
     }
 
-    ok_count   = 0
-    bull_count = 0
+    if df is None or df.empty:
+        return result
 
-    for key, meta in TICKERS.items():
-        close_series = None
+    try:
+        # ── Panel 1: all stocks ───────────────────────────────────────────────
+        ema10_col  = "cond9_price_above_ema10"   # pre-computed in indicators.py
+        trend_col  = "trend_template_pass"        # True = passes all conditions
 
-        for ticker in meta["candidates"]:
-            try:
-                raw = yf.download(
-                    ticker, period="60d", interval="1d",
-                    progress=False, auto_adjust=True
-                )
-                if raw.empty or len(raw) < 21:
-                    continue
+        total = len(df)
+        if total == 0:
+            return result
 
-                # ── Fix MultiIndex columns (yfinance >= 0.2.38) ──────────────
-                if isinstance(raw.columns, pd.MultiIndex):
-                    raw.columns = raw.columns.get_level_values(0)
+        # EMA10 above/below
+        if ema10_col in df.columns:
+            above10_all = df[ema10_col].sum()
+            pct10_all   = round(100.0 * above10_all / total, 1)
+        else:
+            # Fallback: check if close > EMA10 column directly
+            above10_all = 0
+            pct10_all   = None
 
-                close_col = raw["Close"].dropna()
+        # EMA20: derive from MA150 proxy or compute from close/MA columns
+        # Use MA50 as a proxy for "above medium-term average" when EMA20 not stored
+        ma50_col = "MA50"
+        if ma50_col in df.columns:
+            above20_all = (df["close"] > df[ma50_col]).sum() if "close" in df.columns else 0
+            pct20_all   = round(100.0 * above20_all / total, 1)
+        else:
+            above20_all = 0
+            pct20_all   = None
 
-                # After flattening, if downloading one ticker we may still get
-                # a DataFrame with one column — squeeze to Series
-                if isinstance(close_col, pd.DataFrame):
-                    close_col = close_col.iloc[:, 0]
-
-                if len(close_col) < 21:
-                    continue
-
-                close_series = close_col.astype(float)
-                print(f"[Market Sentiment] {ticker} OK — {len(close_series)} rows")
-                break  # got valid data, stop trying fallbacks
-
-            except Exception as e:
-                print(f"[Market Sentiment] {ticker} failed: {e}")
-
-        if close_series is None:
-            print(f"[Market Sentiment] All tickers failed for {meta['name']}")
-            continue
-
-        last  = float(close_series.iloc[-1])
-        ema10 = float(close_series.ewm(span=10, adjust=False).mean().iloc[-1])
-        ema20 = float(close_series.ewm(span=20, adjust=False).mean().iloc[-1])
-
-        above10 = last > ema10
-        above20 = last > ema20
-
-        result[key].update({
-            "close":       round(last,  2),
-            "ema10":       round(ema10, 2),
-            "ema20":       round(ema20, 2),
-            "above_ema10": above10,
-            "above_ema20": above20,
+        result["cnxsmallcap"].update({
+            "above_ema10":      bool(pct10_all is not None and pct10_all >= 50),
+            "above_ema20":      bool(pct20_all is not None and pct20_all >= 50),
+            "pct_above_ema10":  pct10_all,
+            "pct_above_ema20":  pct20_all,
+            "count":            total,
         })
 
-        ok_count += 1
-        if above10 and above20:
-            bull_count += 1
-        elif above10 or above20:
-            bull_count += 0.5
+        # ── Panel 2: trend-template stocks only ───────────────────────────────
+        if trend_col in df.columns:
+            df_trend = df[df[trend_col] == True]
+        else:
+            # Fall back to stocks passing at least 6 of 7 conditions
+            cond_cols = [c for c in df.columns if c.startswith("cond") and df[c].dtype == bool]
+            if cond_cols:
+                df_trend = df[df[cond_cols].sum(axis=1) >= 6]
+            else:
+                df_trend = df.head(0)
 
-    if ok_count == 0:
-        result["overall"] = "unavailable"
-    elif bull_count >= ok_count * 0.75:
-        result["overall"] = "bullish"
-    elif bull_count <= ok_count * 0.25:
-        result["overall"] = "bearish"
-    else:
-        result["overall"] = "mixed"
+        trend_total = len(df_trend)
+        if trend_total > 0 and ema10_col in df_trend.columns:
+            above10_tr  = df_trend[ema10_col].sum()
+            pct10_tr    = round(100.0 * above10_tr / trend_total, 1)
+            if ma50_col in df_trend.columns and "close" in df_trend.columns:
+                above20_tr = (df_trend["close"] > df_trend[ma50_col]).sum()
+                pct20_tr   = round(100.0 * above20_tr / trend_total, 1)
+            else:
+                above20_tr, pct20_tr = 0, None
+            result["niftysmlcap250"].update({
+                "above_ema10":      bool(pct10_tr >= 50),
+                "above_ema20":      bool(pct20_tr is not None and pct20_tr >= 50),
+                "pct_above_ema10":  pct10_tr,
+                "pct_above_ema20":  pct20_tr,
+                "count":            trend_total,
+            })
+
+        # ── Overall signal ────────────────────────────────────────────────────
+        bull_count = 0
+        ok_count   = 0
+        for key in ("cnxsmallcap", "niftysmlcap250"):
+            p = result[key]
+            if p["pct_above_ema10"] is not None:
+                ok_count += 1
+                score = (1 if p["above_ema10"] else 0) + (0.5 if p["above_ema20"] else 0)
+                bull_count += score
+
+        if ok_count == 0:
+            result["overall"] = "unavailable"
+        elif bull_count >= ok_count * 0.75:
+            result["overall"] = "bullish"
+        elif bull_count <= ok_count * 0.25:
+            result["overall"] = "bearish"
+        else:
+            result["overall"] = "mixed"
+
+    except Exception as exc:
+        import logging
+        logging.getLogger(__name__).warning("Market sentiment computation failed: %s", exc)
 
     return result
+
 
 # ── Helper predicates ─────────────────────────────────────────────────────────
 
