@@ -258,8 +258,8 @@ def run() -> None:
         )
 
     # ── 9b. Market Sentiment (small-cap indices) ──────────────────────────────
-    logger.info("Fetching market sentiment (small-cap indices)…")
-    sentiment = get_market_sentiment()
+    logger.info("Computing market sentiment from scan data…")
+    sentiment = get_market_sentiment(df)
     logger.info("Market sentiment:\n%s", json.dumps(sentiment, indent=2, default=str))
 
     # ── 9c. Net New Highs (market breadth) ────────────────────────────────────
@@ -558,15 +558,14 @@ function toggleMonth(btn) {{
 def _build_sentiment_html(sentiment: dict) -> str:
     """Build the Market Sentiment HTML section from the sentiment dict."""
 
-    def _pill(label: str, above: bool | None, ema_val: float | None) -> str:
-        if above is None:
-            css = "na"
+    def _pill(label: str, above: bool | None, pct: float | None) -> str:
+        if above is None or pct is None:
+            css  = "na"
             text = f"{label} N/A"
         else:
-            css = "green" if above else "red"
+            css       = "green" if above else "red"
             direction = "above" if above else "below"
-            val_str = f" ({ema_val:,.0f})" if ema_val is not None else ""
-            text = f"Price {direction} {label}{val_str}"
+            text = f"{pct:.1f}% {direction} {label}"
         return f'<span class="ema-pill {css}"><span class="ema-dot {css}"></span>{text}</span>'
 
     overall = sentiment.get("overall", "unavailable")
@@ -577,27 +576,27 @@ def _build_sentiment_html(sentiment: dict) -> str:
     for key in ("cnxsmallcap", "niftysmlcap250"):
         info = sentiment.get(key, {})
         name    = info.get("name", key)
-        close   = info.get("close")
-        ema10   = info.get("ema10")
-        ema20   = info.get("ema20")
         above10 = info.get("above_ema10")
         above20 = info.get("above_ema20")
+        pct10   = info.get("pct_above_ema10")
+        pct20   = info.get("pct_above_ema20")
+        count   = info.get("count", 0)
 
-        close_str = f"₹{close:,.2f}" if close is not None else "N/A"
-        pill10    = _pill("EMA10", above10, ema10)
-        pill20    = _pill("EMA20", above20, ema20)
+        count_str = f"{count} stocks" if count else "N/A"
+        pill10    = _pill("EMA10", above10, pct10)
+        pill20    = _pill("EMA50", above20, pct20)
 
         cards_html += f"""
     <div class="sentiment-card">
       <div class="sentiment-card-header">
         <span class="sentiment-index-name">{name}</span>
       </div>
-      <div class="close-val">Last Close: <strong>{close_str}</strong></div>
+      <div class="close-val">Universe: <strong>{count_str}</strong></div>
       <div class="ema-row">
         {pill10}
         {pill20}
       </div>
-      <div class="sentiment-legend">Green = price above EMA &nbsp;·&nbsp; Red = price below EMA</div>
+      <div class="sentiment-legend">% of stocks above EMA — Green = majority above, Red = majority below</div>
     </div>"""
 
     return f"""
@@ -607,7 +606,7 @@ def _build_sentiment_html(sentiment: dict) -> str:
     <span class="overall-badge {overall}">{overall_label}</span>
   </div>
   <p style="font-size:.8rem;color:var(--muted);margin-bottom:.75rem;">
-    Small-cap index health based on 10-EMA &amp; 20-EMA — updated each scan run.
+    NSE breadth — % of scanned stocks above EMA10 and EMA50 &middot; updated each scan run.
   </p>
   <div class="sentiment-grid">
     {cards_html}
