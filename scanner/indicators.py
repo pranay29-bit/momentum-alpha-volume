@@ -36,123 +36,117 @@ def add_indicators(df: pd.DataFrame) -> pd.DataFrame:
 
 def get_market_sentiment(df: pd.DataFrame | None = None) -> dict:
     """
-    Compute NSE market breadth sentiment from the scan results DataFrame.
+    Fetch NIFTY SMALLCAP 250 index historical data and compute 10-EMA.
 
-    Rather than fetching index prices via Yahoo Finance (which fails silently
-    when those specific tickers are unavailable), we derive sentiment directly
-    from the EMA10 / EMA20 flags already computed for every stock in the scan.
+    Primary source: jugaad-data (niftyindices.com) — reliable on GitHub Actions.
+    Fallback:       yfinance with multiple ticker candidates.
 
-    Returns two "panels" styled like the old index cards:
-      • "All NSE"   — breadth across every stock in the scan universe
-      • "Trend Pass" — breadth only across stocks that pass the Minervini
-                       trend template (more refined signal)
-
-    Each panel shows:
-      • pct_above_ema10  / pct_above_ema20
-      • above_ema10 / above_ema20 booleans (True = majority above)
+    Returns a sentiment dict with close price, EMA10, above/below signals.
     """
-    empty = lambda name: {
-        "close": None, "ema10": None, "ema20": None,
-        "above_ema10": None, "above_ema20": None, "name": name,
-        "pct_above_ema10": None, "pct_above_ema20": None,
-        "count": 0,
-    }
+    import datetime as dt
+    import logging
+    logger = logging.getLogger(__name__)
 
     result: dict = {
-        "cnxsmallcap":    empty("NSE Breadth — All Stocks"),
-        "niftysmlcap250": empty("NSE Breadth — Trend Template Stocks"),
+        "cnxsmallcap": {
+            "close": None, "ema10": None, "ema20": None,
+            "above_ema10": None, "above_ema20": None,
+            "name": "NIFTY Smallcap 250",
+            "pct_above_ema10": None, "pct_above_ema20": None,
+            "count": 0,
+        },
+        "niftysmlcap250": {
+            "close": None, "ema10": None, "ema20": None,
+            "above_ema10": None, "above_ema20": None,
+            "name": "NIFTY Smallcap 250 (10 EMA)",
+            "pct_above_ema10": None, "pct_above_ema20": None,
+            "count": 0,
+        },
         "overall": "unavailable",
     }
 
-    if df is None or df.empty:
+    close_series: pd.Series | None = None
+
+    # ── 1. Try jugaad-data (niftyindices.com) ────────────────────────────────
+    try:
+        from jugaad_data.nse import index_raw
+        to_date   = dt.date.today()
+        from_date = to_date - dt.timedelta(days=90)  # ~3 months for reliable EMA
+        records   = index_raw(
+            symbol    = "NIFTY SMALLCAP 250",
+            from_date = from_date,
+            to_date   = to_date,
+        )
+        if records:
+            tmp = pd.DataFrame(records)
+            # jugaad-data returns columns like 'CLOSE', 'HistoricalDate'
+            date_col  = next((c for c in tmp.columns if "date" in c.lower()), None)
+            close_col = next((c for c in tmp.columns if "close" in c.lower()), None)
+            if date_col and close_col:
+                tmp[date_col]  = pd.to_datetime(tmp[date_col], dayfirst=True, errors="coerce")
+                tmp[close_col] = pd.to_numeric(tmp[close_col].astype(str).str.replace(",", ""), errors="coerce")
+                tmp = tmp.dropna(subset=[date_col, close_col]).sort_values(date_col)
+                if len(tmp) >= 11:
+                    close_series = tmp.set_index(date_col)[close_col].astype(float)
+                    logger.info("[Market Sentiment] jugaad-data OK — %d rows", len(close_series))
+    except Exception as exc:
+        logger.warning("[Market Sentiment] jugaad-data failed: %s", exc)
+
+    # ── 2. Fallback: yfinance ─────────────────────────────────────────────────
+    if close_series is None:
+        import yfinance as yf
+        # Correct Yahoo Finance tickers for Nifty Smallcap 250 (try multiple)
+        candidates = ["^CNXSC", "^NSMIDCP250", "NIFTY_SMALLCAP_250.NS"]
+        for ticker in candidates:
+            try:
+                raw = yf.download(
+                    ticker, period="90d", interval="1d",
+                    progress=False, auto_adjust=True, threads=False,
+                )
+                if raw is None or raw.empty:
+                    continue
+                if isinstance(raw.columns, pd.MultiIndex):
+                    raw.columns = raw.columns.get_level_values(0)
+                col = raw["Close"].dropna()
+                if isinstance(col, pd.DataFrame):
+                    col = col.iloc[:, 0]
+                if len(col) >= 11:
+                    close_series = col.astype(float)
+                    logger.info("[Market Sentiment] yfinance %s OK — %d rows", ticker, len(col))
+                    break
+            except Exception as exc:
+                logger.warning("[Market Sentiment] yfinance %s failed: %s", ticker, exc)
+
+    if close_series is None or len(close_series) < 11:
+        logger.warning("[Market Sentiment] No data available — showing N/A")
         return result
 
-    try:
-        # ── Panel 1: all stocks ───────────────────────────────────────────────
-        ema10_col  = "cond9_price_above_ema10"   # pre-computed in indicators.py
-        trend_col  = "trend_template_pass"        # True = passes all conditions
+    # ── 3. Compute EMA10 and EMA20 ────────────────────────────────────────────
+    last  = float(close_series.iloc[-1])
+    ema10 = float(close_series.ewm(span=10, adjust=False).mean().iloc[-1])
+    ema20 = float(close_series.ewm(span=20, adjust=False).mean().iloc[-1])
 
-        total = len(df)
-        if total == 0:
-            return result
+    above10 = last > ema10
+    above20 = last > ema20
 
-        # EMA10 above/below
-        if ema10_col in df.columns:
-            above10_all = df[ema10_col].sum()
-            pct10_all   = round(100.0 * above10_all / total, 1)
-        else:
-            # Fallback: check if close > EMA10 column directly
-            above10_all = 0
-            pct10_all   = None
+    common = {
+        "close":      round(last, 2),
+        "ema10":      round(ema10, 2),
+        "ema20":      round(ema20, 2),
+        "above_ema10": above10,
+        "above_ema20": above20,
+        "count":      len(close_series),
+    }
+    result["cnxsmallcap"].update(common)
+    result["niftysmlcap250"].update(common)
 
-        # EMA20: derive from MA150 proxy or compute from close/MA columns
-        # Use MA50 as a proxy for "above medium-term average" when EMA20 not stored
-        ma50_col = "MA50"
-        if ma50_col in df.columns:
-            above20_all = (df["close"] > df[ma50_col]).sum() if "close" in df.columns else 0
-            pct20_all   = round(100.0 * above20_all / total, 1)
-        else:
-            above20_all = 0
-            pct20_all   = None
-
-        result["cnxsmallcap"].update({
-            "above_ema10":      bool(pct10_all is not None and pct10_all >= 50),
-            "above_ema20":      bool(pct20_all is not None and pct20_all >= 50),
-            "pct_above_ema10":  pct10_all,
-            "pct_above_ema20":  pct20_all,
-            "count":            total,
-        })
-
-        # ── Panel 2: trend-template stocks only ───────────────────────────────
-        if trend_col in df.columns:
-            df_trend = df[df[trend_col] == True]
-        else:
-            # Fall back to stocks passing at least 6 of 7 conditions
-            cond_cols = [c for c in df.columns if c.startswith("cond") and df[c].dtype == bool]
-            if cond_cols:
-                df_trend = df[df[cond_cols].sum(axis=1) >= 6]
-            else:
-                df_trend = df.head(0)
-
-        trend_total = len(df_trend)
-        if trend_total > 0 and ema10_col in df_trend.columns:
-            above10_tr  = df_trend[ema10_col].sum()
-            pct10_tr    = round(100.0 * above10_tr / trend_total, 1)
-            if ma50_col in df_trend.columns and "close" in df_trend.columns:
-                above20_tr = (df_trend["close"] > df_trend[ma50_col]).sum()
-                pct20_tr   = round(100.0 * above20_tr / trend_total, 1)
-            else:
-                above20_tr, pct20_tr = 0, None
-            result["niftysmlcap250"].update({
-                "above_ema10":      bool(pct10_tr >= 50),
-                "above_ema20":      bool(pct20_tr is not None and pct20_tr >= 50),
-                "pct_above_ema10":  pct10_tr,
-                "pct_above_ema20":  pct20_tr,
-                "count":            trend_total,
-            })
-
-        # ── Overall signal ────────────────────────────────────────────────────
-        bull_count = 0
-        ok_count   = 0
-        for key in ("cnxsmallcap", "niftysmlcap250"):
-            p = result[key]
-            if p["pct_above_ema10"] is not None:
-                ok_count += 1
-                score = (1 if p["above_ema10"] else 0) + (0.5 if p["above_ema20"] else 0)
-                bull_count += score
-
-        if ok_count == 0:
-            result["overall"] = "unavailable"
-        elif bull_count >= ok_count * 0.75:
-            result["overall"] = "bullish"
-        elif bull_count <= ok_count * 0.25:
-            result["overall"] = "bearish"
-        else:
-            result["overall"] = "mixed"
-
-    except Exception as exc:
-        import logging
-        logging.getLogger(__name__).warning("Market sentiment computation failed: %s", exc)
+    # Overall signal based on EMA10 (primary) + EMA20 (secondary)
+    if above10 and above20:
+        result["overall"] = "bullish"
+    elif not above10 and not above20:
+        result["overall"] = "bearish"
+    else:
+        result["overall"] = "mixed"
 
     return result
 
