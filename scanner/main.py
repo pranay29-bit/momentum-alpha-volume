@@ -23,7 +23,7 @@ import pandas as pd
 from .config     import DOCS_DIR
 from .data_loader import download_all, load_symbols
 from .nse_client  import enrich_with_market_caps
-from .dashboard   import build_passing_dashboard, build_passing_ema10_dashboard, build_volume_action_dashboard, build_rocket_dashboard
+from .dashboard   import build_passing_dashboard, build_passing_ema10_dashboard, build_volume_action_dashboard, build_rocket_dashboard, build_industry_drilldown
 from .result_calendar import get_result_date
 from .indicators  import get_market_sentiment
 from . import net_new_highs as nnh
@@ -267,7 +267,7 @@ def run() -> None:
     nnh_stats = nnh.run(df, date_display)
 
     # ── 10. Update docs/index.html  (GitHub Pages landing page) ───────────────
-    _update_index(today_str, out_dir, len(passing), len(passing_ema10), sentiment=sentiment, nnh_stats=nnh_stats)
+    _update_index(today_str, out_dir, len(passing), len(passing_ema10), sentiment=sentiment, nnh_stats=nnh_stats, passing=passing)
 
     # ── 10. Console summary ───────────────────────────────────────────────────
     logger.info("── SUMMARY ──────────────────────────────")
@@ -279,7 +279,15 @@ def run() -> None:
 
 # ── Landing-page updater ──────────────────────────────────────────────────────
 
-def _update_index(today_str: str, out_dir: Path, n_passing: int, n_elite: int, sentiment: dict | None = None, nnh_stats: dict | None = None) -> None:
+def _update_index(
+    today_str: str,
+    out_dir: Path,
+    n_passing: int,
+    n_elite: int,
+    sentiment: dict | None = None,
+    nnh_stats: dict | None = None,
+    passing: pd.DataFrame | None = None,
+) -> None:
     """Regenerate docs/index.html with a link to today's dashboards."""
     docs_root  = Path(DOCS_DIR)
     index_path = docs_root / "index.html"
@@ -356,6 +364,20 @@ def _update_index(today_str: str, out_dir: Path, n_passing: int, n_elite: int, s
     # ── Build Market Sentiment HTML block ─────────────────────────────────────
     sentiment_html = _build_sentiment_html(sentiment or {})
     nnh_html       = nnh.build_html(nnh_stats or {})
+
+    # ── Build Industry Group → Industry → Stock drill-down widget ─────────────
+    try:
+        today_date_display = dated_dirs[0].name if dated_dirs else datetime.today().strftime("%Y-%m-%d")
+        today_slug          = today_date_display.replace("-", "")
+        today_dashboard_link = f"{today_date_display}/dashboard_{today_slug}.html"
+        industry_html = build_industry_drilldown(
+            passing if passing is not None else pd.DataFrame(),
+            today_date_display,
+            dashboard_link=today_dashboard_link,
+        )
+    except Exception as exc:
+        logger.warning("Could not build industry drill-down widget: %s", exc)
+        industry_html = ""
 
     html = f"""<!DOCTYPE html>
 <html lang="en">
@@ -526,6 +548,8 @@ def _update_index(today_str: str, out_dir: Path, n_passing: int, n_elite: int, s
     </div>
   </div>
 </header>
+
+{industry_html}
 
 {sentiment_html}
 
