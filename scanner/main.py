@@ -361,15 +361,11 @@ def _update_index(
     </div>
   </div>"""
 
-    # ── Build Market Sentiment HTML block ─────────────────────────────────────
-    sentiment_html = _build_sentiment_html(sentiment or {})
-    nnh_html       = nnh.build_html(nnh_stats or {})
-
     # ── Build Industry Group → Industry → Stock drill-down widget ─────────────
+    today_date_display = dated_dirs[0].name if dated_dirs else datetime.today().strftime("%Y-%m-%d")
+    today_slug          = today_date_display.replace("-", "")
+    today_dashboard_link = f"{today_date_display}/dashboard_{today_slug}.html"
     try:
-        today_date_display = dated_dirs[0].name if dated_dirs else datetime.today().strftime("%Y-%m-%d")
-        today_slug          = today_date_display.replace("-", "")
-        today_dashboard_link = f"{today_date_display}/dashboard_{today_slug}.html"
         industry_html = build_industry_drilldown(
             passing if passing is not None else pd.DataFrame(),
             today_date_display,
@@ -378,6 +374,89 @@ def _update_index(
     except Exception as exc:
         logger.warning("Could not build industry drill-down widget: %s", exc)
         industry_html = ""
+
+    # ── Build the "Dashboards" hub — every scanner + tool, arranged as cards ───
+    if dated_dirs:
+        _elite_link  = f"{today_date_display}/elite_dashboard_{today_slug}.html"
+        _volume_link = f"{today_date_display}/volume_dashboard_{today_slug}.html"
+        _rocket_link = f"{today_date_display}/rocket_dashboard_{today_slug}.html"
+    else:
+        _elite_link = _volume_link = _rocket_link = today_dashboard_link
+
+    hub_cards = [
+        dict(icon="📊", accent="indigo", title="Momentum Dashboard",
+             desc="Every stock passing all 8 Minervini trend-template conditions today.",
+             link=today_dashboard_link),
+        dict(icon="⚡", accent="emerald", title="Elite Dashboard",
+             desc="Momentum passes also trading above EMA10 — the highest-conviction setups.",
+             link=_elite_link),
+        dict(icon="🔵", accent="blue", title="Volume Action",
+             desc="Pocket pivots and unusual volume signals across the NSE universe.",
+             link=_volume_link),
+        dict(icon="🚀", accent="amber", title="Rocket Stocks",
+             desc="Momentum passes coiling inside a tight daily inside-bar, ready to fire.",
+             link=_rocket_link),
+    ]
+
+    hub_cards_html = ""
+    for c in hub_cards:
+        hub_cards_html += f"""
+      <a class="hub-card" href="{c['link']}" style="--accent:var(--{c['accent']});--accent-lt:var(--{c['accent']}-lt);--accent-mid:var(--{c['accent']}-mid)">
+        <div class="hub-icon">{c['icon']}</div>
+        <div class="hub-title">{c['title']}</div>
+        <div class="hub-desc">{c['desc']}</div>
+        <div class="hub-cta">Open dashboard <span class="hub-cta-arrow">&#8594;</span></div>
+      </a>"""
+
+    hub_html = f"""
+<div class="hub-section">
+  <div class="hub-header">
+    <div>
+      <div class="hub-eyebrow"><span class="hub-dot"></span>DASHBOARDS</div>
+      <h2 class="hub-heading">Everything, in one place</h2>
+      <p class="hub-sub">Live scan results for {today_date_display} &middot; refreshed daily at 18:00 IST</p>
+    </div>
+  </div>
+  <div class="hub-grid">{hub_cards_html}
+  </div>
+</div>"""
+
+    # ── Tools — kept visually separate; these are utilities, not scan dashboards ──
+    tool_cards = [
+        dict(icon="📐", accent="violet", title="Position Size Calculator",
+             desc="Size your next trade against account risk and stop-loss distance.",
+             link="position-size.html"),
+        dict(icon="📈", accent="navy", title="Position Tracker",
+             desc="Track open positions, targets, and stops in one place.",
+             link="position-tracker.html"),
+    ]
+
+    tool_cards_html = ""
+    for c in tool_cards:
+        tool_cards_html += f"""
+      <a class="hub-card tool-card" href="{c['link']}" style="--accent:var(--{c['accent']});--accent-lt:var(--{c['accent']}-lt);--accent-mid:var(--{c['accent']}-mid)">
+        <div class="hub-icon">{c['icon']}</div>
+        <div class="hub-title">{c['title']}</div>
+        <div class="hub-desc">{c['desc']}</div>
+        <div class="hub-cta">Open tool <span class="hub-cta-arrow">&#8594;</span></div>
+      </a>"""
+
+    tools_html = f"""
+<div class="hub-section tools-section">
+  <div class="hub-header">
+    <div>
+      <div class="hub-eyebrow"><span class="hub-dot" style="background:var(--violet);box-shadow:0 0 0 3px var(--violet-lt)"></span>TOOLS</div>
+      <h2 class="hub-heading">Trade planning &amp; tracking</h2>
+      <p class="hub-sub">Utilities to size and manage your trades — not scan results</p>
+    </div>
+  </div>
+  <div class="hub-grid tools-grid">{tool_cards_html}
+  </div>
+</div>"""
+
+    # ── Build Market Sentiment HTML block ─────────────────────────────────────
+    sentiment_html = _build_sentiment_html(sentiment or {})
+    nnh_html       = nnh.build_html(nnh_stats or {})
 
     html = f"""<!DOCTYPE html>
 <html lang="en">
@@ -388,13 +467,14 @@ def _update_index(
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
 <style>
   :root{{
-    --bg:#f6f7fb;--surface:#fff;--surface-2:#fbfbfe;--border:#e5e8f0;--border2:#d4d9e8;
+    --bg:#ffffff;--surface:#fff;--surface-2:#fbfbfe;--border:#e5e8f0;--border2:#d4d9e8;
     --text:#0d1426;--muted:#5b6178;--subtle:#9499b3;
-    --navy:#0f1b3d;--navy2:#16234a;
+    --navy:#0f1b3d;--navy2:#16234a;--navy-lt:#eef1f8;--navy-mid:#c9d0e3;
     --indigo:#4f46e5;--indigo-lt:#eef0fd;--indigo-mid:#c7d2fe;
     --emerald:#059669;--emerald-lt:#ecfdf5;--emerald-mid:#a7f3d0;
     --blue:#2563eb;--blue-lt:#eff6ff;--blue-mid:#bfdbfe;
     --amber:#b45309;--amber-lt:#fffbeb;--amber-mid:#fde68a;
+    --violet:#7c3aed;--violet-lt:#f5f3ff;--violet-mid:#ddd6fe;
     --red:#dc2626;--red-lt:#fef2f2;
     --sans:'Outfit',system-ui,sans-serif;--mono:'DM Mono','Courier New',monospace;
     --radius:12px;--shadow-sm:0 1px 2px rgba(15,23,42,.04);--shadow-md:0 4px 16px -4px rgba(15,23,42,.08),0 1px 3px rgba(15,23,42,.04);
@@ -419,6 +499,45 @@ def _update_index(
   .container{{max-width:1120px;margin:2rem auto;padding:0 1.5rem;}}
   h2.section-title{{font-family:var(--sans);font-size:1.05rem;font-weight:700;
                     letter-spacing:-.01em;margin-bottom:1rem;color:var(--text);}}
+
+  /* ── Dashboards hub ── */
+  .hub-section{{max-width:1120px;margin:2.2rem auto 2.4rem;padding:0 1.5rem;}}
+  .hub-header{{margin-bottom:1.1rem;}}
+  .hub-eyebrow{{display:flex;align-items:center;gap:.45rem;font-family:var(--mono);font-size:.62rem;
+               font-weight:700;letter-spacing:.14em;color:var(--indigo);margin-bottom:.4rem;}}
+  .hub-dot{{width:6px;height:6px;border-radius:50%;background:var(--emerald);box-shadow:0 0 0 3px var(--emerald-lt);}}
+  .hub-heading{{font-family:var(--sans);font-size:1.3rem;font-weight:700;letter-spacing:-.02em;
+               color:var(--text);margin-bottom:.3rem;}}
+  .hub-sub{{font-family:var(--sans);font-size:.8rem;color:var(--muted);}}
+  .hub-grid{{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:1rem;}}
+  .hub-card{{
+    position:relative;display:flex;flex-direction:column;gap:.6rem;
+    background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
+    padding:1.35rem 1.4rem 1.25rem;box-shadow:var(--shadow-sm);
+    text-decoration:none;color:inherit;overflow:hidden;
+    transition:transform .18s ease,box-shadow .18s ease,border-color .18s ease;
+  }}
+  .hub-card::before{{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--accent);}}
+  .hub-card:hover{{transform:translateY(-3px);box-shadow:var(--shadow-md);border-color:var(--accent-mid);}}
+  .hub-tag{{position:absolute;top:.9rem;right:1rem;font-family:var(--mono);font-size:.56rem;font-weight:700;
+           letter-spacing:.08em;color:var(--subtle);background:var(--surface-2);border:1px solid var(--border);
+           border-radius:999px;padding:.15rem .5rem;}}
+  .hub-icon{{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;
+            font-size:1.1rem;background:var(--accent-lt);}}
+  .hub-title{{font-family:var(--sans);font-weight:700;font-size:.95rem;letter-spacing:-.01em;color:var(--text);}}
+  .hub-desc{{font-family:var(--sans);font-size:.78rem;color:var(--muted);line-height:1.5;flex:1;}}
+  .hub-cta{{font-family:var(--mono);font-size:.67rem;font-weight:600;letter-spacing:.03em;color:var(--accent);
+           display:flex;align-items:center;gap:.3rem;transition:gap .18s ease;}}
+  .hub-card:hover .hub-cta{{gap:.5rem;}}
+  .hub-cta-arrow{{transition:transform .18s ease;display:inline-block;}}
+  .hub-card:hover .hub-cta-arrow{{transform:translateX(3px);}}
+
+  /* Tools section — visually secondary/compact vs. the main Dashboards grid */
+  .tools-section{{margin-top:0;}}
+  .tools-grid{{grid-template-columns:repeat(auto-fit,minmax(220px,1fr));max-width:640px;}}
+  .tool-card{{padding:1.1rem 1.2rem 1.05rem;}}
+  .tool-card .hub-icon{{width:34px;height:34px;font-size:1rem;}}
+  .tool-card .hub-title{{font-size:.9rem;}}
   /* Month accordion */
   .month-group{{margin-bottom:1.1rem;}}
   .month-accordion{{
@@ -522,6 +641,9 @@ def _update_index(
     .history-table th, .history-table td{{padding:.6rem .75rem;font-size:.78rem;}}
     .btn-link{{padding:.24rem .65rem;font-size:.66rem;}}
     h2.section-title{{font-size:.95rem;}}
+    .hub-section{{padding:0 1rem;}}
+    .hub-heading{{font-size:1.1rem;}}
+    .hub-grid{{grid-template-columns:1fr 1fr;}}
   }}
   @media (max-width: 480px){{
     html{{font-size:13px;}}
@@ -530,6 +652,7 @@ def _update_index(
     .sentiment-card{{padding:1rem 1.1rem;}}
     .ema-row{{gap:.45rem;}}
     .ema-pill{{font-size:.68rem;padding:.26rem .65rem;}}
+    .hub-grid{{grid-template-columns:1fr;}}
   }}
   </style>
 </head>
@@ -542,16 +665,16 @@ def _update_index(
       <h1>NSE Trend Scanner</h1>
       <p>Daily Minervini trend-template scans · Free-float &amp; liquidity data · NSE India</p>
     </div>
-    <div class="top-buttons">
-      <a href="position-size.html" class="btn-link green">📐 Position Size Calculator</a>
-      <a href="position-tracker.html" class="btn-link blue">📊 Position Tracker</a>
-    </div>
   </div>
 </header>
 
-{industry_html}
-
 {sentiment_html}
+
+{hub_html}
+
+{tools_html}
+
+{industry_html}
 
 {nnh_html}
 
