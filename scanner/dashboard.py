@@ -1536,68 +1536,121 @@ h1{{font-size:1.7rem;font-weight:700;letter-spacing:-.03em;margin-bottom:.35rem}
 # No external charting library is used — the bars are lightweight CSS
 # elements so the whole thing stays fast, dependency-free, and animates
 # smoothly (width + crossfade transitions) even on mobile.
+#
+# Visual language is deliberately copy-pasted from the rest of the site
+# (same fonts, same --indigo/--emerald/--amber tokens, same pill/sym-tag/
+# kpi-strip/eyebrow-dot components used elsewhere) so it reads as part of
+# the product rather than a bolted-on widget.
 
 _INDV_TEMPLATE = r"""
 <div class="indv-section" id="indv-section">
-  <div class="indv-head">
-    <div>
-      <h2 class="section-title" style="margin-bottom:.2rem">Momentum Universe &mdash; Industry Breakdown</h2>
+  <div class="indv-titlebar">
+    <div class="indv-titlewrap">
+      <div class="indv-eyebrow"><span class="indv-dot"></span>MOMENTUM UNIVERSE</div>
+      <h2 class="indv-heading">Industry Breakdown</h2>
       <p class="indv-sub">%%SUBTITLE%%</p>
     </div>
     %%DASH_BTN%%
   </div>
+
   <div class="indv-card">
-    %%BODY%%
+    %%STATS%%
+    <div class="indv-body">
+      %%BODY%%
+    </div>
   </div>
 </div>
 
 <style>
 .indv-section{max-width:1120px;margin:0 auto 2rem;padding:0 1.5rem;}
-.indv-head{display:flex;justify-content:space-between;align-items:flex-end;gap:1rem;flex-wrap:wrap;margin-bottom:.9rem;}
-.indv-sub{font-size:.8rem;color:var(--muted);margin-top:.15rem;}
+.indv-titlebar{display:flex;justify-content:space-between;align-items:flex-start;gap:1.25rem;flex-wrap:wrap;margin-bottom:1rem;}
+.indv-titlewrap{min-width:220px;flex:1;}
+.indv-eyebrow{display:flex;align-items:center;gap:.45rem;font-family:var(--mono);font-size:.62rem;
+              font-weight:700;letter-spacing:.14em;color:var(--indigo);margin-bottom:.4rem;}
+.indv-dot{width:6px;height:6px;border-radius:50%;background:var(--emerald);box-shadow:0 0 0 3px var(--emerald-lt);}
+.indv-heading{font-family:var(--sans);font-size:1.25rem;font-weight:700;letter-spacing:-.02em;
+              color:var(--text);margin-bottom:.3rem;}
+.indv-sub{font-family:var(--sans);font-size:.8rem;color:var(--muted);max-width:640px;line-height:1.55;}
+
 .indv-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
-           box-shadow:var(--shadow-sm);padding:1.3rem 1.4rem;}
+           box-shadow:var(--shadow-sm);overflow:hidden;}
+
+.indv-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));border-bottom:1px solid var(--border);}
+.indv-kpi{padding:.95rem 1.35rem;border-right:1px solid var(--border);position:relative;min-width:0;}
+.indv-kpi:last-child{border-right:none;}
+.indv-kpi::after{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--accent);}
+.indv-kpi-lbl{font-family:var(--mono);font-size:.6rem;font-weight:600;text-transform:uppercase;
+              letter-spacing:.1em;color:var(--muted);margin-bottom:.35rem;}
+.indv-kpi-val{font-family:var(--sans);font-size:1.15rem;font-weight:700;letter-spacing:-.02em;
+              color:var(--accent);line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.indv-kpi-hint{font-family:var(--mono);font-size:.64rem;color:var(--subtle);margin-top:.25rem;}
+
+.indv-body{padding:1.25rem 1.4rem 1.4rem;}
+
 .indv-crumbs{display:flex;flex-wrap:wrap;align-items:center;gap:.35rem;font-family:var(--mono);
-             font-size:.72rem;color:var(--subtle);margin-bottom:1rem;min-height:1.2rem;}
-.indv-crumb{padding:.15rem .5rem;border-radius:6px;transition:background .15s ease,color .15s ease;}
+             font-size:.72rem;color:var(--subtle);margin-bottom:1.1rem;min-height:1.2rem;}
+.indv-crumb{padding:.15rem .55rem;border-radius:6px;transition:background .15s ease,color .15s ease;}
 .indv-crumb.is-link{cursor:pointer;}
 .indv-crumb.is-link:hover{background:var(--indigo-lt);color:var(--indigo);}
 .indv-crumb.is-current{color:var(--text);font-weight:600;}
-.indv-sep{color:var(--subtle);opacity:.55;}
-.indv-panel{position:relative;min-height:80px;opacity:1;transform:translateY(0);
-            transition:opacity .16s ease,transform .16s ease;}
+.indv-sep{color:var(--subtle);opacity:.5;}
+
+.indv-panel{position:relative;opacity:1;transform:translateY(0);transition:opacity .16s ease,transform .16s ease;}
 .indv-panel.is-anim{opacity:0;transform:translateY(6px);}
-.indv-row{display:flex;flex-direction:column;gap:.42rem;padding:.65rem .9rem;border:1px solid var(--border);
-          border-radius:10px;margin-bottom:.55rem;cursor:pointer;background:var(--surface);
-          transition:box-shadow .15s ease,border-color .15s ease,transform .15s ease;}
+
+.indv-row{display:flex;flex-direction:column;gap:.55rem;padding:.8rem 1.05rem;border:1px solid var(--border);
+          border-radius:10px;margin-bottom:.6rem;cursor:pointer;background:var(--surface);
+          box-shadow:var(--shadow-sm);
+          transition:background .15s ease,border-color .15s ease,box-shadow .15s ease,transform .15s ease;}
 .indv-row:last-child{margin-bottom:0;}
-.indv-row:hover{box-shadow:var(--shadow-md);border-color:var(--indigo-mid);transform:translateX(3px);}
-.indv-row-top{display:flex;align-items:center;justify-content:space-between;gap:.6rem;}
-.indv-name{font-size:.86rem;font-weight:600;color:var(--text);letter-spacing:-.01em;}
-.indv-rank{font-family:var(--mono);font-size:.68rem;color:var(--subtle);margin-right:.45rem;}
-.indv-count{font-family:var(--mono);font-size:.72rem;font-weight:700;color:var(--indigo);background:var(--indigo-lt);
-            border:1px solid var(--indigo-mid);border-radius:999px;padding:.1rem .6rem;white-space:nowrap;}
-.indv-bar-track{height:7px;border-radius:999px;background:var(--border);overflow:hidden;}
-.indv-bar-fill{height:100%;width:0%;border-radius:999px;background:linear-gradient(90deg,var(--indigo),var(--blue));
+.indv-row:hover{background:var(--indigo-lt);border-color:var(--indigo-mid);box-shadow:var(--shadow-md);transform:translateX(3px);}
+.indv-row:hover .indv-name{color:var(--indigo);}
+.indv-row:hover .indv-chevron{color:var(--indigo);transform:translateX(2px);}
+.indv-row-top{display:flex;align-items:center;justify-content:space-between;gap:.7rem;}
+.indv-name-wrap{display:flex;align-items:center;gap:.65rem;min-width:0;}
+.indv-rank{flex-shrink:0;width:22px;height:22px;border-radius:6px;background:var(--indigo-lt);
+           display:flex;align-items:center;justify-content:center;font-family:var(--mono);
+           font-size:.64rem;font-weight:700;color:var(--indigo);}
+.indv-name{font-family:var(--sans);font-size:.87rem;font-weight:600;color:var(--text);letter-spacing:-.01em;
+           white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:color .15s ease;}
+.indv-row-right{display:flex;align-items:center;gap:.5rem;flex-shrink:0;}
+.indv-count{font-family:var(--mono);font-size:.67rem;font-weight:700;letter-spacing:.02em;color:var(--indigo);
+            background:var(--indigo-lt);border:1px solid var(--indigo-mid);border-radius:999px;
+            padding:.16rem .65rem;white-space:nowrap;}
+.indv-chevron{color:var(--subtle);font-size:.7rem;transition:transform .15s ease,color .15s ease;}
+.indv-bar-track{height:6px;border-radius:999px;background:var(--border);overflow:hidden;margin-left:2.15rem;}
+.indv-bar-fill{height:100%;width:0%;border-radius:999px;
+               background:linear-gradient(90deg,var(--navy,#0f1b3d) 0%,var(--indigo) 55%,var(--emerald) 100%);
                transition:width .6s cubic-bezier(.4,0,.2,1);}
-.indv-empty{text-align:center;padding:2.2rem 1rem;color:var(--muted);font-size:.85rem;font-family:var(--mono);}
-.indv-table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;}
+
+.indv-empty{text-align:center;padding:2.4rem 1rem;color:var(--muted);font-size:.83rem;font-family:var(--mono);}
+
+.indv-table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;border:1px solid var(--border);border-radius:10px;}
 table.indv-table{width:100%;border-collapse:collapse;min-width:380px;}
-.indv-table th{font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--subtle);
-               padding:.55rem .7rem;text-align:left;border-bottom:1px solid var(--border);}
-.indv-table td{padding:.6rem .7rem;border-bottom:1px solid var(--border);font-size:.83rem;}
+.indv-table thead th{font-family:var(--mono);font-size:.62rem;font-weight:700;text-transform:uppercase;
+                     letter-spacing:.1em;color:var(--subtle);padding:.7rem 1rem;text-align:left;
+                     background:var(--surface-2,#fbfbfe);border-bottom:1px solid var(--border);}
+.indv-table td{padding:.75rem 1rem;border-bottom:1px solid var(--border);font-size:.85rem;color:var(--text);}
 .indv-table tr:last-child td{border-bottom:none;}
 .indv-table tr:hover td{background:var(--indigo-lt);}
-.indv-sym{display:inline-flex;align-items:center;gap:.3rem;padding:.22rem .7rem;border-radius:999px;
-          background:var(--indigo-lt);border:1px solid var(--indigo-mid);color:var(--indigo);
-          font-family:var(--mono);font-weight:600;font-size:.78rem;text-decoration:none;transition:background .14s;}
-.indv-sym:hover{background:#dde2fb;}
 th.r,td.r{text-align:right;}
+
+.indv-sym{display:inline-flex;align-items:center;gap:.35rem;font-family:var(--mono);font-weight:500;
+          font-size:.72rem;padding:.2rem .6rem;border-radius:6px;letter-spacing:.05em;border:1px solid;
+          background:var(--indigo-lt);border-color:var(--indigo-mid);color:var(--indigo);
+          text-decoration:none;transition:filter .12s;}
+.indv-sym:hover{filter:brightness(.93);}
+.indv-pill{display:inline-block;font-family:var(--mono);font-size:.7rem;font-weight:500;padding:.18rem .55rem;
+           border-radius:999px;border:1px solid;background:var(--amber-lt);border-color:var(--amber-mid);color:var(--amber);}
+
 @media (max-width:768px){
   .indv-section{padding:0 1rem;}
-  .indv-card{padding:1rem 1.05rem;}
-  .indv-name{font-size:.8rem;}
-  .indv-count{font-size:.66rem;}
+  .indv-heading{font-size:1.1rem;}
+  .indv-body{padding:1rem 1.05rem 1.15rem;}
+  .indv-kpi{padding:.8rem 1rem;}
+  .indv-kpi-val{font-size:1.02rem;}
+  .indv-row{padding:.7rem .85rem;}
+  .indv-bar-track{margin-left:0;}
 }
 </style>
 
@@ -1617,6 +1670,8 @@ th.r,td.r{text-align:right;}
     });
   }
 
+  function pad2(n){ return n < 10 ? '0' + n : '' + n; }
+
   function countBy(arr, keyFn){
     var m = new Map();
     arr.forEach(function(d){
@@ -1634,8 +1689,14 @@ th.r,td.r{text-align:right;}
       var pct = (r.count / max * 100).toFixed(1);
       return '<div class="indv-row" data-action="' + action + '" data-key="' + escapeHtml(r.name) + '">' +
         '<div class="indv-row-top">' +
-          '<span class="indv-name"><span class="indv-rank">' + (idx + 1) + '</span>' + escapeHtml(r.name) + '</span>' +
-          '<span class="indv-count">' + r.count + ' stock' + (r.count === 1 ? '' : 's') + '</span>' +
+          '<div class="indv-name-wrap">' +
+            '<span class="indv-rank">' + pad2(idx + 1) + '</span>' +
+            '<span class="indv-name">' + escapeHtml(r.name) + '</span>' +
+          '</div>' +
+          '<div class="indv-row-right">' +
+            '<span class="indv-count">' + r.count + ' stock' + (r.count === 1 ? '' : 's') + '</span>' +
+            '<span class="indv-chevron">&#8250;</span>' +
+          '</div>' +
         '</div>' +
         '<div class="indv-bar-track"><div class="indv-bar-fill" data-target="' + pct + '"></div></div>' +
       '</div>';
@@ -1661,7 +1722,7 @@ th.r,td.r{text-align:right;}
         '<td><a class="indv-sym" href="' + TV_BASE + encodeURIComponent(d.s) + '" target="_blank" rel="noopener">' +
            escapeHtml(d.s) + ' &#8599;</a></td>' +
         '<td class="r" style="font-family:var(--mono)">' + closeStr + '</td>' +
-        '<td class="r" style="font-family:var(--mono)">' + rsStr + '</td>' +
+        '<td class="r"><span class="indv-pill">' + rsStr + '</span></td>' +
       '</tr>';
     }).join('');
     return '<div class="indv-table-wrap"><table class="indv-table"><thead><tr>' +
@@ -1761,9 +1822,10 @@ def build_industry_drilldown(
     from TODAY's Momentum (8-condition passing) stocks.
 
     Returns a self-contained HTML fragment (markup + scoped CSS + vanilla JS)
-    ready to be dropped into docs/index.html. Reuses the CSS custom properties
-    already defined on that page's :root (--surface, --indigo, --mono, etc.)
-    so it inherits the site's look automatically.
+    ready to be dropped into docs/index.html. It reuses the same fonts,
+    color tokens, and component patterns (pills, sym-tags, kpi strips,
+    eyebrow labels) as the rest of the site, so it reads as a native part
+    of the dashboard rather than a bolted-on widget.
     """
     records: list[dict] = []
     if passing is not None and not passing.empty:
@@ -1784,10 +1846,9 @@ def build_industry_drilldown(
             })
 
     n_stocks = len(records)
-    n_groups = len({r["g"] for r in records})
 
     dash_btn = (
-        f'<a href="{dashboard_link}" class="btn-link">📊 Full Momentum Dashboard</a>'
+        f'<a href="{dashboard_link}" class="btn-link green">📊 Full Momentum Dashboard</a>'
         if dashboard_link else ""
     )
 
@@ -1795,19 +1856,49 @@ def build_industry_drilldown(
         subtitle = f"No passing stocks yet for {date_display}."
         html = _INDV_TEMPLATE.replace("%%SUBTITLE%%", subtitle) \
                               .replace("%%DASH_BTN%%", dash_btn) \
+                              .replace("%%STATS%%", "") \
                               .replace("%%BODY%%", _INDV_EMPTY_BODY) \
                               .replace("%%PAYLOAD%%", "[]")
         return html
 
+    # ── Group counts (for stats strip + subtitle) ─────────────────────────────
+    group_counts: dict[str, int] = {}
+    for r in records:
+        group_counts[r["g"]] = group_counts.get(r["g"], 0) + 1
+    n_groups = len(group_counts)
+    top_group, top_count = max(group_counts.items(), key=lambda kv: (kv[1], kv[0]))
+    top_group_disp = top_group if len(top_group) <= 26 else top_group[:24] + "…"
+
     subtitle = (
         f"{n_stocks} stock{'s' if n_stocks != 1 else ''} passing today&rsquo;s Minervini scan "
         f"across {n_groups} industry group{'s' if n_groups != 1 else ''} "
-        f"&middot; {date_display} &middot; tap to drill down, tap a symbol for TradingView"
+        f"&middot; tap a row to drill down, tap a symbol to open TradingView"
     )
+
+    stats_html = f"""
+    <div class="indv-kpis">
+      <div class="indv-kpi" style="--accent:var(--indigo)">
+        <div class="indv-kpi-lbl">Stocks Passing</div>
+        <div class="indv-kpi-val">{n_stocks}</div>
+        <div class="indv-kpi-hint">{date_display}</div>
+      </div>
+      <div class="indv-kpi" style="--accent:var(--blue)">
+        <div class="indv-kpi-lbl">Industry Groups</div>
+        <div class="indv-kpi-val">{n_groups}</div>
+        <div class="indv-kpi-hint">represented today</div>
+      </div>
+      <div class="indv-kpi" style="--accent:var(--emerald)">
+        <div class="indv-kpi-lbl">Top Group</div>
+        <div class="indv-kpi-val" title="{top_group}">{top_group_disp}</div>
+        <div class="indv-kpi-hint">{top_count} stock{"s" if top_count != 1 else ""}</div>
+      </div>
+    </div>"""
+
     payload = json.dumps(records, separators=(",", ":"))
 
     html = _INDV_TEMPLATE.replace("%%SUBTITLE%%", subtitle) \
                           .replace("%%DASH_BTN%%", dash_btn) \
+                          .replace("%%STATS%%", stats_html) \
                           .replace("%%BODY%%", _INDV_BODY) \
                           .replace("%%PAYLOAD%%", payload)
     return html
