@@ -18,8 +18,10 @@ New-stock tracking:
 
 from __future__ import annotations
 
+import html
 import json
 import logging
+from collections import OrderedDict
 from datetime import datetime
 from pathlib import Path
 
@@ -1519,297 +1521,38 @@ h1{{font-size:1.7rem;font-weight:700;letter-spacing:-.03em;margin-bottom:.35rem}
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-#  HOMEPAGE WIDGET — Industry Group → Industry → Stock drill-down
+#  HOMEPAGE WIDGET — Industry Group → Industry → Stock (nested accordion)
 # ─────────────────────────────────────────────────────────────────────────────
 #
-# Renders an interactive, self-contained fragment (CSS + markup + JS) meant to
-# be embedded into docs/index.html (the GitHub Pages landing page). It shows,
-# for TODAY's Momentum (8-condition passing) universe:
+# Renders an interactive, self-contained fragment (CSS + markup + a single
+# tiny shared toggle script) meant to be embedded into docs/index.html (the
+# GitHub Pages landing page). For TODAY's Momentum (8-condition passing)
+# universe it shows:
 #
-#   Level 0 — every Industry Group, with a count of how many passing stocks
-#             sit in it, sorted descending (a horizontal bar-list chart).
-#   Level 1 — click a group  → the Industries inside it, same bar-list,
-#             also sorted descending by stock count.
-#   Level 2 — click an industry → the actual stock list (symbol / close / RS),
-#             where clicking a symbol opens that stock on TradingView.
+#   • Every Industry Group, sorted descending by stock count, as an
+#     expand/collapse row — exactly the same accordion pattern already used
+#     by the "Scan History" month groups further down the page.
+#   • Expanding a group reveals its Industries, sorted descending by stock
+#     count, each its own (nested) expand/collapse row.
+#   • Expanding an industry reveals the stock list (symbol / close / RS),
+#     where clicking a symbol opens that stock on TradingView.
 #
-# No external charting library is used — the bars are lightweight CSS
-# elements so the whole thing stays fast, dependency-free, and animates
-# smoothly (width + crossfade transitions) even on mobile.
-#
-# Visual language is deliberately copy-pasted from the rest of the site
-# (same fonts, same --indigo/--emerald/--amber tokens, same pill/sym-tag/
-# kpi-strip/eyebrow-dot components used elsewhere) so it reads as part of
-# the product rather than a bolted-on widget.
+# Everything is rendered server-side (no client-side data/JSON, no fetch) —
+# the whole tree is plain HTML with CSS max-height transitions, just like the
+# month-wise history section, so opening/closing feels identical site-wide.
 
-_INDV_TEMPLATE = r"""
-<div class="indv-section" id="indv-section">
-  <div class="indv-titlebar">
-    <div class="indv-titlewrap">
-      <div class="indv-eyebrow"><span class="indv-dot"></span>MOMENTUM UNIVERSE</div>
-      <h2 class="indv-heading">Industry Breakdown</h2>
-      <p class="indv-sub">%%SUBTITLE%%</p>
-    </div>
-    %%DASH_BTN%%
-  </div>
 
-  <div class="indv-card">
-    %%STATS%%
-    <div class="indv-body">
-      %%BODY%%
-    </div>
-  </div>
-</div>
-
-<style>
-.indv-section{max-width:1120px;margin:0 auto 2rem;padding:0 1.5rem;}
-.indv-titlebar{display:flex;justify-content:space-between;align-items:flex-start;gap:1.25rem;flex-wrap:wrap;margin-bottom:1rem;}
-.indv-titlewrap{min-width:220px;flex:1;}
-.indv-eyebrow{display:flex;align-items:center;gap:.45rem;font-family:var(--mono);font-size:.62rem;
-              font-weight:700;letter-spacing:.14em;color:var(--indigo);margin-bottom:.4rem;}
-.indv-dot{width:6px;height:6px;border-radius:50%;background:var(--emerald);box-shadow:0 0 0 3px var(--emerald-lt);}
-.indv-heading{font-family:var(--sans);font-size:1.25rem;font-weight:700;letter-spacing:-.02em;
-              color:var(--text);margin-bottom:.3rem;}
-.indv-sub{font-family:var(--sans);font-size:.8rem;color:var(--muted);max-width:640px;line-height:1.55;}
-
-.indv-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
-           box-shadow:var(--shadow-sm);overflow:hidden;}
-
-.indv-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));border-bottom:1px solid var(--border);}
-.indv-kpi{padding:.95rem 1.35rem;border-right:1px solid var(--border);position:relative;min-width:0;}
-.indv-kpi:last-child{border-right:none;}
-.indv-kpi::after{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--accent);}
-.indv-kpi-lbl{font-family:var(--mono);font-size:.6rem;font-weight:600;text-transform:uppercase;
-              letter-spacing:.1em;color:var(--muted);margin-bottom:.35rem;}
-.indv-kpi-val{font-family:var(--sans);font-size:1.15rem;font-weight:700;letter-spacing:-.02em;
-              color:var(--accent);line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.indv-kpi-hint{font-family:var(--mono);font-size:.64rem;color:var(--subtle);margin-top:.25rem;}
-
-.indv-body{padding:1.25rem 1.4rem 1.4rem;}
-
-.indv-crumbs{display:flex;flex-wrap:wrap;align-items:center;gap:.35rem;font-family:var(--mono);
-             font-size:.72rem;color:var(--subtle);margin-bottom:1.1rem;min-height:1.2rem;}
-.indv-crumb{padding:.15rem .55rem;border-radius:6px;transition:background .15s ease,color .15s ease;}
-.indv-crumb.is-link{cursor:pointer;}
-.indv-crumb.is-link:hover{background:var(--indigo-lt);color:var(--indigo);}
-.indv-crumb.is-current{color:var(--text);font-weight:600;}
-.indv-sep{color:var(--subtle);opacity:.5;}
-
-.indv-panel{position:relative;opacity:1;transform:translateY(0);transition:opacity .16s ease,transform .16s ease;}
-.indv-panel.is-anim{opacity:0;transform:translateY(6px);}
-
-.indv-row{display:flex;flex-direction:column;gap:.55rem;padding:.8rem 1.05rem;border:1px solid var(--border);
-          border-radius:10px;margin-bottom:.6rem;cursor:pointer;background:var(--surface);
-          box-shadow:var(--shadow-sm);
-          transition:background .15s ease,border-color .15s ease,box-shadow .15s ease,transform .15s ease;}
-.indv-row:last-child{margin-bottom:0;}
-.indv-row:hover{background:var(--indigo-lt);border-color:var(--indigo-mid);box-shadow:var(--shadow-md);transform:translateX(3px);}
-.indv-row:hover .indv-name{color:var(--indigo);}
-.indv-row:hover .indv-chevron{color:var(--indigo);transform:translateX(2px);}
-.indv-row-top{display:flex;align-items:center;justify-content:space-between;gap:.7rem;}
-.indv-name-wrap{display:flex;align-items:center;gap:.65rem;min-width:0;}
-.indv-rank{flex-shrink:0;width:22px;height:22px;border-radius:6px;background:var(--indigo-lt);
-           display:flex;align-items:center;justify-content:center;font-family:var(--mono);
-           font-size:.64rem;font-weight:700;color:var(--indigo);}
-.indv-name{font-family:var(--sans);font-size:.87rem;font-weight:600;color:var(--text);letter-spacing:-.01em;
-           white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:color .15s ease;}
-.indv-row-right{display:flex;align-items:center;gap:.5rem;flex-shrink:0;}
-.indv-count{font-family:var(--mono);font-size:.67rem;font-weight:700;letter-spacing:.02em;color:var(--indigo);
-            background:var(--indigo-lt);border:1px solid var(--indigo-mid);border-radius:999px;
-            padding:.16rem .65rem;white-space:nowrap;}
-.indv-chevron{color:var(--subtle);font-size:.7rem;transition:transform .15s ease,color .15s ease;}
-.indv-bar-track{height:6px;border-radius:999px;background:var(--border);overflow:hidden;margin-left:2.15rem;}
-.indv-bar-fill{height:100%;width:0%;border-radius:999px;
-               background:linear-gradient(90deg,var(--navy,#0f1b3d) 0%,var(--indigo) 55%,var(--emerald) 100%);
-               transition:width .6s cubic-bezier(.4,0,.2,1);}
-
-.indv-empty{text-align:center;padding:2.4rem 1rem;color:var(--muted);font-size:.83rem;font-family:var(--mono);}
-
-.indv-table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;border:1px solid var(--border);border-radius:10px;}
-table.indv-table{width:100%;border-collapse:collapse;min-width:380px;}
-.indv-table thead th{font-family:var(--mono);font-size:.62rem;font-weight:700;text-transform:uppercase;
-                     letter-spacing:.1em;color:var(--subtle);padding:.7rem 1rem;text-align:left;
-                     background:var(--surface-2,#fbfbfe);border-bottom:1px solid var(--border);}
-.indv-table td{padding:.75rem 1rem;border-bottom:1px solid var(--border);font-size:.85rem;color:var(--text);}
-.indv-table tr:last-child td{border-bottom:none;}
-.indv-table tr:hover td{background:var(--indigo-lt);}
-th.r,td.r{text-align:right;}
-
-.indv-sym{display:inline-flex;align-items:center;gap:.35rem;font-family:var(--mono);font-weight:500;
-          font-size:.72rem;padding:.2rem .6rem;border-radius:6px;letter-spacing:.05em;border:1px solid;
-          background:var(--indigo-lt);border-color:var(--indigo-mid);color:var(--indigo);
-          text-decoration:none;transition:filter .12s;}
-.indv-sym:hover{filter:brightness(.93);}
-.indv-pill{display:inline-block;font-family:var(--mono);font-size:.7rem;font-weight:500;padding:.18rem .55rem;
-           border-radius:999px;border:1px solid;background:var(--amber-lt);border-color:var(--amber-mid);color:var(--amber);}
-
-@media (max-width:768px){
-  .indv-section{padding:0 1rem;}
-  .indv-heading{font-size:1.1rem;}
-  .indv-body{padding:1rem 1.05rem 1.15rem;}
-  .indv-kpi{padding:.8rem 1rem;}
-  .indv-kpi-val{font-size:1.02rem;}
-  .indv-row{padding:.7rem .85rem;}
-  .indv-bar-track{margin-left:0;}
-}
-</style>
-
-<script>
-(function(){
-  var DATA = %%PAYLOAD%%;
-  if (!DATA.length) return;
-  var TV_BASE = "https://www.tradingview.com/chart/?symbol=NSE%3A";
-  var panel   = document.getElementById('indvPanel');
-  var crumbs  = document.getElementById('indvCrumbs');
-  if (!panel || !crumbs) return;
-  var state = { level: 0, group: null, industry: null };
-
-  function escapeHtml(s){
-    return String(s).replace(/[&<>"']/g, function(c){
-      return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c];
-    });
-  }
-
-  function pad2(n){ return n < 10 ? '0' + n : '' + n; }
-
-  function countBy(arr, keyFn){
-    var m = new Map();
-    arr.forEach(function(d){
-      var k = keyFn(d);
-      m.set(k, (m.get(k) || 0) + 1);
-    });
-    return Array.from(m.entries())
-      .map(function(e){ return { name: e[0], count: e[1] }; })
-      .sort(function(a,b){ return b.count - a.count || a.name.localeCompare(b.name); });
-  }
-
-  function barListHtml(rows, action){
-    var max = rows.length ? rows[0].count : 1;
-    return rows.map(function(r, idx){
-      var pct = (r.count / max * 100).toFixed(1);
-      return '<div class="indv-row" data-action="' + action + '" data-key="' + escapeHtml(r.name) + '">' +
-        '<div class="indv-row-top">' +
-          '<div class="indv-name-wrap">' +
-            '<span class="indv-rank">' + pad2(idx + 1) + '</span>' +
-            '<span class="indv-name">' + escapeHtml(r.name) + '</span>' +
-          '</div>' +
-          '<div class="indv-row-right">' +
-            '<span class="indv-count">' + r.count + ' stock' + (r.count === 1 ? '' : 's') + '</span>' +
-            '<span class="indv-chevron">&#8250;</span>' +
-          '</div>' +
-        '</div>' +
-        '<div class="indv-bar-track"><div class="indv-bar-fill" data-target="' + pct + '"></div></div>' +
-      '</div>';
-    }).join('');
-  }
-
-  function renderGroups(){
-    return barListHtml(countBy(DATA, function(d){ return d.g; }), 'group');
-  }
-
-  function renderIndustries(group){
-    var subset = DATA.filter(function(d){ return d.g === group; });
-    return barListHtml(countBy(subset, function(d){ return d.i; }), 'industry');
-  }
-
-  function renderStocks(group, industry){
-    var subset = DATA.filter(function(d){ return d.g === group && d.i === industry; })
-      .sort(function(a,b){ return (b.r == null ? -1 : b.r) - (a.r == null ? -1 : a.r) || a.s.localeCompare(b.s); });
-    var body = subset.map(function(d){
-      var closeStr = d.c != null ? '₹' + Number(d.c).toLocaleString('en-IN') : 'N/A';
-      var rsStr    = d.r != null ? Number(d.r).toFixed(1) : 'N/A';
-      return '<tr>' +
-        '<td><a class="indv-sym" href="' + TV_BASE + encodeURIComponent(d.s) + '" target="_blank" rel="noopener">' +
-           escapeHtml(d.s) + ' &#8599;</a></td>' +
-        '<td class="r" style="font-family:var(--mono)">' + closeStr + '</td>' +
-        '<td class="r"><span class="indv-pill">' + rsStr + '</span></td>' +
-      '</tr>';
-    }).join('');
-    return '<div class="indv-table-wrap"><table class="indv-table"><thead><tr>' +
-      '<th>Symbol</th><th class="r">Close ₹</th><th class="r">RS %ile</th>' +
-      '</tr></thead><tbody>' + body + '</tbody></table></div>';
-  }
-
-  function renderCrumbs(){
-    var html = '<span class="indv-crumb ' + (state.level === 0 ? 'is-current' : 'is-link') + '" data-nav="0">All Industry Groups</span>';
-    if (state.group) {
-      html += '<span class="indv-sep">&rsaquo;</span><span class="indv-crumb ' +
-        (state.level === 1 ? 'is-current' : 'is-link') + '" data-nav="1">' + escapeHtml(state.group) + '</span>';
-    }
-    if (state.industry) {
-      html += '<span class="indv-sep">&rsaquo;</span><span class="indv-crumb is-current" data-nav="2">' +
-        escapeHtml(state.industry) + '</span>';
-    }
-    crumbs.innerHTML = html;
-  }
-
-  function activateBars(){
-    requestAnimationFrame(function(){
-      panel.querySelectorAll('.indv-bar-fill').forEach(function(el){
-        var t = el.getAttribute('data-target');
-        requestAnimationFrame(function(){ el.style.width = t + '%'; });
-      });
-    });
-  }
-
-  function draw(){
-    var html;
-    if (state.level === 0) html = renderGroups();
-    else if (state.level === 1) html = renderIndustries(state.group);
-    else html = renderStocks(state.group, state.industry);
-    panel.innerHTML = html;
-    panel.classList.remove('is-anim');
-    activateBars();
-  }
-
-  function render(animate){
-    renderCrumbs();
-    if (animate) {
-      panel.classList.add('is-anim');
-      setTimeout(draw, 170);
-    } else {
-      draw();
-    }
-  }
-
-  panel.addEventListener('click', function(e){
-    var row = e.target.closest('.indv-row');
-    if (!row) return;
-    var action = row.getAttribute('data-action');
-    var key    = row.getAttribute('data-key');
-    if (action === 'group') {
-      state = { level: 1, group: key, industry: null };
-      render(true);
-    } else if (action === 'industry') {
-      state = { level: 2, group: state.group, industry: key };
-      render(true);
-    }
-  });
-
-  crumbs.addEventListener('click', function(e){
-    var c = e.target.closest('.indv-crumb.is-link');
-    if (!c) return;
-    var nav = c.getAttribute('data-nav');
-    if (nav === '0') state = { level: 0, group: null, industry: null };
-    else if (nav === '1') state = { level: 1, group: state.group, industry: null };
-    render(true);
-  });
-
-  render(false);
-})();
-</script>
-"""
-
-_INDV_EMPTY_BODY = (
-    '<div class="indv-crumbs" id="indvCrumbs"></div>'
-    '<div class="indv-empty">No stocks are currently passing the Momentum scan '
-    '&mdash; check back after the next run.</div>'
-)
-
-_INDV_BODY = (
-    '<div class="indv-crumbs" id="indvCrumbs"></div>'
-    '<div class="indv-panel" id="indvPanel"></div>'
-)
+def _indv_stock_row(rec: dict) -> str:
+    close_s = f"₹{rec['c']:,.2f}" if rec.get("c") is not None else "N/A"
+    rs_s    = f"{rec['r']:.1f}" if rec.get("r") is not None else "N/A"
+    tv_link = _tv_link(rec["s"] + ".NS")
+    sym_esc = html.escape(rec["s"])
+    return f"""
+        <tr>
+          <td><a class="indv-sym" href="{tv_link}" target="_blank" rel="noopener">{sym_esc} &#8599;</a></td>
+          <td class="r" style="font-family:var(--mono)">{close_s}</td>
+          <td class="r"><span class="indv-pill">{rs_s}</span></td>
+        </tr>"""
 
 
 def build_industry_drilldown(
@@ -1818,14 +1561,15 @@ def build_industry_drilldown(
     dashboard_link: str | None = None,
 ) -> str:
     """
-    Build the homepage "Industry Group → Industry → Stock" drill-down widget
-    from TODAY's Momentum (8-condition passing) stocks.
+    Build the homepage "Industry Group → Industry → Stock" nested-accordion
+    widget from TODAY's Momentum (8-condition passing) stocks.
 
-    Returns a self-contained HTML fragment (markup + scoped CSS + vanilla JS)
-    ready to be dropped into docs/index.html. It reuses the same fonts,
-    color tokens, and component patterns (pills, sym-tags, kpi strips,
-    eyebrow labels) as the rest of the site, so it reads as a native part
-    of the dashboard rather than a bolted-on widget.
+    Returns a self-contained HTML fragment (markup + scoped CSS + a tiny
+    shared toggle script) ready to be dropped into docs/index.html. Visually
+    and interactively it mirrors the "Scan History" month-wise accordion
+    already on that page — same expand/collapse mechanics, same fonts and
+    color tokens, same pill/sym-tag components — so it reads as one more
+    section of the same product rather than a bolted-on widget.
     """
     records: list[dict] = []
     if passing is not None and not passing.empty:
@@ -1854,28 +1598,101 @@ def build_industry_drilldown(
 
     if n_stocks == 0:
         subtitle = f"No passing stocks yet for {date_display}."
-        html = _INDV_TEMPLATE.replace("%%SUBTITLE%%", subtitle) \
-                              .replace("%%DASH_BTN%%", dash_btn) \
-                              .replace("%%STATS%%", "") \
-                              .replace("%%BODY%%", _INDV_EMPTY_BODY) \
-                              .replace("%%PAYLOAD%%", "[]")
-        return html
+        return f"""
+<div class="indv-section" id="indv-section">
+  <div class="indv-titlebar">
+    <div class="indv-titlewrap">
+      <div class="indv-eyebrow"><span class="indv-dot"></span>MOMENTUM UNIVERSE</div>
+      <h2 class="indv-heading">Industry Breakdown</h2>
+      <p class="indv-sub">{subtitle}</p>
+    </div>
+    {dash_btn}
+  </div>
+  <div class="indv-card">
+    <div class="indv-empty">No stocks are currently passing the Momentum scan &mdash; check back after the next run.</div>
+  </div>
+</div>
+{_INDV_STYLE}
+{_INDV_SCRIPT}
+"""
 
-    # ── Group counts (for stats strip + subtitle) ─────────────────────────────
-    group_counts: dict[str, int] = {}
+    # ── Group stocks by Industry Group → Industry ─────────────────────────────
+    groups: "OrderedDict[str, list[dict]]" = OrderedDict()
     for r in records:
-        group_counts[r["g"]] = group_counts.get(r["g"], 0) + 1
-    n_groups = len(group_counts)
-    top_group, top_count = max(group_counts.items(), key=lambda kv: (kv[1], kv[0]))
+        groups.setdefault(r["g"], []).append(r)
+    group_items = sorted(groups.items(), key=lambda kv: (-len(kv[1]), kv[0]))
+    n_groups = len(group_items)
+    top_group, top_group_recs = group_items[0]
     top_group_disp = top_group if len(top_group) <= 26 else top_group[:24] + "…"
+
+    groups_html_parts: list[str] = []
+    for idx, (grp, recs) in enumerate(group_items):
+        industries: "OrderedDict[str, list[dict]]" = OrderedDict()
+        for r in recs:
+            industries.setdefault(r["i"], []).append(r)
+        industry_items = sorted(industries.items(), key=lambda kv: (-len(kv[1]), kv[0]))
+
+        industries_html_parts: list[str] = []
+        for jdx, (ind, irecs) in enumerate(industry_items):
+            irecs_sorted = sorted(
+                irecs,
+                key=lambda d: (-(d["r"] if d["r"] is not None else -1.0), d["s"]),
+            )
+            rows = "".join(_indv_stock_row(d) for d in irecs_sorted)
+            ind_esc = html.escape(ind)
+            industries_html_parts.append(f"""
+      <div class="indv-ind">
+        <button class="indv-ind-acc" onclick="toggleAccordion(this)" aria-expanded="false">
+          <span class="indv-ind-rank">{jdx + 1:02d}</span>
+          <span class="indv-ind-label">{ind_esc}</span>
+          <span class="indv-ind-meta">{len(irecs)} stock{'s' if len(irecs) != 1 else ''}</span>
+          <span class="indv-ind-chev">&#8963;</span>
+        </button>
+        <div class="indv-ind-body">
+          <div class="indv-table-wrap">
+            <table class="indv-table">
+              <thead><tr><th>Symbol</th><th class="r">Close ₹</th><th class="r">RS %ile</th></tr></thead>
+              <tbody>{rows}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>""")
+
+        is_first  = idx == 0
+        grp_esc   = html.escape(grp)
+        groups_html_parts.append(f"""
+  <div class="indv-group">
+    <button class="indv-acc" onclick="toggleAccordion(this)" aria-expanded="{'true' if is_first else 'false'}">
+      <span class="indv-acc-rank">{idx + 1:02d}</span>
+      <span class="indv-acc-label">{grp_esc}</span>
+      <span class="indv-acc-meta">{len(recs)} stock{'s' if len(recs) != 1 else ''}</span>
+      <span class="indv-acc-chevron">&#8963;</span>
+    </button>
+    <div class="indv-body{' open' if is_first else ''}">
+      <div class="indv-industries">{''.join(industries_html_parts)}
+      </div>
+    </div>
+  </div>""")
 
     subtitle = (
         f"{n_stocks} stock{'s' if n_stocks != 1 else ''} passing today&rsquo;s Minervini scan "
         f"across {n_groups} industry group{'s' if n_groups != 1 else ''} "
-        f"&middot; tap a row to drill down, tap a symbol to open TradingView"
+        f"&middot; click a group to expand it, click a symbol to open TradingView"
     )
 
-    stats_html = f"""
+    return f"""
+<div class="indv-section" id="indv-section">
+  <div class="indv-titlebar">
+    <div class="indv-titlewrap">
+      <div class="indv-eyebrow"><span class="indv-dot"></span>MOMENTUM UNIVERSE</div>
+      <h2 class="indv-heading">Industry Breakdown</h2>
+      <p class="indv-sub">{subtitle}</p>
+    </div>
+    {dash_btn}
+  </div>
+
+  <div class="indv-card">
     <div class="indv-kpis">
       <div class="indv-kpi" style="--accent:var(--indigo)">
         <div class="indv-kpi-lbl">Stocks Passing</div>
@@ -1889,16 +1706,158 @@ def build_industry_drilldown(
       </div>
       <div class="indv-kpi" style="--accent:var(--emerald)">
         <div class="indv-kpi-lbl">Top Group</div>
-        <div class="indv-kpi-val" title="{top_group}">{top_group_disp}</div>
-        <div class="indv-kpi-hint">{top_count} stock{"s" if top_count != 1 else ""}</div>
+        <div class="indv-kpi-val" title="{html.escape(top_group)}">{html.escape(top_group_disp)}</div>
+        <div class="indv-kpi-hint">{len(top_group_recs)} stock{'s' if len(top_group_recs) != 1 else ''}</div>
       </div>
-    </div>"""
+    </div>
+    <div class="indv-body-outer">
+      <div class="indv-groups">{''.join(groups_html_parts)}
+      </div>
+    </div>
+  </div>
+</div>
+{_INDV_STYLE}
+{_INDV_SCRIPT}
+"""
 
-    payload = json.dumps(records, separators=(",", ":"))
 
-    html = _INDV_TEMPLATE.replace("%%SUBTITLE%%", subtitle) \
-                          .replace("%%DASH_BTN%%", dash_btn) \
-                          .replace("%%STATS%%", stats_html) \
-                          .replace("%%BODY%%", _INDV_BODY) \
-                          .replace("%%PAYLOAD%%", payload)
-    return html
+_INDV_STYLE = """
+<style>
+.indv-section{max-width:1120px;margin:0 auto 2rem;padding:0 1.5rem;}
+.indv-titlebar{display:flex;justify-content:space-between;align-items:flex-start;gap:1.25rem;flex-wrap:wrap;margin-bottom:1rem;}
+.indv-titlewrap{min-width:220px;flex:1;}
+.indv-eyebrow{display:flex;align-items:center;gap:.45rem;font-family:var(--mono);font-size:.62rem;
+              font-weight:700;letter-spacing:.14em;color:var(--indigo);margin-bottom:.4rem;}
+.indv-dot{width:6px;height:6px;border-radius:50%;background:var(--emerald);box-shadow:0 0 0 3px var(--emerald-lt);}
+.indv-heading{font-family:var(--sans);font-size:1.25rem;font-weight:700;letter-spacing:-.02em;
+              color:var(--text);margin-bottom:.3rem;}
+.indv-sub{font-family:var(--sans);font-size:.8rem;color:var(--muted);max-width:640px;line-height:1.55;}
+
+.indv-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
+           box-shadow:var(--shadow-sm);overflow:hidden;}
+
+.indv-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));border-bottom:1px solid var(--border);}
+.indv-kpi{padding:.95rem 1.35rem;border-right:1px solid var(--border);position:relative;min-width:0;}
+.indv-kpi:last-child{border-right:none;}
+.indv-kpi::after{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--accent);}
+.indv-kpi-lbl{font-family:var(--mono);font-size:.6rem;font-weight:600;text-transform:uppercase;
+              letter-spacing:.1em;color:var(--muted);margin-bottom:.35rem;}
+.indv-kpi-val{font-family:var(--sans);font-size:1.15rem;font-weight:700;letter-spacing:-.02em;
+              color:var(--accent);line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.indv-kpi-hint{font-family:var(--mono);font-size:.64rem;color:var(--subtle);margin-top:.25rem;}
+
+.indv-body-outer{padding:1.25rem 1.4rem 1.4rem;}
+.indv-empty{text-align:center;padding:2.4rem 1rem;color:var(--muted);font-size:.83rem;font-family:var(--mono);}
+
+/* ── Top-level: Industry Group accordion (mirrors .month-accordion) ── */
+.indv-groups{display:flex;flex-direction:column;gap:.7rem;}
+.indv-acc{
+  width:100%;display:flex;align-items:center;gap:.75rem;
+  background:var(--surface);border:1px solid var(--border);border-radius:10px;
+  padding:.85rem 1.2rem;cursor:pointer;
+  font-family:var(--sans);font-size:.92rem;font-weight:600;color:var(--text);
+  letter-spacing:-.01em;text-align:left;
+  transition:background .15s,box-shadow .15s;
+  box-shadow:var(--shadow-sm);
+}
+.indv-acc:hover{background:var(--surface-2,#fbfbfe);box-shadow:var(--shadow-md);}
+.indv-acc[aria-expanded="true"]{
+  border-bottom-left-radius:0;border-bottom-right-radius:0;
+  border-bottom-color:transparent;
+  background:var(--indigo-lt);border-color:var(--indigo-mid);color:var(--indigo);
+}
+.indv-acc-rank{flex-shrink:0;width:22px;height:22px;border-radius:6px;background:rgba(15,23,42,.05);
+               display:flex;align-items:center;justify-content:center;
+               font-family:var(--mono);font-size:.62rem;font-weight:700;}
+.indv-acc[aria-expanded="true"] .indv-acc-rank{background:rgba(255,255,255,.65);}
+.indv-acc-label{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.indv-acc-meta{font-family:var(--mono);font-size:.67rem;font-weight:500;color:var(--subtle);letter-spacing:.04em;white-space:nowrap;}
+.indv-acc[aria-expanded="true"] .indv-acc-meta{color:var(--indigo);opacity:.75;}
+.indv-acc-chevron{font-size:.8rem;transition:transform .3s cubic-bezier(.4,0,.2,1);display:inline-block;flex-shrink:0;}
+.indv-acc[aria-expanded="false"] .indv-acc-chevron{transform:rotate(180deg);}
+
+.indv-body{
+  overflow:hidden;max-height:0;opacity:0;
+  transition:max-height .38s cubic-bezier(.4,0,.2,1),opacity .28s ease;
+  border:1px solid transparent;border-top:none;
+  border-bottom-left-radius:10px;border-bottom-right-radius:10px;
+}
+.indv-body.open{max-height:6000px;opacity:1;border-color:var(--indigo-mid);}
+.indv-industries{padding:.9rem 1.1rem 1.05rem;display:flex;flex-direction:column;gap:.55rem;background:var(--surface);}
+
+/* ── Nested: Industry accordion (same mechanics, smaller/indented) ── */
+.indv-ind{border-left:2px solid var(--indigo-mid);padding-left:.7rem;}
+.indv-ind-acc{
+  width:100%;display:flex;align-items:center;gap:.6rem;
+  background:var(--surface-2,#fbfbfe);border:1px solid var(--border);border-radius:8px;
+  padding:.6rem .9rem;cursor:pointer;
+  font-family:var(--sans);font-size:.82rem;font-weight:600;color:var(--text);
+  letter-spacing:-.005em;text-align:left;
+  transition:background .15s,box-shadow .15s;
+}
+.indv-ind-acc:hover{box-shadow:var(--shadow-sm);}
+.indv-ind-acc[aria-expanded="true"]{
+  background:var(--indigo-lt);border-color:var(--indigo-mid);color:var(--indigo);
+  border-bottom-left-radius:0;border-bottom-right-radius:0;border-bottom-color:transparent;
+}
+.indv-ind-rank{flex-shrink:0;width:18px;height:18px;border-radius:5px;background:var(--border);
+               display:flex;align-items:center;justify-content:center;
+               font-family:var(--mono);font-size:.58rem;font-weight:700;color:var(--muted);}
+.indv-ind-acc[aria-expanded="true"] .indv-ind-rank{background:#fff;color:var(--indigo);}
+.indv-ind-label{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.indv-ind-meta{font-family:var(--mono);font-size:.63rem;color:var(--subtle);white-space:nowrap;}
+.indv-ind-acc[aria-expanded="true"] .indv-ind-meta{color:var(--indigo);opacity:.75;}
+.indv-ind-chev{font-size:.7rem;transition:transform .3s cubic-bezier(.4,0,.2,1);flex-shrink:0;}
+.indv-ind-acc[aria-expanded="false"] .indv-ind-chev{transform:rotate(180deg);}
+
+.indv-ind-body{
+  overflow:hidden;max-height:0;opacity:0;
+  transition:max-height .34s cubic-bezier(.4,0,.2,1),opacity .24s ease;
+  border:1px solid transparent;border-top:none;
+  border-bottom-left-radius:8px;border-bottom-right-radius:8px;
+}
+.indv-ind-body.open{max-height:4000px;opacity:1;border-color:var(--indigo-mid);}
+
+/* ── Stock table (leaf level) ── */
+.indv-table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;}
+table.indv-table{width:100%;border-collapse:collapse;min-width:340px;background:var(--surface);}
+.indv-table thead th{font-family:var(--mono);font-size:.62rem;font-weight:700;text-transform:uppercase;
+                     letter-spacing:.1em;color:var(--subtle);padding:.65rem .9rem;text-align:left;
+                     background:var(--surface-2,#fbfbfe);border-bottom:1px solid var(--border);}
+.indv-table td{padding:.65rem .9rem;border-bottom:1px solid var(--border);font-size:.83rem;color:var(--text);}
+.indv-table tr:last-child td{border-bottom:none;}
+.indv-table tr:hover td{background:var(--indigo-lt);}
+th.r,td.r{text-align:right;}
+
+.indv-sym{display:inline-flex;align-items:center;gap:.35rem;font-family:var(--mono);font-weight:500;
+          font-size:.72rem;padding:.2rem .6rem;border-radius:6px;letter-spacing:.05em;border:1px solid;
+          background:var(--indigo-lt);border-color:var(--indigo-mid);color:var(--indigo);
+          text-decoration:none;transition:filter .12s;}
+.indv-sym:hover{filter:brightness(.93);}
+.indv-pill{display:inline-block;font-family:var(--mono);font-size:.7rem;font-weight:500;padding:.18rem .55rem;
+           border-radius:999px;border:1px solid;background:var(--amber-lt);border-color:var(--amber-mid);color:var(--amber);}
+
+@media (max-width:768px){
+  .indv-section{padding:0 1rem;}
+  .indv-heading{font-size:1.1rem;}
+  .indv-body-outer{padding:1rem 1.05rem 1.15rem;}
+  .indv-kpi{padding:.8rem 1rem;}
+  .indv-kpi-val{font-size:1.02rem;}
+  .indv-acc{padding:.75rem .95rem;font-size:.85rem;}
+  .indv-ind-acc{padding:.55rem .75rem;font-size:.78rem;}
+}
+</style>
+"""
+
+_INDV_SCRIPT = """
+<script>
+if (typeof window.toggleAccordion !== 'function') {
+  window.toggleAccordion = function(btn) {
+    var body = btn.nextElementSibling;
+    var open = body.classList.contains('open');
+    body.classList.toggle('open', !open);
+    btn.setAttribute('aria-expanded', String(!open));
+  };
+}
+</script>
+"""
