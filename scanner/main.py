@@ -458,6 +458,18 @@ def _update_index(
     sentiment_html = _build_sentiment_html(sentiment or {})
     nnh_html       = nnh.build_html(nnh_stats or {})
 
+    # ── Shared cross-page nav bar — identical component on every page ─────────
+    site_nav_html = f"""
+<nav class="site-nav">
+  <a href="index.html" class="btn-link navy is-active">🏠 Home</a>
+  <a href="{today_dashboard_link}" class="btn-link indigo">📊 Momentum</a>
+  <a href="{_elite_link}" class="btn-link green">⚡ Elite</a>
+  <a href="{_volume_link}" class="btn-link blue">🔵 Volume</a>
+  <a href="{_rocket_link}" class="btn-link amber">🚀 Rocket</a>
+  <a href="position-size.html" class="btn-link violet">📐 Position Size</a>
+  <a href="position-tracker.html" class="btn-link navy">📈 Position Tracker</a>
+</nav>"""
+
     html = f"""<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -467,35 +479,37 @@ def _update_index(
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
 <style>
   :root{{
-    --bg:#ffffff;--surface:#fff;--surface-2:#fbfbfe;--border:#e5e8f0;--border2:#d4d9e8;
+    --bg:#ffffff;--surface:#fff;--surface-2:#fbfbfe;--surface2:#fbfbfe;
+    --border:#e5e8f0;--border2:#d4d9e8;--border-2:#d4d9e8;
     --text:#0d1426;--muted:#5b6178;--subtle:#9499b3;
-    --navy:#0f1b3d;--navy2:#16234a;--navy-lt:#eef1f8;--navy-mid:#c9d0e3;
+    --navy:#0f1b3d;--navy2:#16234a;--navy-2:#16234a;--navy-lt:#eef1f8;--navy-mid:#c9d0e3;
     --indigo:#4f46e5;--indigo-lt:#eef0fd;--indigo-mid:#c7d2fe;
     --emerald:#059669;--emerald-lt:#ecfdf5;--emerald-mid:#a7f3d0;
     --blue:#2563eb;--blue-lt:#eff6ff;--blue-mid:#bfdbfe;
     --amber:#b45309;--amber-lt:#fffbeb;--amber-mid:#fde68a;
     --violet:#7c3aed;--violet-lt:#f5f3ff;--violet-mid:#ddd6fe;
-    --red:#dc2626;--red-lt:#fef2f2;
-    --sans:'Outfit',system-ui,sans-serif;--mono:'DM Mono','Courier New',monospace;
-    --radius:12px;--shadow-sm:0 1px 2px rgba(15,23,42,.04);--shadow-md:0 4px 16px -4px rgba(15,23,42,.08),0 1px 3px rgba(15,23,42,.04);
+    --red:#dc2626;--red-lt:#fef2f2;--red-mid:#fca5a5;
+    --sans:'Outfit',system-ui,-apple-system,sans-serif;--mono:'DM Mono','SF Mono','Courier New',monospace;
+    --radius:12px;--radius-sm:8px;--shadow-sm:0 1px 2px rgba(15,23,42,.04);--shadow-md:0 4px 16px -4px rgba(15,23,42,.08),0 1px 3px rgba(15,23,42,.04);
   }}
   *,*::before,*::after{{box-sizing:border-box;margin:0;padding:0;}}
   html{{font-size:14px;-webkit-font-smoothing:antialiased;}}
   body{{background:var(--bg);color:var(--text);font-family:var(--sans);line-height:1.6;}}
   .topbar{{height:3px;background:linear-gradient(90deg,var(--navy) 0%,var(--indigo) 55%,var(--emerald) 100%);}}
   header{{background:var(--surface);border-bottom:1px solid var(--border);
-          padding:2rem 3rem 1.6rem;text-align:center;}}
+          padding:1.65rem 2.5rem;text-align:center;}}
   .header-row{{display:flex;align-items:center;justify-content:space-between;
               gap:1.5rem;flex-wrap:wrap;text-align:left;}}
-  .header-titles{{flex:1;min-width:200px;text-align:center;}}
+  .header-titles{{flex:1;min-width:220px;text-align:center;}}
   .top-buttons{{display:flex;gap:.65rem;flex-wrap:wrap;}}
   .brand-name-idx{{font-family:var(--mono);font-size:.66rem;font-weight:600;
                    letter-spacing:.16em;text-transform:uppercase;color:var(--navy);
-                   display:flex;align-items:center;justify-content:center;gap:.5rem;margin-bottom:.5rem;}}
+                   display:flex;align-items:center;justify-content:center;gap:.5rem;margin-bottom:.7rem;}}
   .brand-dot{{width:7px;height:7px;border-radius:50%;background:var(--emerald);box-shadow:0 0 0 3px var(--emerald-lt);}}
-  header h1{{font-family:var(--sans);font-size:clamp(1.6rem,3vw,2.2rem);font-weight:700;
-             letter-spacing:-.03em;color:var(--text);margin:.25rem 0;}}
-  header p{{color:var(--muted);font-size:.83rem;font-family:var(--mono);}}
+  header h1{{font-family:var(--sans);font-size:clamp(1.45rem,2.6vw,1.9rem);font-weight:700;
+             letter-spacing:-.025em;color:var(--text);margin-bottom:.22rem;}}
+  header p{{color:var(--muted);font-size:.82rem;font-family:var(--mono);}}
+
   .container{{max-width:1120px;margin:2rem auto;padding:0 1.5rem;}}
   h2.section-title{{font-family:var(--sans);font-size:1.05rem;font-weight:700;
                     letter-spacing:-.01em;margin-bottom:1rem;color:var(--text);}}
@@ -580,10 +594,10 @@ def _update_index(
   .history-table tr:last-child td{{border-bottom:none;}}
   .history-table tr:hover td{{background:var(--surface-2);}}
   .date-cell{{font-family:var(--mono);font-weight:600;font-size:.8rem;color:var(--text);}}
-  .btn-link{{display:inline-block;padding:.32rem .9rem;border-radius:999px;
+  .btn-link{{display:inline-flex;align-items:center;gap:.35rem;padding:.32rem .9rem;border-radius:999px;
              font-family:var(--mono);font-size:.72rem;font-weight:600;
              background:var(--indigo-lt);border:1px solid var(--indigo-mid);color:var(--indigo);
-             text-decoration:none;transition:background .14s;letter-spacing:.03em;}}
+             text-decoration:none;transition:background .14s,box-shadow .14s;letter-spacing:.03em;}}
   .btn-link:hover{{background:#dde2fb;}}
   .btn-link.green{{background:var(--emerald-lt);border-color:var(--emerald-mid);color:var(--emerald);}}
   .btn-link.green:hover{{background:#d7f8ea;}}
@@ -591,6 +605,14 @@ def _update_index(
   .btn-link.amber:hover{{background:#fef3c7;}}
   .btn-link.blue{{background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue);}}
   .btn-link.blue:hover{{background:#dee9fd;}}
+  .btn-link.violet{{background:var(--violet-lt);border-color:var(--violet-mid);color:var(--violet);}}
+  .btn-link.violet:hover{{background:#ede7fd;}}
+  .btn-link.navy{{background:var(--navy-lt);border-color:var(--navy-mid);color:var(--navy);}}
+  .btn-link.navy:hover{{background:#e2e6f2;}}
+  .btn-link.is-active{{box-shadow:0 0 0 1px currentColor inset;font-weight:700;}}
+  /* Shared cross-page nav bar — identical component on every generated page */
+  .site-nav{{display:flex;flex-wrap:wrap;gap:.5rem;padding:.75rem 2.5rem;
+            background:var(--surface-2);border-bottom:1px solid var(--border);}}
   footer{{text-align:center;padding:1.5rem;font-family:var(--mono);font-size:.68rem;
           color:var(--subtle);border-top:1px solid var(--border);
           background:var(--surface);letter-spacing:.04em;margin-top:3rem;}}
@@ -628,11 +650,12 @@ def _update_index(
 
   /* ── Mobile responsiveness ── */
   @media (max-width: 768px){{
-    header{{padding:1.4rem 1.2rem 1.2rem;}}
+    header{{padding:1.25rem 1.1rem;}}
     .header-row{{flex-direction:column;align-items:stretch;}}
     .header-titles{{text-align:center;}}
     .top-buttons{{width:100%;}}
     .top-buttons .btn-link{{flex:1;text-align:center;}}
+    .site-nav{{padding:.65rem 1.1rem;}}
     .container{{margin:1.4rem auto;padding:0 1rem;}}
     .sentiment-section{{padding:0 1rem;}}
     .sentiment-grid{{grid-template-columns:1fr;}}
@@ -667,6 +690,8 @@ def _update_index(
     </div>
   </div>
 </header>
+
+{site_nav_html}
 
 {sentiment_html}
 
