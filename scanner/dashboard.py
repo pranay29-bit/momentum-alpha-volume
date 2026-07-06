@@ -70,19 +70,25 @@ _GOOGLE_FONTS = (
 _BASE_CSS = """
 :root {
   /* Surfaces */
-  --bg:         #f7f8fc;
+  --bg:         #ffffff;
   --surface:    #ffffff;
-  --surface2:   #f1f3f9;
-  --surface3:   #e8ebf5;
-  --border:     #e2e6f0;
-  --border2:    #ccd1e4;
+  --surface-2:  #fbfbfe;
+  --surface2:   #fbfbfe;
+  --surface3:   #f1f3f9;
+  --border:     #e5e8f0;
+  --border-2:   #d4d9e8;
+  --border2:    #d4d9e8;
 
   /* Text */
-  --text:       #0f1629;
-  --muted:      #5a6282;
-  --subtle:     #8b93b5;
+  --text:       #0d1426;
+  --muted:      #5b6178;
+  --subtle:     #9499b3;
 
   /* Brand accents */
+  --navy:       #0f1b3d;
+  --navy-2:     #16234a;
+  --navy-lt:    #eef1f8;
+  --navy-mid:   #c9d0e3;
   --indigo:     #4f46e5;
   --indigo-lt:  #eef0fd;
   --indigo-mid: #c7d2fe;
@@ -92,11 +98,12 @@ _BASE_CSS = """
   --blue:       #2563eb;
   --blue-lt:    #eff6ff;
   --blue-mid:   #bfdbfe;
-  --amber:      #d97706;
+  --amber:      #b45309;
   --amber-lt:   #fffbeb;
   --amber-mid:  #fde68a;
   --red:        #dc2626;
   --red-lt:     #fef2f2;
+  --red-mid:    #fca5a5;
   --violet:     #7c3aed;
   --violet-lt:  #f5f3ff;
   --violet-mid: #ddd6fe;
@@ -107,13 +114,17 @@ _BASE_CSS = """
   --new-text:   #a21caf;
   --new-row:    #fdf4ff;
 
-  /* Type */
-  --sans:  'Outfit', system-ui, sans-serif;
-  --mono:  'DM Mono', 'Courier New', monospace;
+  /* Type — identical stack used site-wide (homepage, all dashboards, tools) */
+  --sans:  'Outfit', system-ui, -apple-system, sans-serif;
+  --mono:  'DM Mono', 'SF Mono', 'Courier New', monospace;
 
   /* Radii */
   --r:   8px;
   --rl:  12px;
+  --radius:    12px;
+  --radius-sm: 8px;
+  --shadow-sm: 0 1px 2px rgba(15,23,42,.04);
+  --shadow-md: 0 4px 16px -4px rgba(15,23,42,.08), 0 1px 3px rgba(15,23,42,.04);
   --rxl: 16px;
 }
 
@@ -177,6 +188,33 @@ header h1 {
   margin-top: .15rem;
 }
 .badge-row { display: flex; gap: .45rem; margin-top: .5rem; flex-wrap: wrap; }
+
+/* ── Shared cross-page nav bar (identical component on every page) ── */
+.site-nav {
+  display: flex; flex-wrap: wrap; gap: .5rem;
+  padding: .75rem 2.5rem;
+  background: var(--surface-2);
+  border-bottom: 1px solid var(--border);
+}
+.btn-link {
+  display: inline-flex; align-items: center; gap: .35rem;
+  padding: .32rem .9rem; border-radius: 999px;
+  font-family: var(--mono); font-size: .72rem; font-weight: 600;
+  background: var(--indigo-lt); border: 1px solid var(--indigo-mid); color: var(--indigo);
+  text-decoration: none; transition: background .14s, box-shadow .14s; letter-spacing: .03em;
+}
+.btn-link:hover { background: #dde2fb; }
+.btn-link.green   { background: var(--emerald-lt); border-color: var(--emerald-mid); color: var(--emerald); }
+.btn-link.green:hover   { background: #d7f8ea; }
+.btn-link.blue    { background: var(--blue-lt);    border-color: var(--blue-mid);    color: var(--blue); }
+.btn-link.blue:hover    { background: #dee9fd; }
+.btn-link.amber   { background: var(--amber-lt);   border-color: var(--amber-mid);   color: var(--amber); }
+.btn-link.amber:hover   { background: #fef3c7; }
+.btn-link.violet  { background: var(--violet-lt);  border-color: var(--violet-mid);  color: var(--violet); }
+.btn-link.violet:hover  { background: #ede7fd; }
+.btn-link.navy    { background: var(--navy-lt, #eef1f8); border-color: var(--navy-mid, #c9d0e3); color: var(--navy); }
+.btn-link.navy:hover    { background: #e2e6f2; }
+.btn-link.is-active { box-shadow: 0 0 0 1px currentColor inset; font-weight: 700; }
 .hdr-badge {
   font-size: .64rem;
   font-weight: 600;
@@ -497,6 +535,7 @@ table { min-width: 640px; }
     flex-direction: column;
     align-items: stretch;
   }
+  .site-nav { padding: .65rem 1.1rem; }
   .date-pill { align-self: flex-start; margin-top: .6rem; }
 
   .csv-bar { padding: .55rem 1.1rem; }
@@ -576,7 +615,37 @@ Chart.defaults.color       = "#5a6282";
 """
 
 
-def _html_head(title: str, accent1: str, accent2: str) -> str:
+def _site_nav(active: str, date_str: str) -> str:
+    """
+    Shared cross-page nav bar — identical on every generated dashboard page
+    (and mirrored by the nav-tabs on the tool pages) so a visitor can jump
+    to Home or any other dashboard from wherever they land.
+
+    `active` is one of: "momentum", "elite", "volume", "rocket".
+    `date_str` is the scan date in YYYYMMDD form (dashboards for the same
+    date live side-by-side in the same folder, so links are relative).
+    """
+    def _link(key, href, cls, label):
+        active_cls = " is-active" if key == active else ""
+        return f'<a href="{href}" class="btn-link {cls}{active_cls}">{label}</a>'
+
+    links = "".join([
+        _link("momentum", f"dashboard_{date_str}.html",        "indigo",  "📊 Momentum"),
+        _link("elite",    f"elite_dashboard_{date_str}.html",   "green",   "⚡ Elite"),
+        _link("volume",   f"volume_dashboard_{date_str}.html",  "blue",    "🔵 Volume"),
+        _link("rocket",   f"rocket_dashboard_{date_str}.html",  "amber",   "🚀 Rocket"),
+    ])
+    return f"""
+<nav class="site-nav">
+  <a href="../index.html" class="btn-link navy">🏠 Home</a>
+  {links}
+  <a href="../position-size.html" class="btn-link violet">📐 Position Size</a>
+  <a href="../position-tracker.html" class="btn-link navy">📈 Position Tracker</a>
+</nav>"""
+
+
+def _html_head(title: str, accent1: str, accent2: str, active: str | None = None, date_str: str | None = None) -> str:
+    nav_html = _site_nav(active, date_str) if (active and date_str) else ""
     return f"""<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -592,6 +661,7 @@ def _html_head(title: str, accent1: str, accent2: str) -> str:
 </head>
 <body>
 <div class="topbar"></div>
+{nav_html}
 """
 
 
@@ -706,7 +776,7 @@ def build_passing_dashboard(
                 if str(r.get("symbol","")).replace(".NS","") not in known)
 
     html  = _html_head(f"Alpha Momentum — Passing Stocks — {date_display}",
-                       "var(--indigo)", "var(--blue)")
+                       "var(--indigo)", "var(--blue)", active="momentum", date_str=date_str)
     html += _csv_bar_passing(date_str)
     html += f"""
 <header>
@@ -947,7 +1017,7 @@ def build_passing_ema10_dashboard(
                 if str(r.get("symbol","")).replace(".NS","") not in known)
 
     html  = _html_head(f"Alpha Momentum — Elite Stocks — {date_display}",
-                       "var(--emerald)", "var(--blue)")
+                       "var(--emerald)", "var(--blue)", active="elite", date_str=date_str)
     html += _csv_bar_elite(date_str)
     html += f"""
 <header>
@@ -1179,7 +1249,7 @@ def build_volume_action_dashboard(
                 if str(r.get("symbol","")).replace(".NS","") not in known)
 
     html  = _html_head(f"Alpha Momentum — Volume Action — {date_display}",
-                       "var(--blue)", "var(--indigo)")
+                       "var(--blue)", "var(--indigo)", active="volume", date_str=date_str)
     html += f"""
 <header>
   <div class="hdr-left">
@@ -1339,7 +1409,7 @@ def build_rocket_dashboard(
     hit_rate = f"{100*n_rocket/n_passing:.1f}%" if n_passing > 0 else "N/A"
 
     html  = _html_head(f"Alpha Momentum — Rocket Stocks — {date_display}",
-                       "var(--amber)", "var(--red)")
+                       "var(--amber)", "var(--red)", active="rocket", date_str=date_str)
     html += f"""
 <header>
   <div class="hdr-left">
@@ -1446,13 +1516,13 @@ def build_main_index(
 <link href="{_GOOGLE_FONTS}" rel="stylesheet"/>
 <style>
 :root {{
-  --bg:#f7f8fc; --surface:#fff; --border:#e2e6f0;
-  --text:#0f1629; --muted:#5a6282;
-  --sans:'Outfit',system-ui,sans-serif; --mono:'DM Mono',monospace;
+  --bg:#ffffff; --surface:#fff; --border:#e5e8f0;
+  --text:#0d1426; --muted:#5b6178;
+  --sans:'Outfit',system-ui,-apple-system,sans-serif; --mono:'DM Mono','SF Mono','Courier New',monospace;
 }}
 *,*::before,*::after{{box-sizing:border-box;margin:0;padding:0}}
 body{{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:100vh;padding:2.5rem}}
-.topbar{{height:3px;background:linear-gradient(90deg,#4f46e5,#06b6d4);margin:-2.5rem -2.5rem 2rem;}}
+.topbar{{height:3px;background:linear-gradient(90deg,#0f1b3d 0%,#4f46e5 55%,#059669 100%);margin:-2.5rem -2.5rem 2rem;}}
 h1{{font-size:1.7rem;font-weight:700;letter-spacing:-.03em;margin-bottom:.35rem}}
 .sub{{color:var(--muted);font-size:.85rem;margin-bottom:2rem;font-family:var(--mono)}}
 .grid{{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:1rem}}
