@@ -1,28 +1,32 @@
 name: Update Live Prices
-
 on:
   schedule:
-    # Every 5 minutes. GitHub's scheduler can run a little late under load,
-    # but this is fine for a 5-min refresh use case.
-    - cron: "*/5 * * * *"
+    # Runs every 15 minutes, 9:15 AM – 4:00 PM IST (NSE market hours), Mon–Fri.
+    # GitHub Actions cron is UTC-only, and IST is UTC+5:30, so the quarter-hour
+    # marks land 15 minutes off the UTC hour boundary — that's why this is split
+    # into three lines instead of one clean "*/15" expression:
+    #   1) 09:15 IST  = 03:45 UTC  (market open — only the :45 mark)
+    #   2) 09:30–15:45 IST = 04:00–09:45 UTC (all four quarters, every hour)
+    #   3) 16:00 IST  = 10:30 UTC  (market close — only :00/:15/:30 marks)
+    - cron: "45 3 * * 1-5"
+    - cron: "0,15,30,45 4-9 * * 1-5"
+    - cron: "0,15,30 10 * * 1-5"
+    # GitHub's scheduler can run a little late under load, but this is fine
+    # for a 15-min refresh use case.
   workflow_dispatch: {}   # lets you trigger it manually from the Actions tab
-
 jobs:
   update-prices:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
-
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: "20"
-
       - name: Install dependencies
         working-directory: scripts
         run: npm install
-
       - name: Run price update
         working-directory: scripts
         env:
