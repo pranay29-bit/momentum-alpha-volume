@@ -20,6 +20,11 @@ let unsubOpen = null;
 let unsubBooked = null;
 let activeTab = "open"; // "open" | "booked"
 
+// Column sorting state for the Open Positions / Booked Positions tables.
+// dir: 1 = ascending, -1 = descending. key: null = original (insertion) order.
+let openSort = { key: null, dir: -1 };
+let bookedSort = { key: null, dir: -1 };
+
 const loginBtn = document.getElementById("loginBtn");
 const settingsDisplay = document.getElementById("settingsDisplay");
 const tabOpenBtn = document.getElementById("tabOpenBtn");
@@ -143,12 +148,15 @@ function renderAll() {
   const tbody = document.getElementById("positionsTable");
   tbody.innerHTML = "";
 
-  if (positions.length === 0) {
+  const rows = sortRows(positions, openSort.key, openSort.dir, openSortValue);
+
+  if (rows.length === 0) {
     tbody.innerHTML = `<tr><td colspan="12"><div class="empty-state"><span class="icon">📭</span>No open positions yet — add one from the Position Size Calculator.</div></td></tr>`;
   } else {
-    positions.forEach(renderRow);
+    rows.forEach(renderRow);
   }
   updateSummary();
+  updateSortIndicators("open");
 }
 
 function metrics(entry, riskPerShare, qty, currentPrice) {
@@ -172,6 +180,71 @@ function pnlClass(value) {
   if (value < -0.001) return "pnl-neg";
   return "pnl-flat";
 }
+
+// ── Column sorting (P&L %, R Multiple, Portfolio Impact) ─────────────────────
+
+function openSortValue(p, key) {
+  const { pnlPct, rMultiple, impactPct } = positionMetrics(p);
+  if (key === "pnlPct") return pnlPct;
+  if (key === "rMultiple") return rMultiple;
+  if (key === "impactPct") return impactPct;
+  return null;
+}
+
+function bookedSortValue(p, key) {
+  if (key === "pnlPct") return Number(p.pnlPct);
+  if (key === "rMultiple") return Number(p.rMultiple);
+  if (key === "impactPct") return Number(p.impactPct);
+  return null;
+}
+
+function sortRows(arr, key, dir, valueFn) {
+  if (!key) return arr;
+  return arr
+    .map((item, idx) => ({ item, idx, val: valueFn(item, key) }))
+    .sort((a, b) => {
+      const aBad = a.val === null || a.val === undefined || Number.isNaN(a.val);
+      const bBad = b.val === null || b.val === undefined || Number.isNaN(b.val);
+      if (aBad && bBad) return a.idx - b.idx;      // both unknown — keep original order
+      if (aBad) return 1;                           // unknown values always sort last
+      if (bBad) return -1;
+      if (a.val === b.val) return a.idx - b.idx;    // stable tie-break
+      return dir * (a.val - b.val);
+    })
+    .map((x) => x.item);
+}
+
+function updateSortIndicators(table) {
+  const state = table === "open" ? openSort : bookedSort;
+  document.querySelectorAll(`th.sortable[data-table="${table}"]`).forEach((th) => {
+    const arrow = th.querySelector(".sort-arrow");
+    if (th.dataset.key === state.key) {
+      arrow.textContent = state.dir === 1 ? "▲" : "▼";
+      th.classList.add("sorted");
+    } else {
+      arrow.textContent = "";
+      th.classList.remove("sorted");
+    }
+  });
+}
+
+document.querySelectorAll("th.sortable").forEach((th) => {
+  th.addEventListener("click", () => {
+    const table = th.dataset.table;
+    const key = th.dataset.key;
+    const state = table === "open" ? openSort : bookedSort;
+
+    if (state.key === key) {
+      state.dir *= -1;          // clicking the same column flips direction
+    } else {
+      state.key = key;
+      state.dir = -1;           // new column — start with highest value first
+    }
+
+    if (table === "open") renderAll();
+    else renderBooked();
+  });
+});
 
 function formatINR(n) {
   const sign = n < 0 ? "-" : "";
@@ -373,12 +446,15 @@ function renderBooked() {
   const tbody = document.getElementById("bookedTable");
   tbody.innerHTML = "";
 
-  if (bookedPositions.length === 0) {
+  const rows = sortRows(bookedPositions, bookedSort.key, bookedSort.dir, bookedSortValue);
+
+  if (rows.length === 0) {
     tbody.innerHTML = `<tr><td colspan="13"><div class="empty-state"><span class="icon">📒</span>No booked trades yet — click ✅ on an open position to log it here once closed.</div></td></tr>`;
   } else {
-    bookedPositions.forEach(renderBookedRow);
+    rows.forEach(renderBookedRow);
   }
   updateBookedSummary();
+  updateSortIndicators("booked");
 }
 
 function holdingDays(p) {
