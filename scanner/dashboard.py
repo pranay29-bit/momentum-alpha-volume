@@ -1672,7 +1672,7 @@ def build_industry_drilldown(
 <div class="indv-section" id="indv-section">
   <div class="indv-titlebar">
     <div class="indv-titlewrap">
-      <div class="indv-eyebrow"><span class="indv-dot"></span>MOMENTUM UNIVERSE</div>
+      <div class="indv-eyebrow" style="color:var(--blue)"><span class="indv-dot" style="background:var(--blue);box-shadow:0 0 0 3px var(--blue-lt)"></span>MOMENTUM UNIVERSE</div>
       <h2 class="indv-heading">Industry Breakdown</h2>
       <p class="indv-sub">{subtitle}</p>
     </div>
@@ -1755,7 +1755,7 @@ def build_industry_drilldown(
 <div class="indv-section" id="indv-section">
   <div class="indv-titlebar">
     <div class="indv-titlewrap">
-      <div class="indv-eyebrow"><span class="indv-dot"></span>MOMENTUM UNIVERSE</div>
+      <div class="indv-eyebrow" style="color:var(--blue)"><span class="indv-dot" style="background:var(--blue);box-shadow:0 0 0 3px var(--blue-lt)"></span>MOMENTUM UNIVERSE</div>
       <h2 class="indv-heading">Industry Breakdown</h2>
       <p class="indv-sub">{subtitle}</p>
     </div>
@@ -1764,17 +1764,17 @@ def build_industry_drilldown(
 
   <div class="indv-card">
     <div class="indv-kpis">
-      <div class="indv-kpi" style="--accent:var(--indigo)">
+      <div class="indv-kpi" style="--accent:var(--indigo);--accent-lt:var(--indigo-lt);--accent-mid:var(--indigo-mid)">
         <div class="indv-kpi-lbl">Stocks Passing</div>
         <div class="indv-kpi-val">{n_stocks}</div>
         <div class="indv-kpi-hint">{date_display}</div>
       </div>
-      <div class="indv-kpi" style="--accent:var(--blue)">
+      <div class="indv-kpi" style="--accent:var(--blue);--accent-lt:var(--blue-lt);--accent-mid:var(--blue-mid)">
         <div class="indv-kpi-lbl">Industry Groups</div>
         <div class="indv-kpi-val">{n_groups}</div>
         <div class="indv-kpi-hint">represented today</div>
       </div>
-      <div class="indv-kpi" style="--accent:var(--emerald)">
+      <div class="indv-kpi" style="--accent:var(--emerald);--accent-lt:var(--emerald-lt);--accent-mid:var(--emerald-mid)">
         <div class="indv-kpi-lbl">Top Group</div>
         <div class="indv-kpi-val" title="{html.escape(top_group)}">{html.escape(top_group_disp)}</div>
         <div class="indv-kpi-hint">{len(top_group_recs)} stock{'s' if len(top_group_recs) != 1 else ''}</div>
@@ -1807,9 +1807,12 @@ _INDV_STYLE = """
            box-shadow:var(--shadow-sm);overflow:hidden;}
 
 .indv-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));border-bottom:1px solid var(--border);}
-.indv-kpi{padding:.95rem 1.35rem;border-right:1px solid var(--border);position:relative;min-width:0;}
+.indv-kpi{padding:.95rem 1.35rem;border-right:1px solid var(--border);position:relative;min-width:0;
+          background:linear-gradient(120deg,var(--accent-mid) -60%,var(--accent-lt) 40%,var(--surface) 100%);
+          border-left:3px solid var(--accent);}
+.indv-kpi:first-child{border-left:none;}
 .indv-kpi:last-child{border-right:none;}
-.indv-kpi::after{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--accent);}
+.indv-kpi::after{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--accent);}
 .indv-kpi-lbl{font-family:var(--mono);font-size:.6rem;font-weight:600;text-transform:uppercase;
               letter-spacing:.1em;color:var(--muted);margin-bottom:.35rem;}
 .indv-kpi-val{font-family:var(--sans);font-size:1.15rem;font-weight:700;letter-spacing:-.02em;
@@ -2013,7 +2016,7 @@ def build_minervini_ranking(passing_df: "pd.DataFrame", date_display: str, ranke
 <div class="rank-section" id="rank-section">
   <div class="rank-titlebar">
     <div class="rank-titlewrap">
-      <div class="rank-eyebrow"><span class="rank-dot"></span>MINERVINI + O'NEIL RANKING</div>
+      <div class="rank-eyebrow" style="color:var(--amber)"><span class="rank-dot" style="background:var(--amber);box-shadow:0 0 0 3px var(--amber-lt)"></span>MINERVINI + O'NEIL RANKING</div>
       <h2 class="rank-heading">Today's Top-Ranked Setups</h2>
       <p class="rank-sub">No ranking data yet for {date_display} — runs automatically after the next scan.</p>
     </div>
@@ -2081,7 +2084,7 @@ def build_minervini_ranking(passing_df: "pd.DataFrame", date_display: str, ranke
 <div class="rank-section" id="rank-section">
   <div class="rank-titlebar">
     <div class="rank-titlewrap">
-      <div class="rank-eyebrow"><span class="rank-dot"></span>MINERVINI + O'NEIL RANKING</div>
+      <div class="rank-eyebrow" style="color:var(--amber)"><span class="rank-dot" style="background:var(--amber);box-shadow:0 0 0 3px var(--amber-lt)"></span>MINERVINI + O'NEIL RANKING</div>
       <h2 class="rank-heading">Today's Top-Ranked Setups</h2>
       <p class="rank-sub">Composite score blending Mark Minervini's SEPA/VCP with William O'Neil's CANSLIM — RS, VCP, Volume, New-High Leadership, Entry &amp; Group strength — for every stock passing the Trend Template today, market cap &ge; &#8377;1,000&nbsp;Cr &middot; {date_display}</p>
     </div>
@@ -2090,19 +2093,19 @@ def build_minervini_ranking(passing_df: "pd.DataFrame", date_display: str, ranke
 
   <div class="rank-card">
     <div class="rank-kpis">
-      <div class="rank-kpi" style="--accent:var(--indigo)">
+      <div class="rank-kpi" style="--accent:var(--indigo);--accent-lt:var(--indigo-lt);--accent-mid:var(--indigo-mid)">
         <div class="rank-kpi-lbl">Stocks Ranked</div>
         <div class="rank-kpi-val">{n_ranked}</div>
       </div>
-      <div class="rank-kpi" style="--accent:var(--blue)">
+      <div class="rank-kpi" style="--accent:var(--blue);--accent-lt:var(--blue-lt);--accent-mid:var(--blue-mid)">
         <div class="rank-kpi-lbl">Average Score</div>
         <div class="rank-kpi-val">{avg_score}</div>
       </div>
-      <div class="rank-kpi" style="--accent:var(--emerald)">
+      <div class="rank-kpi" style="--accent:var(--emerald);--accent-lt:var(--emerald-lt);--accent-mid:var(--emerald-mid)">
         <div class="rank-kpi-lbl">Top Grades</div>
         <div class="rank-kpi-val" style="font-size:1rem">{top_grades}</div>
       </div>
-      <div class="rank-kpi" style="--accent:var(--{badge_color})">
+      <div class="rank-kpi" style="--accent:var(--{badge_color});--accent-lt:var(--{badge_color}-lt);--accent-mid:var(--{badge_color}-mid)">
         <div class="rank-kpi-lbl">Market State</div>
         <div class="rank-kpi-val" style="font-size:.92rem">{badge_label}</div>
         <div class="rank-kpi-hint">score &times;{market_mult:.2f}</div>
@@ -2147,9 +2150,12 @@ _RANK_STYLE = """
 .rank-empty{text-align:center;padding:2.4rem 1rem;color:var(--muted);font-size:.83rem;font-family:var(--mono);}
 
 .rank-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));border-bottom:1px solid var(--border);}
-.rank-kpi{padding:.95rem 1.35rem;border-right:1px solid var(--border);position:relative;min-width:0;}
+.rank-kpi{padding:.95rem 1.35rem;border-right:1px solid var(--border);position:relative;min-width:0;
+          background:linear-gradient(120deg,var(--accent-mid) -60%,var(--accent-lt) 40%,var(--surface) 100%);
+          border-left:3px solid var(--accent);}
+.rank-kpi:first-child{border-left:none;}
 .rank-kpi:last-child{border-right:none;}
-.rank-kpi::after{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--accent);}
+.rank-kpi::after{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--accent);}
 .rank-kpi-lbl{font-family:var(--mono);font-size:.6rem;font-weight:600;text-transform:uppercase;
               letter-spacing:.1em;color:var(--muted);margin-bottom:.35rem;}
 .rank-kpi-val{font-family:var(--sans);font-size:1.15rem;font-weight:700;letter-spacing:-.02em;
