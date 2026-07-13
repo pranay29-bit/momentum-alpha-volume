@@ -242,6 +242,27 @@ def build_html(stats: dict) -> str:
     net_css = "green" if net > 0 else ("red" if net < 0 else "na")
     net_str = f"{net:+d}"
 
+    bias_gradients = {
+        "bullish": "linear-gradient(90deg,var(--emerald),var(--blue))",
+        "bearish": "linear-gradient(90deg,var(--red),var(--amber))",
+        "neutral": "linear-gradient(90deg,var(--amber),var(--violet))",
+    }
+    card_accent = bias_gradients.get(stats["bias"], bias_gradients["neutral"])
+
+    bias_glows = {
+        "bullish": "0 20px 45px -22px rgba(5,150,105,.45)",
+        "bearish": "0 20px 45px -22px rgba(220,38,38,.45)",
+        "neutral": "0 20px 45px -22px rgba(180,83,9,.4)",
+    }
+    card_glow = bias_glows.get(stats["bias"], bias_glows["neutral"])
+
+    bias_dot = {
+        "bullish": "var(--emerald)", "bearish": "var(--red)", "neutral": "var(--amber)",
+    }.get(stats["bias"], "var(--blue)")
+    bias_dot_lt = {
+        "bullish": "var(--emerald-lt)", "bearish": "var(--red-lt)", "neutral": "var(--amber-lt)",
+    }.get(stats["bias"], "var(--blue-lt)")
+
     chart_data = _json.dumps(stats.get("chart", []))
     table_rows = "".join(
         f"<tr><td>{r['date']}</td>"
@@ -253,6 +274,7 @@ def build_html(stats: dict) -> str:
 
     return f"""
 <div class="sentiment-section">
+  <div class="hub-eyebrow" style="color:{bias_dot}"><span class="hub-dot" style="background:{bias_dot};box-shadow:0 0 0 3px {bias_dot_lt}"></span>MARKET BREADTH</div>
   <div style="display:flex;align-items:center;gap:1rem;margin-bottom:.25rem;">
     <h2 class="section-title" style="margin-bottom:0">Net New Highs</h2>
     <span class="overall-badge {bias_css}">{bias_label}</span>
@@ -263,7 +285,7 @@ def build_html(stats: dict) -> str:
     smoothed with a {SMA_WINDOW}-day SMA.
   </p>
 
-  <div class="sentiment-card" style="margin-bottom:1.1rem;">
+  <div class="sentiment-card" style="margin-bottom:1.1rem;--card-accent:{card_accent};box-shadow:var(--shadow-sm),{card_glow};">
     <div class="sentiment-card-header">
       <span class="sentiment-index-name">Net New Highs &nbsp;
         <strong style="color:{'var(--emerald)' if net>=0 else 'var(--red)'}">{net_str}</strong>
