@@ -428,16 +428,16 @@ def _update_index(
         _elite_link = _volume_link = _rocket_link = today_dashboard_link
 
     hub_cards = [
-        dict(icon="📊", accent="indigo", title="Momentum Dashboard",
+        dict(icon="📊", accent="indigo", accent2="blue", title="Momentum Dashboard",
              desc="Every stock passing all 8 Minervini trend-template conditions today.",
              link=today_dashboard_link),
-        dict(icon="⚡", accent="emerald", title="Elite Dashboard",
+        dict(icon="⚡", accent="emerald", accent2="blue", title="Elite Dashboard",
              desc="Momentum passes also trading above EMA10 — the highest-conviction setups.",
              link=_elite_link),
-        dict(icon="🔵", accent="blue", title="Volume Action",
+        dict(icon="🔵", accent="blue", accent2="indigo", title="Volume Action",
              desc="Pocket pivots and unusual volume signals across the NSE universe.",
              link=_volume_link),
-        dict(icon="🚀", accent="amber", title="Rocket Stocks",
+        dict(icon="🚀", accent="amber", accent2="red", title="Rocket Stocks",
              desc="Momentum passes coiling inside a tight daily inside-bar, ready to fire.",
              link=_rocket_link),
     ]
@@ -445,7 +445,7 @@ def _update_index(
     hub_cards_html = ""
     for c in hub_cards:
         hub_cards_html += f"""
-      <a class="hub-card" href="{c['link']}" style="--accent:var(--{c['accent']});--accent-lt:var(--{c['accent']}-lt);--accent-mid:var(--{c['accent']}-mid)">
+      <a class="hub-card" href="{c['link']}" style="--accent:var(--{c['accent']});--accent2:var(--{c['accent2']});--accent-lt:var(--{c['accent']}-lt);--accent-mid:var(--{c['accent']}-mid)">
         <div class="hub-icon">{c['icon']}</div>
         <div class="hub-title">{c['title']}</div>
         <div class="hub-desc">{c['desc']}</div>
@@ -467,10 +467,10 @@ def _update_index(
 
     # ── Tools — kept visually separate; these are utilities, not scan dashboards ──
     tool_cards = [
-        dict(icon="📐", accent="violet", title="Position Size Calculator",
+        dict(icon="📐", accent="violet", accent2="indigo", title="Position Size Calculator",
              desc="Size your next trade against account risk and stop-loss distance.",
              link="position-size.html"),
-        dict(icon="📈", accent="navy", title="Position Tracker",
+        dict(icon="📈", accent="navy", accent2="indigo", title="Position Tracker",
              desc="Track open positions, targets, and stops in one place.",
              link="position-tracker.html"),
     ]
@@ -478,7 +478,7 @@ def _update_index(
     tool_cards_html = ""
     for c in tool_cards:
         tool_cards_html += f"""
-      <a class="hub-card tool-card" href="{c['link']}" style="--accent:var(--{c['accent']});--accent-lt:var(--{c['accent']}-lt);--accent-mid:var(--{c['accent']}-mid)">
+      <a class="hub-card tool-card" href="{c['link']}" style="--accent:var(--{c['accent']});--accent2:var(--{c['accent2']});--accent-lt:var(--{c['accent']}-lt);--accent-mid:var(--{c['accent']}-mid)">
         <div class="hub-icon">{c['icon']}</div>
         <div class="hub-title">{c['title']}</div>
         <div class="hub-desc">{c['desc']}</div>
@@ -489,7 +489,7 @@ def _update_index(
 <div class="hub-section tools-section">
   <div class="hub-header">
     <div>
-      <div class="hub-eyebrow"><span class="hub-dot" style="background:var(--violet);box-shadow:0 0 0 3px var(--violet-lt)"></span>TOOLS</div>
+      <div class="hub-eyebrow" style="color:var(--violet)"><span class="hub-dot" style="background:var(--violet);box-shadow:0 0 0 3px var(--violet-lt)"></span>TOOLS</div>
       <h2 class="hub-heading">Trade planning &amp; tracking</h2>
       <p class="hub-sub">Utilities to size and manage your trades — not scan results</p>
     </div>
@@ -498,9 +498,10 @@ def _update_index(
   </div>
 </div>"""
 
-    # ── Build Market Sentiment HTML block ─────────────────────────────────────
-    sentiment_html = _build_sentiment_html(sentiment or {})
-    nnh_html       = nnh.build_html(nnh_stats or {})
+    # ── Market Sentiment is currently not shown on the homepage (removed for
+    #    now — NNH/Market Breadth leads instead). _build_sentiment_html() is
+    #    still defined below so it's a one-line change to bring it back.
+    nnh_html = nnh.build_html(nnh_stats or {})
 
     # ── Shared cross-page nav bar — identical component on every page ─────────
     site_nav_html = f"""
@@ -539,20 +540,30 @@ def _update_index(
   *,*::before,*::after{{box-sizing:border-box;margin:0;padding:0;}}
   html{{font-size:14px;-webkit-font-smoothing:antialiased;}}
   body{{background:var(--bg);color:var(--text);font-family:var(--sans);line-height:1.6;}}
-  .topbar{{height:3px;background:linear-gradient(90deg,var(--navy) 0%,var(--indigo) 55%,var(--emerald) 100%);}}
+  .topbar{{height:5px;background:linear-gradient(90deg,var(--navy) 0%,var(--indigo) 40%,var(--blue) 65%,var(--emerald) 100%);}}
   header{{background:var(--surface);border-bottom:1px solid var(--border);
-          padding:1.65rem 2.5rem;text-align:center;}}
+          padding:1.65rem 2.5rem;text-align:center;position:relative;overflow:hidden;}}
+  header::before{{content:'';position:absolute;top:-65%;left:50%;transform:translateX(-50%);
+                  width:900px;height:260px;pointer-events:none;
+                  background:
+                    radial-gradient(ellipse 260px 180px at 20% 60%,var(--indigo-lt) 0%,rgba(255,255,255,0) 72%),
+                    radial-gradient(ellipse 260px 180px at 50% 40%,var(--emerald-lt) 0%,rgba(255,255,255,0) 72%),
+                    radial-gradient(ellipse 260px 180px at 80% 60%,var(--blue-lt) 0%,rgba(255,255,255,0) 72%);
+                  opacity:.9;}}
   .header-row{{display:flex;align-items:center;justify-content:space-between;
-              gap:1.5rem;flex-wrap:wrap;text-align:left;}}
+              gap:1.5rem;flex-wrap:wrap;text-align:left;position:relative;}}
   .header-titles{{flex:1;min-width:220px;text-align:center;}}
   .top-buttons{{display:flex;gap:.65rem;flex-wrap:wrap;}}
   .brand-name-idx{{font-family:var(--mono);font-size:.66rem;font-weight:600;
                    letter-spacing:.16em;text-transform:uppercase;color:var(--navy);
-                   display:flex;align-items:center;justify-content:center;gap:.5rem;margin-bottom:.7rem;}}
+                   display:flex;align-items:center;justify-content:center;gap:.5rem;margin-bottom:.7rem;
+                   position:relative;}}
   .brand-dot{{width:7px;height:7px;border-radius:50%;background:var(--emerald);box-shadow:0 0 0 3px var(--emerald-lt);}}
-  header h1{{font-family:var(--sans);font-size:clamp(1.45rem,2.6vw,1.9rem);font-weight:700;
-             letter-spacing:-.025em;color:var(--text);margin-bottom:.22rem;}}
-  header p{{color:var(--muted);font-size:.82rem;font-family:var(--mono);}}
+  header h1{{font-family:var(--sans);font-size:clamp(1.45rem,2.6vw,1.9rem);font-weight:800;
+             letter-spacing:-.025em;margin-bottom:.22rem;position:relative;
+             background:linear-gradient(90deg,var(--navy) 0%,var(--indigo) 50%,var(--emerald) 100%);
+             -webkit-background-clip:text;background-clip:text;color:transparent;}}
+  header p{{color:var(--muted);font-size:.82rem;font-family:var(--mono);position:relative;}}
 
   .container{{max-width:1120px;margin:2rem auto;padding:0 1.5rem;}}
   h2.section-title{{font-family:var(--sans);font-size:1.05rem;font-weight:700;
@@ -570,18 +581,22 @@ def _update_index(
   .hub-grid{{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:1rem;}}
   .hub-card{{
     position:relative;display:flex;flex-direction:column;gap:.6rem;
-    background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
+    background:linear-gradient(165deg,var(--accent-mid) -40%,var(--accent-lt) 15%,var(--surface) 78%);
+    border:1px solid var(--border);border-radius:var(--radius);
     padding:1.35rem 1.4rem 1.25rem;box-shadow:var(--shadow-sm);
     text-decoration:none;color:inherit;overflow:hidden;
     transition:transform .18s ease,box-shadow .18s ease,border-color .18s ease;
   }}
-  .hub-card::before{{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--accent);}}
-  .hub-card:hover{{transform:translateY(-3px);box-shadow:var(--shadow-md);border-color:var(--accent-mid);}}
+  .hub-card::before{{content:'';position:absolute;top:0;left:0;right:0;height:4px;
+                     background:linear-gradient(90deg,var(--accent),var(--accent2,var(--accent)));}}
+  .hub-card:hover{{transform:translateY(-3px);border-color:var(--accent-mid);
+                   box-shadow:var(--shadow-sm),0 14px 30px -14px var(--accent);}}
   .hub-tag{{position:absolute;top:.9rem;right:1rem;font-family:var(--mono);font-size:.56rem;font-weight:700;
            letter-spacing:.08em;color:var(--subtle);background:var(--surface-2);border:1px solid var(--border);
            border-radius:999px;padding:.15rem .5rem;}}
   .hub-icon{{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;
-            font-size:1.1rem;background:var(--accent-lt);}}
+            font-size:1.1rem;background:linear-gradient(135deg,var(--accent-lt),var(--accent-mid));
+            box-shadow:0 3px 10px -3px var(--accent-mid);}}
   .hub-title{{font-family:var(--sans);font-weight:700;font-size:.95rem;letter-spacing:-.01em;color:var(--text);}}
   .hub-desc{{font-family:var(--sans);font-size:.78rem;color:var(--muted);line-height:1.5;flex:1;}}
   .hub-cta{{font-family:var(--mono);font-size:.67rem;font-weight:600;letter-spacing:.03em;color:var(--accent);
@@ -661,11 +676,13 @@ def _update_index(
           color:var(--subtle);border-top:1px solid var(--border);
           background:var(--surface);letter-spacing:.04em;margin-top:3rem;}}
 
-  /* ── Market Sentiment ── */
+  /* ── Net New Highs (uses the same .sentiment-card component) ── */
   .sentiment-section{{max-width:1120px;margin:0 auto 2rem;padding:0 1.5rem;}}
   .sentiment-grid{{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:1.1rem;margin-top:.85rem;}}
   .sentiment-card{{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
-                   padding:1.3rem 1.5rem;box-shadow:var(--shadow-sm);}}
+                   padding:1.3rem 1.5rem;box-shadow:var(--shadow-sm);position:relative;overflow:hidden;}}
+  .sentiment-card::before{{content:'';position:absolute;top:0;left:0;right:0;height:4px;
+                           background:var(--card-accent,linear-gradient(90deg,var(--indigo),var(--blue)));}}
   .sentiment-card-header{{display:flex;align-items:center;justify-content:space-between;margin-bottom:.85rem;}}
   .sentiment-index-name{{font-weight:700;font-size:.9rem;letter-spacing:-.01em;}}
   .overall-badge{{display:inline-block;padding:.22rem .8rem;border-radius:999px;
@@ -737,7 +754,7 @@ def _update_index(
 
 {site_nav_html}
 
-{sentiment_html}
+{nnh_html}
 
 {hub_html}
 
@@ -746,8 +763,6 @@ def _update_index(
 {ranked_html}
 
 {industry_html}
-
-{nnh_html}
 
 <div class="container">
   <h2 class="section-title">Scan History</h2>
