@@ -140,7 +140,7 @@ addBtn.onclick = async () => {
     return;
   }
 
-  const symbol = symbolInput.value.trim();
+  const symbol = symbolInput.value.trim().toUpperCase();
   if (!symbol) {
     alert("Enter a symbol");
     return;
