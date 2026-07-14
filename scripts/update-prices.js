@@ -36,6 +36,19 @@ const db = admin.firestore();
 let cachedCrumb = null;
 let cachedCookie = null;
 
+// Positions are stored with whatever the user typed into the Position Size
+// Calculator (e.g. "PGIL", "reliance") — clean and suffix-free, which is
+// what the UI displays. Yahoo Finance, however, requires the exchange
+// suffix for NSE-listed tickers (PGIL.NS, not PGIL) or it 404s. Rather than
+// changing what's stored/displayed everywhere else in the app, normalize
+// only at the point of the Yahoo fetch: uppercase, and append ".NS" unless
+// the symbol already carries a recognized exchange suffix (so a position
+// someone deliberately entered as "SOMETICKER.BO" for BSE is left alone).
+function toYahooSymbol(symbol) {
+  const s = symbol.trim().toUpperCase();
+  return /\.(NS|BO)$/.test(s) ? s : `${s}.NS`;
+}
+
 async function getCrumbAndCookie() {
   if (cachedCrumb && cachedCookie) return { crumb: cachedCrumb, cookie: cachedCookie };
 
@@ -61,21 +74,22 @@ async function getCrumbAndCookie() {
 
 async function fetchLivePrice(symbol) {
   const { crumb, cookie } = await getCrumbAndCookie();
+  const yahooSymbol = toYahooSymbol(symbol);
 
-  const url = `https://query2.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}` +
+  const url = `https://query2.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(yahooSymbol)}` +
               `?interval=1m&crumb=${encodeURIComponent(crumb)}`;
 
   const res = await fetch(url, {
     headers: { "User-Agent": "Mozilla/5.0", "Cookie": cookie }
   });
 
-  if (!res.ok) throw new Error(`Yahoo returned HTTP ${res.status} for ${symbol}`);
+  if (!res.ok) throw new Error(`Yahoo returned HTTP ${res.status} for ${yahooSymbol}`);
 
   const data = await res.json();
   const price = data?.chart?.result?.[0]?.meta?.regularMarketPrice;
 
   if (typeof price !== "number" || price <= 0) {
-    throw new Error(`No valid price in response for ${symbol}`);
+    throw new Error(`No valid price in response for ${yahooSymbol}`);
   }
 
   return price;
