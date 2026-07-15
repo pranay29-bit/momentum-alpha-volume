@@ -1,0 +1,1574 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Alpha Momentum — Rocket Stocks — 15 Jul 2026</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+:root { --ACCENT1:var(--amber); --ACCENT2:var(--red); }
+
+:root {
+  /* Surfaces */
+  --bg:         #ffffff;
+  --surface:    #ffffff;
+  --surface-2:  #fbfbfe;
+  --surface2:   #fbfbfe;
+  --surface3:   #f1f3f9;
+  --border:     #e5e8f0;
+  --border-2:   #d4d9e8;
+  --border2:    #d4d9e8;
+
+  /* Text */
+  --text:       #0d1426;
+  --muted:      #5b6178;
+  --subtle:     #9499b3;
+
+  /* Brand accents */
+  --navy:       #0f1b3d;
+  --navy-2:     #16234a;
+  --navy-lt:    #eef1f8;
+  --navy-mid:   #c9d0e3;
+  --indigo:     #4f46e5;
+  --indigo-lt:  #eef0fd;
+  --indigo-mid: #c7d2fe;
+  --emerald:    #059669;
+  --emerald-lt: #ecfdf5;
+  --emerald-mid:#a7f3d0;
+  --blue:       #2563eb;
+  --blue-lt:    #eff6ff;
+  --blue-mid:   #bfdbfe;
+  --amber:      #b45309;
+  --amber-lt:   #fffbeb;
+  --amber-mid:  #fde68a;
+  --red:        #dc2626;
+  --red-lt:     #fef2f2;
+  --red-mid:    #fca5a5;
+  --violet:     #7c3aed;
+  --violet-lt:  #f5f3ff;
+  --violet-mid: #ddd6fe;
+
+  /* NEW badge */
+  --new-bg:     #fdf4ff;
+  --new-border: #d946ef;
+  --new-text:   #a21caf;
+  --new-row:    #fdf4ff;
+
+  /* Type — identical stack used site-wide (homepage, all dashboards, tools) */
+  --sans:  'Outfit', system-ui, -apple-system, sans-serif;
+  --mono:  'DM Mono', 'SF Mono', 'Courier New', monospace;
+
+  /* Radii */
+  --r:   8px;
+  --rl:  12px;
+  --radius:    12px;
+  --radius-sm: 8px;
+  --shadow-sm: 0 1px 2px rgba(15,23,42,.04);
+  --shadow-md: 0 4px 16px -4px rgba(15,23,42,.08), 0 1px 3px rgba(15,23,42,.04);
+  --rxl: 16px;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 14px; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--sans);
+  line-height: 1.6;
+  min-height: 100vh;
+}
+a { color: inherit; text-decoration: none; }
+
+/* ── Topbar ── */
+.topbar {
+  height: 3px;
+  background: linear-gradient(90deg, var(--ACCENT1) 0%, var(--ACCENT2) 100%);
+}
+
+/* ── Header ── */
+header {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 1.6rem 2.5rem;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+.hdr-left { display: flex; flex-direction: column; gap: .2rem; }
+.brand {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  margin-bottom: .25rem;
+}
+.brand-dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+}
+.brand-name {
+  font-family: var(--mono);
+  font-size: .65rem;
+  font-weight: 500;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+header h1 {
+  font-size: clamp(1.35rem, 2.5vw, 1.9rem);
+  font-weight: 700;
+  letter-spacing: -.03em;
+  line-height: 1.1;
+  color: var(--text);
+}
+.hdr-sub {
+  font-size: .8rem;
+  color: var(--muted);
+  margin-top: .15rem;
+}
+.badge-row { display: flex; gap: .45rem; margin-top: .5rem; flex-wrap: wrap; }
+
+/* ── Shared cross-page nav bar (identical component on every page) ── */
+.site-nav {
+  display: flex; flex-wrap: wrap; gap: .5rem;
+  padding: .75rem 2.5rem;
+  background: var(--surface-2);
+  border-bottom: 1px solid var(--border);
+}
+.btn-link {
+  display: inline-flex; align-items: center; gap: .35rem;
+  padding: .32rem .9rem; border-radius: 999px;
+  font-family: var(--mono); font-size: .72rem; font-weight: 600;
+  background: var(--indigo-lt); border: 1px solid var(--indigo-mid); color: var(--indigo);
+  text-decoration: none; transition: background .14s, box-shadow .14s; letter-spacing: .03em;
+}
+.btn-link:hover { background: #dde2fb; }
+.btn-link.green   { background: var(--emerald-lt); border-color: var(--emerald-mid); color: var(--emerald); }
+.btn-link.green:hover   { background: #d7f8ea; }
+.btn-link.blue    { background: var(--blue-lt);    border-color: var(--blue-mid);    color: var(--blue); }
+.btn-link.blue:hover    { background: #dee9fd; }
+.btn-link.amber   { background: var(--amber-lt);   border-color: var(--amber-mid);   color: var(--amber); }
+.btn-link.amber:hover   { background: #fef3c7; }
+.btn-link.violet  { background: var(--violet-lt);  border-color: var(--violet-mid);  color: var(--violet); }
+.btn-link.violet:hover  { background: #ede7fd; }
+.btn-link.navy    { background: var(--navy-lt, #eef1f8); border-color: var(--navy-mid, #c9d0e3); color: var(--navy); }
+.btn-link.navy:hover    { background: #e2e6f2; }
+.btn-link.is-active { box-shadow: 0 0 0 1px currentColor inset; font-weight: 700; }
+.hdr-badge {
+  font-size: .64rem;
+  font-weight: 600;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  border-radius: 999px;
+  padding: .22rem .75rem;
+  border: 1px solid;
+}
+.date-pill {
+  font-family: var(--mono);
+  font-size: .72rem;
+  font-weight: 500;
+  padding: .4rem 1.1rem;
+  border-radius: 999px;
+  border: 1px solid;
+  white-space: nowrap;
+  letter-spacing: .04em;
+  align-self: flex-start;
+  margin-top: .25rem;
+}
+
+/* ── CSV bar ── */
+.csv-bar {
+  display: flex;
+  align-items: center;
+  gap: .6rem;
+  padding: .6rem 2.5rem;
+  background: var(--surface2);
+  border-bottom: 1px solid var(--border);
+  flex-wrap: wrap;
+}
+.csv-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: .35rem .95rem;
+  font-family: var(--mono);
+  font-size: .7rem;
+  font-weight: 500;
+  border-radius: var(--r);
+  border: 1px solid;
+  cursor: pointer;
+  transition: background .14s;
+  letter-spacing: .03em;
+}
+.csv-primary {
+  background: var(--emerald-lt);
+  border-color: var(--emerald-mid);
+  color: var(--emerald);
+}
+.csv-primary:hover { background: #d1fae5; }
+.csv-secondary {
+  background: var(--blue-lt);
+  border-color: var(--blue-mid);
+  color: var(--blue);
+}
+.csv-secondary:hover { background: #dbeafe; }
+.csv-label {
+  font-family: var(--mono);
+  font-size: .67rem;
+  color: var(--subtle);
+  margin-left: auto;
+}
+
+/* ── KPI strip ── */
+.kpi-strip {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  border-bottom: 1px solid var(--border);
+}
+.kpi {
+  background: var(--surface);
+  padding: 1.1rem 1.6rem;
+  border-right: 1px solid var(--border);
+  position: relative;
+}
+.kpi:last-child { border-right: none; }
+.kpi::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  border-radius: 0 0 2px 2px;
+  background: var(--accent);
+}
+.kpi-lbl {
+  font-size: .62rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .11em;
+  color: var(--muted);
+  margin-bottom: .35rem;
+}
+.kpi-val {
+  font-size: clamp(1.1rem, 2vw, 1.65rem);
+  font-weight: 700;
+  letter-spacing: -.02em;
+  line-height: 1;
+  color: var(--accent);
+}
+.kpi-hint {
+  font-size: .67rem;
+  color: var(--subtle);
+  margin-top: .25rem;
+}
+
+/* ── Charts area ── */
+.charts-area {
+  padding: 1.1rem 2.5rem;
+  display: grid;
+  gap: .85rem;
+}
+.chart-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--rl);
+  padding: 1.1rem 1.3rem .9rem;
+}
+.chart-lbl {
+  font-size: .62rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .11em;
+  color: var(--muted);
+  margin-bottom: .8rem;
+}
+.chart-wrap { position: relative; height: 220px; }
+
+/* ── Table section ── */
+.table-sec { padding: 0 2.5rem 3rem; }
+.tbl-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: .9rem 0 .7rem;
+  flex-wrap: wrap;
+  gap: .6rem;
+}
+.tbl-title {
+  font-size: .62rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .12em;
+  color: var(--muted);
+}
+.tbl-count { color: var(--ACCENT1); margin-left: .4rem; }
+.controls { display: flex; align-items: center; gap: .85rem; flex-wrap: wrap; }
+.search {
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-radius: var(--r);
+  color: var(--text);
+  font-family: var(--sans);
+  font-size: .82rem;
+  padding: .38rem .9rem;
+  outline: none;
+  width: 210px;
+  transition: border-color .16s, box-shadow .16s;
+}
+.search::placeholder { color: var(--subtle); }
+.search:focus {
+  border-color: var(--ACCENT1);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--ACCENT1) 12%, transparent);
+}
+.legend-row { display: flex; gap: .9rem; align-items: center; flex-wrap: wrap; }
+.leg { display: flex; align-items: center; gap: .3rem; font-size: .68rem; color: var(--muted); }
+.leg-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+
+/* ── Table ── */
+.tbl-outer {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--rl);
+  overflow: hidden;
+}
+table { width: 100%; border-collapse: collapse; font-size: .82rem; white-space: nowrap; }
+thead tr {
+  background: var(--surface2);
+  border-bottom: 1px solid var(--border);
+  position: sticky; top: 0; z-index: 2;
+}
+th {
+  font-size: .62rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .1em;
+  color: var(--muted);
+  padding: .68rem 1rem;
+  text-align: left;
+  cursor: pointer;
+  user-select: none;
+  transition: background .12s;
+  white-space: nowrap;
+}
+th:hover { background: var(--surface3); }
+th.r { text-align: right; } th.c { text-align: center; }
+th .si { margin-left: .25rem; opacity: .3; font-style: normal; font-size: .65rem; }
+th.sort-asc  .si::after { content: '▲'; opacity: 1; color: var(--ACCENT1); }
+th.sort-desc .si::after { content: '▼'; opacity: 1; color: var(--ACCENT1); }
+th:not(.sort-asc):not(.sort-desc) .si::after { content: '⇅'; }
+.srow { border-bottom: 1px solid var(--border); transition: background .1s; }
+.srow:last-child { border-bottom: none; }
+.srow:hover { background: var(--bg); }
+td { padding: .65rem 1rem; vertical-align: middle; }
+td.r { text-align: right; } td.c { text-align: center; }
+
+/* ── NEW-stock highlight row ── */
+.srow.is-new { background: var(--new-row); }
+.srow.is-new:hover { background: #fae8ff; }
+
+/* ── Symbol tags ── */
+.sym-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: .35rem;
+  font-family: var(--mono);
+  font-weight: 500;
+  font-size: .72rem;
+  padding: .2rem .6rem;
+  border-radius: 6px;
+  letter-spacing: .05em;
+  border: 1px solid;
+  transition: filter .12s;
+}
+.sym-tag:hover { filter: brightness(.93); }
+.sym-new-star {
+  font-size: .55rem;
+  background: var(--new-bg);
+  border: 1px solid var(--new-border);
+  color: var(--new-text);
+  border-radius: 999px;
+  padding: .1rem .38rem;
+  font-weight: 700;
+  letter-spacing: .04em;
+  white-space: nowrap;
+}
+
+/* ── Value pills ── */
+.pill {
+  display: inline-block;
+  font-family: var(--mono);
+  font-size: .71rem;
+  font-weight: 500;
+  padding: .18rem .55rem;
+  border-radius: 999px;
+  border: 1px solid transparent;
+}
+.pill-green  { background: var(--emerald-lt); border-color: var(--emerald-mid); color: var(--emerald); }
+.pill-red    { background: var(--red-lt);     border-color: #fca5a5;            color: var(--red); }
+.pill-amber  { background: var(--amber-lt);   border-color: var(--amber-mid);   color: var(--amber); }
+.pill-indigo { background: var(--indigo-lt);  border-color: var(--indigo-mid);  color: var(--indigo); }
+.pill-blue   { background: var(--blue-lt);    border-color: var(--blue-mid);    color: var(--blue); }
+.pill-muted  { background: var(--surface2);   border-color: var(--border2);     color: var(--muted); }
+.pill-violet { background: var(--violet-lt);  border-color: var(--violet-mid);  color: var(--violet); }
+
+/* ── Volume bar ── */
+.vol-wrap { display: flex; align-items: center; gap: .5rem; min-width: 130px; }
+.vol-bg   { flex: 1; height: 4px; background: var(--surface3); border-radius: 99px; overflow: hidden; }
+.vol-fill { height: 100%; border-radius: 99px; }
+.vol-pct  { font-family: var(--mono); font-size: .7rem; font-weight: 600; min-width: 42px; text-align: right; }
+
+/* ── IB badge ── */
+.ib-badge {
+  display: inline-block;
+  font-family: var(--mono);
+  font-size: .58rem;
+  font-weight: 600;
+  background: var(--amber-lt);
+  border: 1px solid var(--amber-mid);
+  color: var(--amber);
+  padding: .1rem .4rem;
+  border-radius: 4px;
+  margin-left: .3rem;
+  letter-spacing: .04em;
+  vertical-align: middle;
+}
+
+/* ── No-data row ── */
+.no-data {
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--muted);
+  font-size: .82rem;
+}
+
+/* ── Info callout ── */
+.callout {
+  padding: .6rem 2.5rem;
+  font-size: .78rem;
+  color: var(--muted);
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+}
+
+/* ── Footer ── */
+footer {
+  text-align: center;
+  padding: 1rem;
+  font-size: .68rem;
+  color: var(--subtle);
+  border-top: 1px solid var(--border);
+  background: var(--surface);
+  font-family: var(--mono);
+  letter-spacing: .04em;
+}
+
+/* ── Horizontal scroll wrapper for tables on small screens ── */
+.tbl-outer { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+table { min-width: 640px; }
+
+/* ── Mobile responsiveness ── */
+@media (max-width: 768px) {
+  html { font-size: 13px; }
+
+  header {
+    padding: 1.1rem 1.1rem;
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .site-nav { padding: .65rem 1.1rem; }
+  .date-pill { align-self: flex-start; margin-top: .6rem; }
+
+  .csv-bar { padding: .55rem 1.1rem; }
+  .csv-label { margin-left: 0; width: 100%; }
+
+  .charts-area { padding: .9rem 1.1rem; grid-template-columns: 1fr !important; }
+  .chart-wrap { height: 180px; }
+
+  .table-sec { padding: 0 1.1rem 2rem; }
+  .callout { padding: .6rem 1.1rem; }
+
+  .tbl-head { flex-direction: column; align-items: stretch; }
+  .controls { width: 100%; }
+  .search { width: 100%; }
+  .legend-row { width: 100%; }
+
+  .kpi-strip { grid-template-columns: repeat(2, 1fr); }
+  .kpi { padding: .85rem 1rem; border-bottom: 1px solid var(--border); }
+
+  th, td { padding: .55rem .7rem; }
+}
+
+@media (max-width: 480px) {
+  .kpi-strip { grid-template-columns: 1fr 1fr; }
+  header h1 { font-size: 1.25rem; }
+  .hdr-sub { font-size: .74rem; }
+  .badge-row { gap: .3rem; }
+  .hdr-badge { font-size: .6rem; padding: .18rem .6rem; }
+}
+
+</style>
+</head>
+<body>
+<div class="topbar"></div>
+
+<nav class="site-nav">
+  <a href="../index.html" class="btn-link navy">🏠 Home</a>
+  <a href="dashboard_20260715.html" class="btn-link indigo">📊 Momentum</a><a href="elite_dashboard_20260715.html" class="btn-link green">⚡ Elite</a><a href="volume_dashboard_20260715.html" class="btn-link blue">🔵 Volume</a><a href="rocket_dashboard_20260715.html" class="btn-link amber is-active">🚀 Rocket</a>
+  <a href="../position-size.html" class="btn-link violet">📐 Position Size</a>
+  <a href="../position-tracker.html" class="btn-link navy">📈 Position Tracker</a>
+</nav>
+
+<header>
+  <div class="hdr-left">
+    <div class="brand">
+      <div class="brand-dot" style="background:var(--amber)"></div>
+      <span class="brand-name">Alpha Momentum · Rocket Stocks</span>
+    </div>
+    <h1>Rocket Stocks</h1>
+    <p class="hdr-sub">All 8 Minervini conditions + Inside Bar coiling setup · NSE India · 15 Jul 2026</p>
+    <div class="badge-row">
+      <span class="hdr-badge" style="background:var(--amber-lt);border-color:var(--amber-mid);color:var(--amber)">✓ 8 Minervini Conditions</span>
+      <span class="hdr-badge" style="background:var(--amber-lt);border-color:var(--amber-mid);color:var(--amber)">✓ Inside Bar</span>
+      <span class='hdr-badge' style='background:var(--new-bg);border-color:var(--new-border);color:var(--new-text)'>✦ 1 New Stocks</span>
+    </div>
+  </div>
+  <div class="date-pill" style="background:var(--amber-lt);border-color:var(--amber-mid);color:var(--amber)">15 Jul 2026</div>
+</header>
+
+<div class="kpi-strip">
+  <div class="kpi" style="--accent:var(--amber)">
+    <div class="kpi-lbl">Rocket Stocks</div>
+    <div class="kpi-val">55</div>
+    <div class="kpi-hint">inside bar coiling</div>
+  </div>
+  <div class="kpi" style="--accent:var(--indigo)">
+    <div class="kpi-lbl">Total Passing</div>
+    <div class="kpi-val">286</div>
+    <div class="kpi-hint">all 8 conditions</div>
+  </div>
+  <div class="kpi" style="--accent:var(--emerald)">
+    <div class="kpi-lbl">IB Hit Rate</div>
+    <div class="kpi-val">19.2%</div>
+    <div class="kpi-hint">inside bar frequency</div>
+  </div>
+  <div class='kpi' style='--accent:var(--new-text)'><div class='kpi-lbl'>New Appearances</div><div class='kpi-val'>1</div><div class='kpi-hint'>first time in 10 days</div></div>
+</div>
+
+<div class="callout">
+  <strong style="color:var(--amber)">Inside Bar:</strong>
+  Today's high &lt; yesterday's high <strong>AND</strong> today's low &gt; yesterday's low —
+  price compression inside a strong uptrend. Potential coiling setup before breakout.
+</div>
+
+<div class="table-sec" style="padding-top:1.1rem">
+  <div class="tbl-head">
+    <div>
+      <span class="tbl-title">Rocket Stocks</span>
+      <span class="tbl-count tbl-title">[55]</span>
+    </div>
+    <div class="controls">
+      <div class="legend-row">
+        <div class="leg"><div class="leg-dot" style="background:var(--new-border)"></div>✦ New (10-day)</div>
+      </div>
+      <input class="search" id="searchInput" type="text"
+             placeholder="Search symbol / industry…" oninput="filterRows()"/>
+    </div>
+  </div>
+  <div class="tbl-outer">
+    <table id="mainTable">
+      <thead><tr>
+        <th data-col="sym"  data-type="str">Symbol<i class="si"></i></th>
+        <th class="r" data-col="close" data-type="num">Close ₹<i class="si"></i></th>
+        <th class="r" data-col="ema10" data-type="num">EMA10 ₹<i class="si"></i></th>
+        <th class="r" data-col="rs"    data-type="num">RS %ile<i class="si"></i></th>
+        <th class="r">% above 52W Low</th>
+        <th class="r">% from 52W High</th>
+        <th class="r" data-col="tmc"   data-type="num">Mkt Cap<i class="si"></i></th>
+        <th class="r" data-col="tv"    data-type="num">Traded Val<i class="si"></i></th>
+        <th data-col="indgrp" data-type="str">Industry Group<i class="si"></i></th>
+      </tr></thead>
+      <tbody id="tableBody">
+            <tr class="srow"
+              data-sym="SAKAR" data-close="916.95" data-rs="98.82"
+              data-ema10="855.1" data-tmc="2012.7" data-tv="17.82"
+              data-indgrp="Pharmaceuticals & Biotechnology" data-ind="">
+              <td>
+                <a class="sym-tag" style="background:var(--amber-lt);border-color:var(--amber-mid);color:var(--amber)"
+                   href="https://www.tradingview.com/chart/?symbol=NSE%3ASAKAR" target="_blank" rel="noopener">SAKAR<span class="ib-badge">IB</span></a>
+              </td>
+              <td class="r" style="font-family:var(--mono)">₹916.95</td>
+              <td class="r"><span class="pill pill-green">₹855.10</span></td>
+              <td class="r"><span class="pill pill-amber">98.8</span></td>
+              <td class="r" style="font-family:var(--mono);color:var(--emerald);font-weight:600">+194.8%</td>
+              <td class="r" style="font-family:var(--mono);color:var(--amber);font-weight:600">-2.9%</td>
+              <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.77rem">₹2,013 Cr</td>
+              <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.77rem">₹18 Cr</td>
+              <td style="color:var(--muted);font-size:.78rem">Pharmaceuticals & Biotechnology</td>
+            </tr>
+            <tr class="srow"
+              data-sym="KIRLOSENG" data-close="2414.2" data-rs="98.78"
+              data-ema10="2372.67" data-tmc="35128.13" data-tv="190.93"
+              data-indgrp="Industrial Products" data-ind="">
+              <td>
+                <a class="sym-tag" style="background:var(--amber-lt);border-color:var(--amber-mid);color:var(--amber)"
+                   href="https://www.tradingview.com/chart/?symbol=NSE%3AKIRLOSENG" target="_blank" rel="noopener">KIRLOSENG<span class="ib-badge">IB</span></a>
+              </td>
+              <td class="r" style="font-family:var(--mono)">₹2,414.20</td>
+              <td class="r"><span class="pill pill-green">₹2,372.67</span></td>
+              <td class="r"><span class="pill pill-amber">98.8</span></td>
+              <td class="r" style="font-family:var(--mono);color:var(--emerald);font-weight:600">+191.4%</td>
+              <td class="r" style="font-family:var(--mono);color:var(--amber);font-weight:600">-11.2%</td>
+              <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.77rem">₹35,128 Cr</td>
+              <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.77rem">₹191 Cr</td>
+              <td style="color:var(--muted);font-size:.78rem">Industrial Products</td>
+            </tr>
+            <tr class="srow"
+              data-sym="GAYAPROJ" data-close="21.78" data-rs="98.74"
+              data-ema10="21.54" data-tmc="1011.24" data-tv="1.35"
+              data-indgrp="Construction" data-ind="">
+              <td>
+                <a class="sym-tag" style="background:var(--amber-lt);border-color:var(--amber-mid);color:var(--amber)"
+                   href="https://www.tradingview.com/chart/?symbol=NSE%3AGAYAPROJ" target="_blank" rel="noopener">GAYAPROJ<span class="ib-badge">IB</span></a>
+              </td>
+              <td class="r" style="font-family:var(--mono)">₹21.78</td>
+              <td class="r"><span class="pill pill-green">₹21.54</span></td>
+              <td class="r"><span class="pill pill-amber">98.7</span></td>
+              <td class="r" style="font-family:var(--mono);color:var(--emerald);font-weight:600">+182.9%</td>
+              <td class="r" style="font-family:var(--mono);color:var(--amber);font-weight:600">-16.2%</td>
+              <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.77rem">₹1,011 Cr</td>
+              <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.77rem">₹1 Cr</td>
+              <td style="color:var(--muted);font-size:.78rem">Construction</td>
+            </tr>
+            <tr class="srow"
+              data-sym="UFBL" data-close="739.1" data-rs="98.33"
+              data-ema10="718.96" data-tmc="2888.87" data-tv="29.4"
+              data-indgrp="Leisure Services" data-ind="">
+              <td>
+                <a class="sym-tag" style="background:var(--amber-lt);border-color:var(--amber-mid);color:var(--amber)"
+                   href="https://www.tradingview.com/chart/?symbol=NSE%3AUFBL" target="_blank" rel="noopener">UFBL<span class="ib-badge">IB</span></a>
+              </td>
+              <td class="r" style="font-family:var(--mono)">₹739.10</td>
+              <td class="r"><span class="pill pill-green">₹718.96</span></td>
+              <td class="r"><span class="pill pill-amber">98.3</span></td>
+              <td class="r" style="font-family:var(--mono);color:var(--emerald);font-weight:600">+328.9%</td>
+              <td class="r" style="font-family:var(--mono);color:var(--amber);font-weight:600">-3.2%</td>
+              <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.77rem">₹2,889 Cr</td>
+              <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.77rem">₹29 Cr</td>
+              <td style="color:var(--muted);font-size:.78rem">Leisure Services</td>
+            </tr>
+            <tr class="srow"
+              data-sym="NGLFINE" data-close="3165.5" data-rs="98.21"
+              data-ema10="3145.43" data-tmc="1955.65" data-tv="5.85"
+              data-indgrp="Pharmaceuticals & Biotechnology" data-ind="">
+              <td>
+                <a class="sym-tag" style="background:var(--amber-lt);border-color:var(--amber-mid);color:var(--amber)"
+                   href="https://www.tradingview.com/chart/?symbol=NSE%3ANGLFINE" target="_blank" rel="noopener">NGLFINE<span class="ib-badge">IB</span></a>
+              </td>
+              <td class="r" style="font-family:var(--mono)">₹3,165.50</td>
+              <td class="r"><span class="pill pill-green">₹3,145.43</span></td>
+              <td class="r"><span class="pill pill-amber">98.2</span></td>
+              <td class="r" style="font-family:var(--mono);color:var(--emerald);font-weight:600">+169.7%</td>
+              <td class="r" style="font-family:var(--mono);color:var(--amber);font-weight:600">-4.9%</td>
+              <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.77rem">₹1,956 Cr</td>
+              <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.77rem">₹6 Cr</td>
+              <td style="color:var(--muted);font-size:.78rem">Pharmaceuticals & Biotechnology</td>
+            </tr>
+            <tr class="srow is-new"
+              data-sym="APOLLO" data-close="404.75" data-rs="97.76"
+              data-ema10="407.95" data-tmc="15040.49" data-tv="903.79"
+              data-indgrp="Aerospace & Defense" data-ind="">
+              <td>
+                <a class="sym-tag" style="background:var(--amber-lt);border-color:var(--amber-mid);color:var(--amber)"
+                   href="https://www.tradingview.com/chart/?symbol=NSE%3AAPOLLO" target="_blank" rel="noopener">APOLLO<span class="ib-badge">IB</span> <span class="sym-new-star">✦ NEW</span></a>
+              </td>
+              <td class="r" style="font-family:var(--mono)">₹404.75</td>
+              <td class="r"><span class="pill pill-green">₹407.95</span></td>
+              <td class="r"><span class="pill pill-amber">97.8</span></td>
+              <td class="r" style="font-family:var(--mono);color:var(--emerald);font-weight:600">+149.5%</td>
+              <td class="r" style="font-family:var(--mono);color:var(--amber);font-weight:600">-13.2%</td>
+              <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.77rem">₹15,040 Cr</td>
+              <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.77rem">₹904 Cr</td>
+              <td style="color:var(--muted);font-size:.78rem">Aerospace & Defense</td>
+            </tr>
+            <tr class="srow"
+              data-sym="ACCENTMIC" data-close="516.6" data-rs="97.07"
+              data-ema10="502.47" data-tmc="638.24" data-tv="1.59"
+              data-indgrp="Pharmaceuticals & Biotechnology" data-ind="">
+              <td>
+                <a class="sym-tag" style="background:var(--amber-lt);border-color:var(--amber-mid);color:var(--amber)"
+                   href="https://www.tradingview.com/chart/?symbol=NSE%3AACCENTMIC" target="_blank" rel="noopener">ACCENTMIC<span class="ib-badge">IB</span></a>
+              </td>
+              <td class="r" style="font-family:var(--mono)">₹516.60</td>
+              <td class="r"><span class="pill pill-green">₹502.47</span></td>
+              <td class="r"><span class="pill pill-amber">97.1</span></td>
+              <td class="r" style="font-family:var(--mono);color:var(--emerald);font-weight:600">+117.1%</td>
+              <td class="r" style="font-family:var(--mono);color:var(--amber);font-weight:600">-1.6%</td>
+              <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.77rem">₹638 Cr</td>
+              <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.77rem">₹2 Cr</td>
+              <td style="color:var(--muted);font-size:.78rem">Pharmaceuticals & Biotechnology</td>
+            </tr>
+            <tr class="srow"
+              data-sym="SETCO" data-close="18.25" data-rs="96.38"
+              data-ema10="17.9" data-tmc="244.75" data-tv="0.35"
+              data-indgrp="Auto Components" data-ind="">
+              <td>
+                <a class="sym-tag" style="background:var(--amber-lt);border-color:var(--amber-mid);color:var(--amber)"
+                   href="https://www.tradingview.com/chart/?symbol=NSE%3ASETCO" target="_blank" rel="noopener">SETCO<span class="ib-badge">IB</span></a>
+              </td>
+              <td class="r" style="font-family:var(--mono)">₹18.25</td>
+              <td class="r"><span class="pill pill-green">₹17.90</span></td>
+              <td class="r"><span class="pill pill-amber">96.4</span></td>
+              <td class="r" style="font-family:var(--mono);color:var(--emerald);font-weight:600">+189.3%</td>
+              <td class="r" style="font-family:var(--mono);color:var(--amber);font-weight:600">-7.7%</td>
+              <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.77rem">₹245 Cr</td>
+              <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.77rem">₹0 Cr</td>
+              <td style="color:var(--muted);font-size:.78rem">Auto Components</td>
+            </tr>
+            <tr class="srow"
+              data-sym="ADANIENSOL" data-close="1678.0" data-rs="96.34"
+              data-ema10="1632.19" data-tmc="201575.23" data-tv="553.31"
+              data-indgrp="Power" data-ind="">
+              <td>
+                <a class="sym-tag" style="background:var(--amber-lt);border-color:var(--amber-mid);color:var(--amber)"
+                   href="https://www.tradingview.com/chart/?symbol=NSE%3AADANIENSOL" target="_blank" rel="noopener">ADANIENSOL<span class="ib-badge">IB</span></a>
+              </td>
+              <td class="r" style="font-family:var(--mono)">₹1,678.00</td>
+              <td class="r"><span class="pill pill-green">₹1,632.19</span></td>
+              <td class="r"><span class="pill pill-amber">96.3</span></td>
+              <td class="r" style="font-family:var(--mono);color:var(--emerald);font-weight:600">+125.3%</td>
+              <td class="r" style="font-family:var(--mono);color:var(--amber);font-weight:600">-2.1%</td>
+              <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.77rem">₹2.02L Cr</td>
+              <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.77rem">₹553 Cr</td>
+              <td style="color:var(--muted);font-size:.78rem">Power</td>
+            </tr>
+            <tr class="srow"
+              data-sym="GRANULES" data-close="898.05" data-rs="96.09"
+              data-ema10="869.58" data-tmc="22253.4" data-tv="125.65"
+              data-indgrp="Pharmaceuticals & Biotechnology" data-ind="">
+              <td>
+                <a class="sym-tag" style="background:var(--amber-lt);border-color:var(--amber-mid);color:var(--amber)"
+                   href="https://www.tradingview.com/chart/?symbol=NSE%3AGRANULES" target="_blank" rel="noopener">GRANULES<span class="ib-badge">IB</span></a>
+              </td>
+              <td class="r" style="font-family:var(--mono)">₹898.05</td>
+              <td class="r"><span class="pill pill-green">₹869.58</span></td>
+              <td class="r"><span class="pill pill-amber">96.1</span></td>
+              <td class="r" style="font-family:var(--mono);color:var(--emerald);font-weight:600">+107.6%</td>
+              <td class="r" style="font-family:var(--mono);color:var(--amber);font-weight:600">-1.1%</td>
+              <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.77rem">₹22,253 Cr</td>
+              <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.77rem">₹126 Cr</td>
+              <td style="color:var(--muted);font-size:.78rem">Pharmaceuticals & Biotechnology</td>
+            </tr>
+            <tr class="srow"
+              data-sym="KERNEX" data-close="2195.1" data-rs="96.05"
+              data-ema10="2186.15" data-tmc="3688.56" data-tv="68.84"
+              data-indgrp="Transport Services" data-ind="">
+              <td>
+                <a class="sym-tag" style="background:var(--amber-lt);border-color:var(--amber-mid);color:var(--amber)"
+                   href="https://www.tradingview.com/chart/?symbol=NSE%3AKERNEX" target="_blank" rel="noopener">KERNEX<span class="ib-badge">IB</span></a>
+              </td>
+              <td class="r" style="font-family:var(--mono)">₹2,195.10</td>
+              <td class="r"><span class="pill pill-green">₹2,186.15</span></td>
+              <td class="r"><span class="pill pill-amber">96.1</span></td>
+              <td class="r" style="font-family:var(--mono);color:var(--emerald);font-weight:600">+158.2%</td>
+              <td class="r" style="font-family:var(--mono);color:var(--amber);font-weight:600">-10.2%</td>
+              <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.77rem">₹3,689 Cr</td>
+              <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.77rem">₹69 Cr</td>
+              <td style="color:var(--muted);font-size:.78rem">Transport Services</td>
+            </tr>
+            <tr class="srow"
+              data-sym="INDOTECH" data-close="3359.8" data-rs="95.2"
+              data-ema10="3247.8" data-tmc="3568.11" data-tv="24.18"
+              data-indgrp="Electrical Equipment" data-ind="">
+              <td>
+                <a class="sym-tag" style="background:var(--amber-lt);border-color:var(--amber-mid);color:var(--amber)"
+                   href="https://www.tradingview.com/chart/?symbol=NSE%3AINDOTECH" target="_blank" rel="noopener">INDOTECH<span class="ib-badge">IB</span></a>
+              </td>
+              <td class="r" style="font-family:var(--mono)">₹3,359.80</td>
+              <td class="r"><span class="pill pill-green">₹3,247.80</span></td>
+              <td class="r"><span class="pill pill-amber">95.2</span></td>
+              <td class="r" style="font-family:var(--mono);color:var(--emerald);font-weight:600">+205.4%</td>
+              <td class="r" style="font-family:var(--mono);color:var(--amber);font-weight:600">-5.4%</td>
+              <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.77rem">₹3,568 Cr</td>
+              <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.77rem">₹24 Cr</td>
+              <td style="color:var(--muted);font-size:.78rem">Electrical Equipment</td>
+            </tr>
+            <tr class="srow"
+              data-sym="MODISONLTD" data-close="288.05" data-rs="95.08"
+              data-ema10="293.21" data-tmc="934.72" data-tv="5.84"
+              data-indgrp="Electrical Equipment" data-ind="">
+              <td>
+                <a class="sym-tag" style="background:var(--amber-lt);border-color:var(--amber-mid);color:var(--amber)"
+                   href="https://www.tradingview.com/chart/?symbol=NSE%3AMODISONLTD" target="_blank" rel="noopener">MODISONLTD<span class="ib-badge">IB</span></a>
+              </td>
+              <td class="r" style="font-family:var(--mono)">₹288.05</td>
+              <td class="r"><span class="pill pill-green">₹293.21</span></td>
+              <td class="r"><span class="pill pill-amber">95.1</span></td>
+              <td class="r" style="font-family:var(--mono);color:var(--emerald);font-weight:600">+155.3%</td>
+              <td class="r" style="font-family:var(--mono);color:var(--amber);font-weight:600">-19.8%</td>
+              <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.77rem">₹935 Cr</td>
+              <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.77rem">₹6 Cr</td>
+              <td style="color:var(--muted);font-size:.78rem">Electrical Equipment</td>
+            </tr>
+            <tr class="srow"
+              data-sym="SPORTKING" data-close="195.8" data-rs="94.34"
+              data-ema10="187.07" data-tmc="2491.96" data-tv="11.0"
+              data-indgrp="Textiles & Apparels" data-ind="">
+              <td>
+                <a class="sym-tag" style="background:var(--amber-lt);border-color:var(--amber-mid);color:var(--amber)"
+                   href="https://www.tradingview.com/chart/?symbol=NSE%3ASPORTKING" target="_blank" rel="noopener">SPORTKING<span class="ib-badge">IB</span></a>
+              </td>
+              <td class="r" style="font-family:var(--mono)">₹195.80</td>
+              <td class="r"><span class="pill pill-green">₹187.07</span></td>
+              <td class="r"><span class="pill pill-amber">94.3</span></td>
+              <td class="r" style="font-family:var(--mono);color:var(--emerald);font-weight:600">+150.5%</td>
+              <td class="r" style="font-family:var(--mono);color:var(--amber);font-weight:600">-6.7%</td>
+              <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.77rem">₹2,492 Cr</td>
+              <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.77rem">₹11 Cr</td>
+              <td style="color:var(--muted);font-size:.78rem">Textiles & Apparels</td>
+            </tr>
+            <tr class="srow"
+              data-sym="CENTUM" data-close="3652.5" data-rs="93.61"
+              data-ema10="3634.58" data-tmc="5384.14" data-tv="25.56"
+              data-indgrp="Aerospace & Defense" data-ind="">
+              <td>
+                <a class="sym-tag" style="background:var(--amber-lt);border-color:var(--amber-mid);color:var(--amber)"
+                   href="https://www.tradingview.com/chart/?symbol=NSE%3ACENTUM" target="_blank" rel="noopener">CENTUM<span class="ib-badge">IB</span></a>
+              </td>
+              <td class="r" style="font-family:var(--mono)">₹3,652.50</td>
+              <td class="r"><span class="pill pill-green">₹3,634.58</span></td>
+              <td class="r"><span class="pill pill-amber">93.6</span></td>
+              <td class="r" style="font-family:var(--mono);color:var(--emerald);font-weight:600">+78.7%</td>
+              <td class="r" style="font-family:var(--mono);color:var(--amber);font-weight:600">-6.7%</td>
+              <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.77rem">₹5,384 Cr</td>
+              <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.77rem">₹26 Cr</td>
+              <td style="color:var(--muted);font-size:.78rem">Aerospace & Defense</td>
+            </tr>
+            <tr class="srow"
+              data-sym="SCHNEIDER" data-close="1360.3" data-rs="93.45"
+              data-ema10="1403.1" data-tmc="32525.32" data-tv="57.49"
+              data-indgrp="Electrical Equipment" data-ind="">
+              <td>
+                <a class="sym-tag" style="background:var(--amber-lt);border-color:var(--amber-mid);color:var(--amber)"
+                   href="https://www.tradingview.com/chart/?symbol=NSE%3ASCHNEIDER" target="_blank" rel="noopener">SCHNEIDER<span class="ib-badge">IB</span></a>
+              </td>
+              <td class="r" style="font-family:var(--mono)">₹1,360.30</td>
+              <td class="r"><span class="pill pill-green">₹1,403.10</span></td>
+              <td class="r"><span class="pill pill-amber">93.4</span></td>
+              <td class="r" style="font-family:var(--mono);color:var(--emerald);font-weight:600">+137.9%</td>
+              <td class="r" style="font-family:var(--mono);color:var(--amber);font-weight:600">-12.1%</td>
+              <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.77rem">₹32,525 Cr</td>
+              <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.77rem">₹57 Cr</td>
+              <td style="color:var(--muted);font-size:.78rem">Electrical Equipment</td>
+            </tr>
+            <tr class="srow"
+              data-sym="SPARC" data-close="251.04" data-rs="93.12"
+              data-ema10="254.23" data-tmc="8146.79" data-tv="152.39"
+              data-indgrp="Pharmaceuticals & Biotechnology" data-ind="">
+              <td>
+                <a class="sym-tag" style="background:var(--amber-lt);border-color:var(--amber-mid);color:var(--amber)"
+                   href="https://www.tradingview.com/chart/?symbol=NSE%3ASPARC" target="_blank" rel="noopener">SPARC<span class="ib-badge">IB</span></a>
+              </td>
+              <td class="r" style="font-family:var(--mono)">₹251.04</td>
+              <td class="r"><span class="pill pill-green">₹254.23</span></td>
+              <td class="r"><span class="pill pill-amber">93.1</span></td>
+              <td class="r" style="font-family:var(--mono);color:var(--emerald);font-weight:600">+132.4%</td>
+              <td class="r" style="font-family:var(--mono);color:var(--amber);font-weight:600">-13.1%</td>
+              <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.77rem">₹8,147 Cr</td>
+              <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.77rem">₹152 Cr</td>
+              <td style="color:var(--muted);font-size:.78rem">Pharmaceuticals & Biotechnology</td>
+            </tr>
+            <tr class="srow"
+              data-sym="ADANIGREEN" data-close="1555.4" data-rs="92.8"
+              data-ema10="1542.62" data-tmc="256201.78" data-tv="587.97"
+              data-indgrp="Power" data-ind="">
+              <td>
+                <a class="sym-tag" style="background:var(--amber-lt);border-color:var(--amber-mid);color:var(--amber)"
+                   href="https://www.tradingview.com/chart/?symbol=NSE%3AADANIGREEN" target="_blank" rel="noopener">ADANIGREEN<span class="ib-badge">IB</span></a>
+              </td>
+              <td class="r" style="font-family:var(--mono)">₹1,555.40</td>
+              <td class="r"><span class="pill pill-green">₹1,542.62</span></td>
+              <td class="r"><span class="pill pill-amber">92.8</span></td>
+              <td class="r" style="font-family:var(--mono);color:var(--emerald);font-weight:600">+103.3%</td>
+              <td class="r" style="font-family:var(--mono);color:var(--amber);font-weight:600">-4.7%</td>
+              <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.77rem">₹2.56L Cr</td>
+              <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.77rem">₹588 Cr</td>
+              <td style="color:var(--muted);font-size:.78rem">Power</td>
+            </tr>
+            <tr class="srow"
+              data-sym="PROV" data-close="1634.95" data-rs="92.71"
+              data-ema10="1588.56" data-tmc="375.69" data-tv="0.07"
+              data-indgrp="Food Products" data-ind="">
+              <td>
+                <a class="sym-tag" style="background:var(--amber-lt);border-color:var(--amber-mid);color:var(--amber)"
+                   href="https://www.tradingview.com/chart/?symbol=NSE%3APROV" target="_blank" rel="noopener">PROV<span class="ib-badge">IB</span></a>
+              </td>
+              <td class="r" style="font-family:var(--mono)">₹1,634.95</td>
+              <td class="r"><span class="pill pill-green">₹1,588.56</span></td>
+              <td class="r"><span class="pill pill-amber">92.7</span></td>
+              <td class="r" style="font-family:var(--mono);color:var(--emerald);font-weight:600">+100.6%</td>
+              <td class="r" style="font-family:var(--mono);color:var(--amber);font-weight:600">-3.8%</td>
+              <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.77rem">₹376 Cr</td>
+              <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.77rem">₹0 Cr</td>
+              <td style="color:var(--muted);font-size:.78rem">Food Products</td>
+            </tr>
+            <tr class="srow"
+              data-sym="IDEAFORGE" data-close="877.75" data-rs="92.43"
+              data-ema10="874.58" data-tmc="4361.15" data-tv="117.61"
+              data-indgrp="Aerospace & Defense" data-ind="">
+              <td>
+                <a class="sym-tag" style="background:var(--amber-lt);border-color:var(--amber-mid);color:var(--amber)"
+                   href="https://www.tradingview.com/chart/?symbol=NSE%3AIDEAFORGE" target="_blank" rel="noopener">IDEAFORGE<span class="ib-badge">IB</span></a>
+              </td>
+              <td class="r" style="font-family:var(--mono)">₹877.75</td>
+              <td class="r"><span class="pill pill-green">₹874.58</span></td>
+              <td class="r"><span class="pill pill-amber">92.4</span></td>
+              <td class="r" style="font-family:var(--mono);color:var(--emerald);font-weight:600">+139.8%</td>
+              <td class="r" style="font-family:var(--mono);color:var(--amber);font-weight:600">-11.5%</td>
+              <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.77rem">₹4,361 Cr</td>
+              <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.77rem">₹118 Cr</td>
+              <td style="color:var(--muted);font-size:.78rem">Aerospace & Defense</td>
+            </tr>
+            <tr class="srow"
+              data-sym="LTF" data-close="312.4" data-rs="92.31"
+              data-ema10="317.02" data-tmc="78276.82" data-tv="185.68"
+              data-indgrp="Finance" data-ind="">
+              <td>
+                <a class="sym-tag" style="background:var(--amber-lt);border-color:var(--amber-mid);color:var(--amber)"
+                   href="https://www.tradingview.com/chart/?symbol=NSE%3ALTF" target="_blank" rel="noopener">LTF<span class="ib-badge">IB</span></a>
+              </td>
+              <td class="r" style="font-family:var(--mono)">₹312.40</td>
+              <td class="r"><span class="pill pill-green">₹317.02</span></td>
+              <td class="r"><span class="pill pill-amber">92.3</span></td>
+              <td class="r" style="font-family:var(--mono);color:var(--emerald);font-weight:600">+62.4%</td>
+              <td class="r" style="font-family:var(--mono);color:var(--amber);font-weight:600">-7.7%</td>
+              <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.77rem">₹78,277 Cr</td>
+              <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.77rem">₹186 Cr</td>
+              <td style="color:var(--muted);font-size:.78rem">Finance</td>
+            </tr>
+            <tr class="srow"
+              data-sym="CRAFTSMAN" data-close="9230.5" data-rs="92.27"
+              data-ema10="9240.78" data-tmc="24141.85" data-tv="117.05"
+              data-indgrp="Auto Components" data-ind="">
+              <td>
+                <a class="sym-tag" style="background:var(--amber-lt);border-color:var(--amber-mid);color:var(--amber)"
+                   href="https://www.tradingview.com/chart/?symbol=NSE%3ACRAFTSMAN" target="_blank" rel="noopener">CRAFTSMAN<span class="ib-badge">IB</span></a>
+              </td>
+              <td class="r" style="font-family:var(--mono)">₹9,230.50</td>
+              <td class="r"><span class="pill pill-green">₹9,240.78</span></td>
+              <td class="r"><span class="pill pill-amber">92.3</span></td>
+              <td class="r" style="font-family:var(--mono);color:var(--emerald);font-weight:600">+58.4%</td>
+              <td class="r" style="font-family:var(--mono);color:var(--amber);font-weight:600">-7.1%</td>
+              <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.77rem">₹24,142 Cr</td>
+              <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.77rem">₹117 Cr</td>
+              <td style="color:var(--muted);font-size:.78rem">Auto Components</td>
+            </tr>
+            <tr class="srow"
+              data-sym="SHILPAMED" data-close="645.65" data-rs="92.02"
+              data-ema10="615.9" data-tmc="12629.7" data-tv="70.9"
+              data-indgrp="Pharmaceuticals & Biotechnology" data-ind="">
+              <td>
+                <a class="sym-tag" style="background:var(--amber-lt);border-color:var(--amber-mid);color:var(--amber)"
+                   href="https://www.tradingview.com/chart/?symbol=NSE%3ASHILPAMED" target="_blank" rel="noopener">SHILPAMED<span class="ib-badge">IB</span></a>
+              </td>
+              <td class="r" style="font-family:var(--mono)">₹645.65</td>
+              <td class="r"><span class="pill pill-green">₹615.90</span></td>
+              <td class="r"><span class="pill pill-amber">92.0</span></td>
+              <td class="r" style="font-family:var(--mono);color:var(--emerald);font-weight:600">+148.3%</td>
+              <td class="r" style="font-family:var(--mono);color:var(--amber);font-weight:600">-0.7%</td>
+              <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.77rem">₹12,630 Cr</td>
+              <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.77rem">₹71 Cr</td>
+              <td style="color:var(--muted);font-size:.78rem">Pharmaceuticals & Biotechnology</td>
+            </tr>
+            <tr class="srow"
+              data-sym="NAVINFLUOR" data-close="7618.0" data-rs="91.98"
+              data-ema10="7601.41" data-tmc="39069.64" data-tv="148.85"
+              data-indgrp="Chemicals & Petrochemicals" data-ind="">
+              <td>
+                <a class="sym-tag" style="background:var(--amber-lt);border-color:var(--amber-mid);color:var(--amber)"
+                   href="https://www.tradingview.com/chart/?symbol=NSE%3ANAVINFLUOR" target="_blank" rel="noopener">NAVINFLUOR<span class="ib-badge">IB</span></a>
+              </td>
+              <td class="r" style="font-family:var(--mono)">₹7,618.00</td>
+              <td class="r"><span class="pill pill-green">₹7,601.41</span></td>
+              <td class="r"><span class="pill pill-amber">92.0</span></td>
+              <td class="r" style="font-family:var(--mono);color:var(--emerald);font-weight:600">+69.7%</td>
+              <td class="r" style="font-family:var(--mono);color:var(--amber);font-weight:600">-2.5%</td>
+              <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.77rem">₹39,070 Cr</td>
+              <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.77rem">₹149 Cr</td>
+              <td style="color:var(--muted);font-size:.78rem">Chemicals & Petrochemicals</td>
+            </tr>
+            <tr class="srow"
+              data-sym="NAM-INDIA" data-close="1196.3" data-rs="91.82"
+              data-ema10="1195.71" data-tmc="76478.97" data-tv="127.56"
+              data-indgrp="Capital Markets" data-ind="">
+              <td>
+                <a class="sym-tag" style="background:var(--amber-lt);border-color:var(--amber-mid);color:var(--amber)"
+                   href="https://www.tradingview.com/chart/?symbol=NSE%3ANAM-INDIA" target="_blank" rel="noopener">NAM-INDIA<span class="ib-badge">IB</span></a>
+              </td>
+              <td class="r" style="font-family:var(--mono)">₹1,196.30</td>
+              <td class="r"><span class="pill pill-green">₹1,195.71</span></td>
+              <td class="r"><span class="pill pill-amber">91.8</span></td>
+              <td class="r" style="font-family:var(--mono);color:var(--emerald);font-weight:600">+56.6%</td>
+              <td class="r" style="font-family:var(--mono);color:var(--amber);font-weight:600">-3.0%</td>
+              <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.77rem">₹76,479 Cr</td>
+              <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.77rem">₹128 Cr</td>
+              <td style="color:var(--muted);font-size:.78rem">Capital Markets</td>
+            </tr>
+            <tr class="srow"
+              data-sym="RADICO" data-close="4090.0" data-rs="91.78"
+              data-ema10="4029.87" data-tmc="54798.8" data-tv="169.82"
+              data-indgrp="Beverages" data-ind="">
+              <td>
+                <a class="sym-tag" style="background:var(--amber-lt);border-color:var(--amber-mid);color:var(--amber)"
+                   href="https://www.tradingview.com/chart/?symbol=NSE%3ARADICO" target="_blank" rel="noopener">RADICO<span class="ib-badge">IB</span></a>
+              </td>
+              <td class="r" style="font-family:var(--mono)">₹4,090.00</td>
+              <td class="r"><span class="pill pill-green">₹4,029.87</span></td>
+              <td class="r"><span class="pill pill-amber">91.8</span></td>
+              <td class="r" style="font-family:var(--mono);color:var(--emerald);font-weight:600">+63.6%</td>
+              <td class="r" style="font-family:var(--mono);color:var(--amber);font-weight:600">-1.7%</td>
+              <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.77rem">₹54,799 Cr</td>
+              <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.77rem">₹170 Cr</td>
+              <td style="color:var(--muted);font-size:.78rem">Beverages</td>
+            </tr>
+            <tr class="srow"
+              data-sym="PRIVISCL" data-close="3693.1" data-rs="91.53"
+              data-ema10="3645.65" data-tmc="14426.25" data-tv="35.71"
+              data-indgrp="Chemicals & Petrochemicals" data-ind="">
+              <td>
+                <a class="sym-tag" style="background:var(--amber-lt);border-color:var(--amber-mid);color:var(--amber)"
+                   href="https://www.tradingview.com/chart/?symbol=NSE%3APRIVISCL" target="_blank" rel="noopener">PRIVISCL<span class="ib-badge">IB</span></a>
+              </td>
+              <td class="r" style="font-family:var(--mono)">₹3,693.10</td>
+              <td class="r"><span class="pill pill-green">₹3,645.65</span></td>
+              <td class="r"><span class="pill pill-amber">91.5</span></td>
+              <td class="r" style="font-family:var(--mono);color:var(--emerald);font-weight:600">+69.9%</td>
+              <td class="r" style="font-family:var(--mono);color:var(--amber);font-weight:600">-1.8%</td>
+              <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.77rem">₹14,426 Cr</td>
+              <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.77rem">₹36 Cr</td>
+              <td style="color:var(--muted);font-size:.78rem">Chemicals & Petrochemicals</td>
+            </tr>
+            <tr class="srow"
+              data-sym="MMFL" data-close="520.5" data-rs="90.8"
+              data-ema10="504.74" data-tmc="2513.06" data-tv="6.03"
+              data-indgrp="Auto Components" data-ind="">
+              <td>
+                <a class="sym-tag" style="background:var(--amber-lt);border-color:var(--amber-mid);color:var(--amber)"
+                   href="https://www.tradingview.com/chart/?symbol=NSE%3AMMFL" target="_blank" rel="noopener">MMFL<span class="ib-badge">IB</span></a>
+              </td>
+              <td class="r" style="font-family:var(--mono)">₹520.50</td>
+              <td class="r"><span class="pill pill-green">₹504.74</span></td>
+              <td class="r"><span class="pill pill-amber">90.8</span></td>
+              <td class="r" style="font-family:var(--mono);color:var(--emerald);font-weight:600">+82.3%</td>
+              <td class="r" style="font-family:var(--mono);color:var(--amber);font-weight:600">-2.5%</td>
+              <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.77rem">₹2,513 Cr</td>
+              <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.77rem">₹6 Cr</td>
+              <td style="color:var(--muted);font-size:.78rem">Auto Components</td>
+            </tr>
+            <tr class="srow"
+              data-sym="RAIN" data-close="208.71" data-rs="90.19"
+              data-ema10="202.36" data-tmc="7019.87" data-tv="141.15"
+              data-indgrp="Chemicals & Petrochemicals" data-ind="">
+              <td>
+                <a class="sym-tag" style="background:var(--amber-lt);border-color:var(--amber-mid);color:var(--amber)"
+                   href="https://www.tradingview.com/chart/?symbol=NSE%3ARAIN" target="_blank" rel="noopener">RAIN<span class="ib-badge">IB</span></a>
+              </td>
+              <td class="r" style="font-family:var(--mono)">₹208.71</td>
+              <td class="r"><span class="pill pill-green">₹202.36</span></td>
+              <td class="r"><span class="pill pill-amber">90.2</span></td>
+              <td class="r" style="font-family:var(--mono);color:var(--emerald);font-weight:600">+108.9%</td>
+              <td class="r" style="font-family:var(--mono);color:var(--amber);font-weight:600">-4.7%</td>
+              <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.77rem">₹7,020 Cr</td>
+              <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.77rem">₹141 Cr</td>
+              <td style="color:var(--muted);font-size:.78rem">Chemicals & Petrochemicals</td>
+            </tr>
+            <tr class="srow"
+              data-sym="PRECOT" data-close="818.45" data-rs="90.03"
+              data-ema10="785.3" data-tmc="982.14" data-tv="0.65"
+              data-indgrp="Textiles & Apparels" data-ind="">
+              <td>
+                <a class="sym-tag" style="background:var(--amber-lt);border-color:var(--amber-mid);color:var(--amber)"
+                   href="https://www.tradingview.com/chart/?symbol=NSE%3APRECOT" target="_blank" rel="noopener">PRECOT<span class="ib-badge">IB</span></a>
+              </td>
+              <td class="r" style="font-family:var(--mono)">₹818.45</td>
+              <td class="r"><span class="pill pill-green">₹785.30</span></td>
+              <td class="r"><span class="pill pill-amber">90.0</span></td>
+              <td class="r" style="font-family:var(--mono);color:var(--emerald);font-weight:600">+172.8%</td>
+              <td class="r" style="font-family:var(--mono);color:var(--amber);font-weight:600">-5.0%</td>
+              <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.77rem">₹982 Cr</td>
+              <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.77rem">₹1 Cr</td>
+              <td style="color:var(--muted);font-size:.78rem">Textiles & Apparels</td>
+            </tr>
+            <tr class="srow"
+              data-sym="PHOENIXLTD" data-close="2132.4" data-rs="88.89"
+              data-ema10="2084.2" data-tmc="76266.97" data-tv="123.88"
+              data-indgrp="Realty" data-ind="">
+              <td>
+                <a class="sym-tag" style="background:var(--amber-lt);border-color:var(--amber-mid);color:var(--amber)"
+                   href="https://www.tradingview.com/chart/?symbol=NSE%3APHOENIXLTD" target="_blank" rel="noopener">PHOENIXLTD<span class="ib-badge">IB</span></a>
+              </td>
+              <td class="r" style="font-family:var(--mono)">₹2,132.40</td>
+              <td class="r"><span class="pill pill-green">₹2,084.20</span></td>
+              <td class="r"><span class="pill pill-amber">88.9</span></td>
+              <td class="r" style="font-family:var(--mono);color:var(--emerald);font-weight:600">+52.3%</td>
+              <td class="r" style="font-family:var(--mono);color:var(--amber);font-weight:600">-1.7%</td>
+              <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.77rem">₹76,267 Cr</td>
+              <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.77rem">₹124 Cr</td>
+              <td style="color:var(--muted);font-size:.78rem">Realty</td>
+            </tr>
+            <tr class="srow"
+              data-sym="STARHEALTH" data-close="595.55" data-rs="88.64"
+              data-ema10="592.45" data-tmc="35042.37" data-tv="45.46"
+              data-indgrp="Insurance" data-ind="">
+              <td>
+                <a class="sym-tag" style="background:var(--amber-lt);border-color:var(--amber-mid);color:var(--amber)"
+                   href="https://www.tradingview.com/chart/?symbol=NSE%3ASTARHEALTH" target="_blank" rel="noopener">STARHEALTH<span class="ib-badge">IB</span></a>
+              </td>
+              <td class="r" style="font-family:var(--mono)">₹595.55</td>
+              <td class="r"><span class="pill pill-green">₹592.45</span></td>
+              <td class="r"><span class="pill pill-amber">88.6</span></td>
+              <td class="r" style="font-family:var(--mono);color:var(--emerald);font-weight:600">+43.0%</td>
+              <td class="r" style="font-family:var(--mono);color:var(--amber);font-weight:600">-4.5%</td>
+              <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.77rem">₹35,042 Cr</td>
+              <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.77rem">₹45 Cr</td>
+              <td style="color:var(--muted);font-size:.78rem">Insurance</td>
+            </tr>
+            <tr class="srow"
+              data-sym="ABSLAMC" data-close="1149.1" data-rs="88.44"
+              data-ema10="1151.93" data-tmc="33232.37" data-tv="50.25"
+              data-indgrp="Capital Markets" data-ind="">
+              <td>
+                <a class="sym-tag" style="background:var(--amber-lt);border-color:var(--amber-mid);color:var(--amber)"
+                   href="https://www.tradingview.com/chart/?symbol=NSE%3AABSLAMC" target="_blank" rel="noopener">ABSLAMC<span class="ib-badge">IB</span></a>
+              </td>
+              <td class="r" style="font-family:var(--mono)">₹1,149.10</td>
+              <td class="r"><span class="pill pill-green">₹1,151.93</span></td>
+              <td class="r"><span class="pill pill-amber">88.4</span></td>
+              <td class="r" style="font-family:var(--mono);color:var(--emerald);font-weight:600">+62.3%</td>
+              <td class="r" style="font-family:var(--mono);color:var(--amber);font-weight:600">-6.2%</td>
+              <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.77rem">₹33,232 Cr</td>
+              <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.77rem">₹50 Cr</td>
+              <td style="color:var(--muted);font-size:.78rem">Capital Markets</td>
+            </tr>
+            <tr class="srow"
+              data-sym="SANGAMIND" data-close="629.4" data-rs="87.79"
+              data-ema10="584.66" data-tmc="3103.57" data-tv="7.69"
+              data-indgrp="Textiles & Apparels" data-ind="">
+              <td>
+                <a class="sym-tag" style="background:var(--amber-lt);border-color:var(--amber-mid);color:var(--amber)"
+                   href="https://www.tradingview.com/chart/?symbol=NSE%3ASANGAMIND" target="_blank" rel="noopener">SANGAMIND<span class="ib-badge">IB</span></a>
+              </td>
+              <td class="r" style="font-family:var(--mono)">₹629.40</td>
+              <td class="r"><span class="pill pill-green">₹584.66</span></td>
+              <td class="r"><span class="pill pill-amber">87.8</span></td>
+              <td class="r" style="font-family:var(--mono);color:var(--emerald);font-weight:600">+85.9%</td>
+              <td class="r" style="font-family:var(--mono);color:var(--amber);font-weight:600">-3.2%</td>
+              <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.77rem">₹3,104 Cr</td>
+              <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.77rem">₹8 Cr</td>
+              <td style="color:var(--muted);font-size:.78rem">Textiles & Apparels</td>
+            </tr>
+            <tr class="srow"
+              data-sym="AUROPHARMA" data-close="1550.2" data-rs="87.71"
+              data-ema10="1559.42" data-tmc="89195.08" data-tv="208.16"
+              data-indgrp="Pharmaceuticals & Biotechnology" data-ind="">
+              <td>
+                <a class="sym-tag" style="background:var(--amber-lt);border-color:var(--amber-mid);color:var(--amber)"
+                   href="https://www.tradingview.com/chart/?symbol=NSE%3AAUROPHARMA" target="_blank" rel="noopener">AUROPHARMA<span class="ib-badge">IB</span></a>
+              </td>
+              <td class="r" style="font-family:var(--mono)">₹1,550.20</td>
+              <td class="r"><span class="pill pill-green">₹1,559.42</span></td>
+              <td class="r"><span class="pill pill-amber">87.7</span></td>
+              <td class="r" style="font-family:var(--mono);color:var(--emerald);font-weight:600">+52.6%</td>
+              <td class="r" style="font-family:var(--mono);color:var(--amber);font-weight:600">-5.3%</td>
+              <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.77rem">₹89,195 Cr</td>
+              <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.77rem">₹208 Cr</td>
+              <td style="color:var(--muted);font-size:.78rem">Pharmaceuticals & Biotechnology</td>
+            </tr>
+            <tr class="srow"
+              data-sym="KARURVYSYA" data-close="305.4" data-rs="87.67"
+              data-ema10="301.03" data-tmc="29520.54" data-tv="88.53"
+              data-indgrp="Banks" data-ind="">
+              <td>
+                <a class="sym-tag" style="background:var(--amber-lt);border-color:var(--amber-mid);color:var(--amber)"
+                   href="https://www.tradingview.com/chart/?symbol=NSE%3AKARURVYSYA" target="_blank" rel="noopener">KARURVYSYA<span class="ib-badge">IB</span></a>
+              </td>
+              <td class="r" style="font-family:var(--mono)">₹305.40</td>
+              <td class="r"><span class="pill pill-green">₹301.03</span></td>
+              <td class="r"><span class="pill pill-amber">87.7</span></td>
+              <td class="r" style="font-family:var(--mono);color:var(--emerald);font-weight:600">+51.3%</td>
+              <td class="r" style="font-family:var(--mono);color:var(--amber);font-weight:600">-11.1%</td>
+              <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.77rem">₹29,521 Cr</td>
+              <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.77rem">₹89 Cr</td>
+              <td style="color:var(--muted);font-size:.78rem">Banks</td>
+            </tr>
+            <tr class="srow"
+              data-sym="DIACABS" data-close="226.49" data-rs="87.63"
+              data-ema10="223.4" data-tmc="11935.37" data-tv="139.01"
+              data-indgrp="Electrical Equipment" data-ind="">
+              <td>
+                <a class="sym-tag" style="background:var(--amber-lt);border-color:var(--amber-mid);color:var(--amber)"
+                   href="https://www.tradingview.com/chart/?symbol=NSE%3ADIACABS" target="_blank" rel="noopener">DIACABS<span class="ib-badge">IB</span></a>
+              </td>
+              <td class="r" style="font-family:var(--mono)">₹226.49</td>
+              <td class="r"><span class="pill pill-green">₹223.40</span></td>
+              <td class="r"><span class="pill pill-amber">87.6</span></td>
+              <td class="r" style="font-family:var(--mono);color:var(--emerald);font-weight:600">+96.0%</td>
+              <td class="r" style="font-family:var(--mono);color:var(--amber);font-weight:600">-10.1%</td>
+              <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.77rem">₹11,935 Cr</td>
+              <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.77rem">₹139 Cr</td>
+              <td style="color:var(--muted);font-size:.78rem">Electrical Equipment</td>
+            </tr>
+            <tr class="srow"
+              data-sym="SPECTRUM" data-close="2010.3" data-rs="86.73"
+              data-ema10="1943.37" data-tmc="3158.95" data-tv="7.21"
+              data-indgrp="Industrial Manufacturing" data-ind="">
+              <td>
+                <a class="sym-tag" style="background:var(--amber-lt);border-color:var(--amber-mid);color:var(--amber)"
+                   href="https://www.tradingview.com/chart/?symbol=NSE%3ASPECTRUM" target="_blank" rel="noopener">SPECTRUM<span class="ib-badge">IB</span></a>
+              </td>
+              <td class="r" style="font-family:var(--mono)">₹2,010.30</td>
+              <td class="r"><span class="pill pill-green">₹1,943.37</span></td>
+              <td class="r"><span class="pill pill-amber">86.7</span></td>
+              <td class="r" style="font-family:var(--mono);color:var(--emerald);font-weight:600">+91.5%</td>
+              <td class="r" style="font-family:var(--mono);color:var(--amber);font-weight:600">-8.6%</td>
+              <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.77rem">₹3,159 Cr</td>
+              <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.77rem">₹7 Cr</td>
+              <td style="color:var(--muted);font-size:.78rem">Industrial Manufacturing</td>
+            </tr>
+            <tr class="srow"
+              data-sym="NUVAMA" data-close="1919.3" data-rs="86.08"
+              data-ema10="1893.82" data-tmc="35032.76" data-tv="109.66"
+              data-indgrp="Capital Markets" data-ind="">
+              <td>
+                <a class="sym-tag" style="background:var(--amber-lt);border-color:var(--amber-mid);color:var(--amber)"
+                   href="https://www.tradingview.com/chart/?symbol=NSE%3ANUVAMA" target="_blank" rel="noopener">NUVAMA<span class="ib-badge">IB</span></a>
+              </td>
+              <td class="r" style="font-family:var(--mono)">₹1,919.30</td>
+              <td class="r"><span class="pill pill-green">₹1,893.82</span></td>
+              <td class="r"><span class="pill pill-amber">86.1</span></td>
+              <td class="r" style="font-family:var(--mono);color:var(--emerald);font-weight:600">+76.6%</td>
+              <td class="r" style="font-family:var(--mono);color:var(--amber);font-weight:600">-3.7%</td>
+              <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.77rem">₹35,033 Cr</td>
+              <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.77rem">₹110 Cr</td>
+              <td style="color:var(--muted);font-size:.78rem">Capital Markets</td>
+            </tr>
+            <tr class="srow"
+              data-sym="ACMESOLAR" data-close="392.15" data-rs="85.84"
+              data-ema10="378.39" data-tmc="27697.22" data-tv="84.15"
+              data-indgrp="Power" data-ind="">
+              <td>
+                <a class="sym-tag" style="background:var(--amber-lt);border-color:var(--amber-mid);color:var(--amber)"
+                   href="https://www.tradingview.com/chart/?symbol=NSE%3AACMESOLAR" target="_blank" rel="noopener">ACMESOLAR<span class="ib-badge">IB</span></a>
+              </td>
+              <td class="r" style="font-family:var(--mono)">₹392.15</td>
+              <td class="r"><span class="pill pill-green">₹378.39</span></td>
+              <td class="r"><span class="pill pill-amber">85.8</span></td>
+              <td class="r" style="font-family:var(--mono);color:var(--emerald);font-weight:600">+100.4%</td>
+              <td class="r" style="font-family:var(--mono);color:var(--amber);font-weight:600">-1.6%</td>
+              <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.77rem">₹27,697 Cr</td>
+              <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.77rem">₹84 Cr</td>
+              <td style="color:var(--muted);font-size:.78rem">Power</td>
+            </tr>
+            <tr class="srow"
+              data-sym="BAJAJ-AUTO" data-close="10323.0" data-rs="84.49"
+              data-ema10="10146.69" data-tmc="288292.21" data-tv="400.49"
+              data-indgrp="Automobiles" data-ind="">
+              <td>
+                <a class="sym-tag" style="background:var(--amber-lt);border-color:var(--amber-mid);color:var(--amber)"
+                   href="https://www.tradingview.com/chart/?symbol=NSE%3ABAJAJ-AUTO" target="_blank" rel="noopener">BAJAJ-AUTO<span class="ib-badge">IB</span></a>
+              </td>
+              <td class="r" style="font-family:var(--mono)">₹10,323.00</td>
+              <td class="r"><span class="pill pill-green">₹10,146.69</span></td>
+              <td class="r"><span class="pill pill-amber">84.5</span></td>
+              <td class="r" style="font-family:var(--mono);color:var(--emerald);font-weight:600">+33.2%</td>
+              <td class="r" style="font-family:var(--mono);color:var(--amber);font-weight:600">-4.0%</td>
+              <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.77rem">₹2.88L Cr</td>
+              <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.77rem">₹400 Cr</td>
+              <td style="color:var(--muted);font-size:.78rem">Automobiles</td>
+            </tr>
+            <tr class="srow"
+              data-sym="STEELCAS" data-close="306.85" data-rs="84.09"
+              data-ema10="306.3" data-tmc="3105.32" data-tv="6.02"
+              data-indgrp="Industrial Products" data-ind="">
+              <td>
+                <a class="sym-tag" style="background:var(--amber-lt);border-color:var(--amber-mid);color:var(--amber)"
+                   href="https://www.tradingview.com/chart/?symbol=NSE%3ASTEELCAS" target="_blank" rel="noopener">STEELCAS<span class="ib-badge">IB</span></a>
+              </td>
+              <td class="r" style="font-family:var(--mono)">₹306.85</td>
+              <td class="r"><span class="pill pill-green">₹306.30</span></td>
+              <td class="r"><span class="pill pill-amber">84.1</span></td>
+              <td class="r" style="font-family:var(--mono);color:var(--emerald);font-weight:600">+74.7%</td>
+              <td class="r" style="font-family:var(--mono);color:var(--amber);font-weight:600">-10.8%</td>
+              <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.77rem">₹3,105 Cr</td>
+              <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.77rem">₹6 Cr</td>
+              <td style="color:var(--muted);font-size:.78rem">Industrial Products</td>
+            </tr>
+            <tr class="srow"
+              data-sym="ADANIPORTS" data-close="1829.1" data-rs="83.84"
+              data-ema10="1823.54" data-tmc="421417.15" data-tv="484.69"
+              data-indgrp="Transport Infrastructure" data-ind="">
+              <td>
+                <a class="sym-tag" style="background:var(--amber-lt);border-color:var(--amber-mid);color:var(--amber)"
+                   href="https://www.tradingview.com/chart/?symbol=NSE%3AADANIPORTS" target="_blank" rel="noopener">ADANIPORTS<span class="ib-badge">IB</span></a>
+              </td>
+              <td class="r" style="font-family:var(--mono)">₹1,829.10</td>
+              <td class="r"><span class="pill pill-green">₹1,823.54</span></td>
+              <td class="r"><span class="pill pill-amber">83.8</span></td>
+              <td class="r" style="font-family:var(--mono);color:var(--emerald);font-weight:600">+42.3%</td>
+              <td class="r" style="font-family:var(--mono);color:var(--amber);font-weight:600">-3.3%</td>
+              <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.77rem">₹4.21L Cr</td>
+              <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.77rem">₹485 Cr</td>
+              <td style="color:var(--muted);font-size:.78rem">Transport Infrastructure</td>
+            </tr>
+            <tr class="srow"
+              data-sym="BAHETI" data-close="710.0" data-rs="82.34"
+              data-ema10="713.07" data-tmc="294.47" data-tv="0.85"
+              data-indgrp="Industrial Products" data-ind="">
+              <td>
+                <a class="sym-tag" style="background:var(--amber-lt);border-color:var(--amber-mid);color:var(--amber)"
+                   href="https://www.tradingview.com/chart/?symbol=NSE%3ABAHETI" target="_blank" rel="noopener">BAHETI<span class="ib-badge">IB</span></a>
+              </td>
+              <td class="r" style="font-family:var(--mono)">₹710.00</td>
+              <td class="r"><span class="pill pill-green">₹713.07</span></td>
+              <td class="r"><span class="pill pill-amber">82.3</span></td>
+              <td class="r" style="font-family:var(--mono);color:var(--emerald);font-weight:600">+48.5%</td>
+              <td class="r" style="font-family:var(--mono);color:var(--amber);font-weight:600">-6.0%</td>
+              <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.77rem">₹294 Cr</td>
+              <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.77rem">₹1 Cr</td>
+              <td style="color:var(--muted);font-size:.78rem">Industrial Products</td>
+            </tr>
+            <tr class="srow"
+              data-sym="CARRARO" data-close="563.45" data-rs="82.01"
+              data-ema10="555.17" data-tmc="3203.3" data-tv="16.27"
+              data-indgrp="Auto Components" data-ind="">
+              <td>
+                <a class="sym-tag" style="background:var(--amber-lt);border-color:var(--amber-mid);color:var(--amber)"
+                   href="https://www.tradingview.com/chart/?symbol=NSE%3ACARRARO" target="_blank" rel="noopener">CARRARO<span class="ib-badge">IB</span></a>
+              </td>
+              <td class="r" style="font-family:var(--mono)">₹563.45</td>
+              <td class="r"><span class="pill pill-green">₹555.17</span></td>
+              <td class="r"><span class="pill pill-amber">82.0</span></td>
+              <td class="r" style="font-family:var(--mono);color:var(--emerald);font-weight:600">+40.6%</td>
+              <td class="r" style="font-family:var(--mono);color:var(--amber);font-weight:600">-15.6%</td>
+              <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.77rem">₹3,203 Cr</td>
+              <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.77rem">₹16 Cr</td>
+              <td style="color:var(--muted);font-size:.78rem">Auto Components</td>
+            </tr>
+            <tr class="srow"
+              data-sym="EIFFL" data-close="329.25" data-rs="81.36"
+              data-ema10="325.18" data-tmc="816.54" data-tv="1.45"
+              data-indgrp="Food Products" data-ind="">
+              <td>
+                <a class="sym-tag" style="background:var(--amber-lt);border-color:var(--amber-mid);color:var(--amber)"
+                   href="https://www.tradingview.com/chart/?symbol=NSE%3AEIFFL" target="_blank" rel="noopener">EIFFL<span class="ib-badge">IB</span></a>
+              </td>
+              <td class="r" style="font-family:var(--mono)">₹329.25</td>
+              <td class="r"><span class="pill pill-green">₹325.18</span></td>
+              <td class="r"><span class="pill pill-amber">81.4</span></td>
+              <td class="r" style="font-family:var(--mono);color:var(--emerald);font-weight:600">+60.6%</td>
+              <td class="r" style="font-family:var(--mono);color:var(--amber);font-weight:600">-13.8%</td>
+              <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.77rem">₹817 Cr</td>
+              <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.77rem">₹1 Cr</td>
+              <td style="color:var(--muted);font-size:.78rem">Food Products</td>
+            </tr>
+            <tr class="srow"
+              data-sym="PTCIL" data-close="17591.0" data-rs="80.95"
+              data-ema10="17528.82" data-tmc="26373.39" data-tv="36.76"
+              data-indgrp="Industrial Products" data-ind="">
+              <td>
+                <a class="sym-tag" style="background:var(--amber-lt);border-color:var(--amber-mid);color:var(--amber)"
+                   href="https://www.tradingview.com/chart/?symbol=NSE%3APTCIL" target="_blank" rel="noopener">PTCIL<span class="ib-badge">IB</span></a>
+              </td>
+              <td class="r" style="font-family:var(--mono)">₹17,591.00</td>
+              <td class="r"><span class="pill pill-green">₹17,528.82</span></td>
+              <td class="r"><span class="pill pill-amber">81.0</span></td>
+              <td class="r" style="font-family:var(--mono);color:var(--emerald);font-weight:600">+32.8%</td>
+              <td class="r" style="font-family:var(--mono);color:var(--amber);font-weight:600">-11.4%</td>
+              <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.77rem">₹26,373 Cr</td>
+              <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.77rem">₹37 Cr</td>
+              <td style="color:var(--muted);font-size:.78rem">Industrial Products</td>
+            </tr>
+            <tr class="srow"
+              data-sym="AEROENTER" data-close="120.55" data-rs="80.46"
+              data-ema10="124.14" data-tmc="1364.19" data-tv="12.67"
+              data-indgrp="Industrial Products" data-ind="">
+              <td>
+                <a class="sym-tag" style="background:var(--amber-lt);border-color:var(--amber-mid);color:var(--amber)"
+                   href="https://www.tradingview.com/chart/?symbol=NSE%3AAEROENTER" target="_blank" rel="noopener">AEROENTER<span class="ib-badge">IB</span></a>
+              </td>
+              <td class="r" style="font-family:var(--mono)">₹120.55</td>
+              <td class="r"><span class="pill pill-green">₹124.14</span></td>
+              <td class="r"><span class="pill pill-amber">80.5</span></td>
+              <td class="r" style="font-family:var(--mono);color:var(--emerald);font-weight:600">+93.8%</td>
+              <td class="r" style="font-family:var(--mono);color:var(--amber);font-weight:600">-19.4%</td>
+              <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.77rem">₹1,364 Cr</td>
+              <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.77rem">₹13 Cr</td>
+              <td style="color:var(--muted);font-size:.78rem">Industrial Products</td>
+            </tr>
+            <tr class="srow"
+              data-sym="NESTLEIND" data-close="1424.4" data-rs="79.69"
+              data-ema10="1434.59" data-tmc="274669.1" data-tv="306.61"
+              data-indgrp="Food Products" data-ind="">
+              <td>
+                <a class="sym-tag" style="background:var(--amber-lt);border-color:var(--amber-mid);color:var(--amber)"
+                   href="https://www.tradingview.com/chart/?symbol=NSE%3ANESTLEIND" target="_blank" rel="noopener">NESTLEIND<span class="ib-badge">IB</span></a>
+              </td>
+              <td class="r" style="font-family:var(--mono)">₹1,424.40</td>
+              <td class="r"><span class="pill pill-green">₹1,434.59</span></td>
+              <td class="r"><span class="pill pill-amber">79.7</span></td>
+              <td class="r" style="font-family:var(--mono);color:var(--emerald);font-weight:600">+32.7%</td>
+              <td class="r" style="font-family:var(--mono);color:var(--amber);font-weight:600">-4.5%</td>
+              <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.77rem">₹2.75L Cr</td>
+              <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.77rem">₹307 Cr</td>
+              <td style="color:var(--muted);font-size:.78rem">Food Products</td>
+            </tr>
+            <tr class="srow"
+              data-sym="WELSPUNLIV" data-close="165.89" data-rs="78.96"
+              data-ema10="166.51" data-tmc="15617.63" data-tv="45.39"
+              data-indgrp="Textiles & Apparels" data-ind="">
+              <td>
+                <a class="sym-tag" style="background:var(--amber-lt);border-color:var(--amber-mid);color:var(--amber)"
+                   href="https://www.tradingview.com/chart/?symbol=NSE%3AWELSPUNLIV" target="_blank" rel="noopener">WELSPUNLIV<span class="ib-badge">IB</span></a>
+              </td>
+              <td class="r" style="font-family:var(--mono)">₹165.89</td>
+              <td class="r"><span class="pill pill-green">₹166.51</span></td>
+              <td class="r"><span class="pill pill-amber">79.0</span></td>
+              <td class="r" style="font-family:var(--mono);color:var(--emerald);font-weight:600">+55.0%</td>
+              <td class="r" style="font-family:var(--mono);color:var(--amber);font-weight:600">-5.2%</td>
+              <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.77rem">₹15,618 Cr</td>
+              <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.77rem">₹45 Cr</td>
+              <td style="color:var(--muted);font-size:.78rem">Textiles & Apparels</td>
+            </tr>
+            <tr class="srow"
+              data-sym="MAWANASUG" data-close="113.8" data-rs="78.31"
+              data-ema10="110.66" data-tmc="445.15" data-tv="1.49"
+              data-indgrp="Agricultural Food & other Products" data-ind="">
+              <td>
+                <a class="sym-tag" style="background:var(--amber-lt);border-color:var(--amber-mid);color:var(--amber)"
+                   href="https://www.tradingview.com/chart/?symbol=NSE%3AMAWANASUG" target="_blank" rel="noopener">MAWANASUG<span class="ib-badge">IB</span></a>
+              </td>
+              <td class="r" style="font-family:var(--mono)">₹113.80</td>
+              <td class="r"><span class="pill pill-green">₹110.66</span></td>
+              <td class="r"><span class="pill pill-amber">78.3</span></td>
+              <td class="r" style="font-family:var(--mono);color:var(--emerald);font-weight:600">+57.1%</td>
+              <td class="r" style="font-family:var(--mono);color:var(--amber);font-weight:600">-4.7%</td>
+              <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.77rem">₹445 Cr</td>
+              <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.77rem">₹1 Cr</td>
+              <td style="color:var(--muted);font-size:.78rem">Agricultural Food & other Products</td>
+            </tr>
+            <tr class="srow"
+              data-sym="BIOCON" data-close="434.6" data-rs="77.9"
+              data-ema10="420.38" data-tmc="70765.65" data-tv="197.64"
+              data-indgrp="Pharmaceuticals & Biotechnology" data-ind="">
+              <td>
+                <a class="sym-tag" style="background:var(--amber-lt);border-color:var(--amber-mid);color:var(--amber)"
+                   href="https://www.tradingview.com/chart/?symbol=NSE%3ABIOCON" target="_blank" rel="noopener">BIOCON<span class="ib-badge">IB</span></a>
+              </td>
+              <td class="r" style="font-family:var(--mono)">₹434.60</td>
+              <td class="r"><span class="pill pill-green">₹420.38</span></td>
+              <td class="r"><span class="pill pill-amber">77.9</span></td>
+              <td class="r" style="font-family:var(--mono);color:var(--emerald);font-weight:600">+31.5%</td>
+              <td class="r" style="font-family:var(--mono);color:var(--amber);font-weight:600">-2.2%</td>
+              <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.77rem">₹70,766 Cr</td>
+              <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.77rem">₹198 Cr</td>
+              <td style="color:var(--muted);font-size:.78rem">Pharmaceuticals & Biotechnology</td>
+            </tr>
+            <tr class="srow"
+              data-sym="MANAKSTEEL" data-close="78.41" data-rs="77.53"
+              data-ema10="77.01" data-tmc="513.85" data-tv="0.65"
+              data-indgrp="Ferrous Metals" data-ind="">
+              <td>
+                <a class="sym-tag" style="background:var(--amber-lt);border-color:var(--amber-mid);color:var(--amber)"
+                   href="https://www.tradingview.com/chart/?symbol=NSE%3AMANAKSTEEL" target="_blank" rel="noopener">MANAKSTEEL<span class="ib-badge">IB</span></a>
+              </td>
+              <td class="r" style="font-family:var(--mono)">₹78.41</td>
+              <td class="r"><span class="pill pill-green">₹77.01</span></td>
+              <td class="r"><span class="pill pill-amber">77.5</span></td>
+              <td class="r" style="font-family:var(--mono);color:var(--emerald);font-weight:600">+73.8%</td>
+              <td class="r" style="font-family:var(--mono);color:var(--amber);font-weight:600">-10.0%</td>
+              <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.77rem">₹514 Cr</td>
+              <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.77rem">₹1 Cr</td>
+              <td style="color:var(--muted);font-size:.78rem">Ferrous Metals</td>
+            </tr>
+            <tr class="srow"
+              data-sym="TEXINFRA" data-close="114.02" data-rs="74.97"
+              data-ema10="113.23" data-tmc="1452.92" data-tv="1.61"
+              data-indgrp="Commercial Services & Supplies" data-ind="">
+              <td>
+                <a class="sym-tag" style="background:var(--amber-lt);border-color:var(--amber-mid);color:var(--amber)"
+                   href="https://www.tradingview.com/chart/?symbol=NSE%3ATEXINFRA" target="_blank" rel="noopener">TEXINFRA<span class="ib-badge">IB</span></a>
+              </td>
+              <td class="r" style="font-family:var(--mono)">₹114.02</td>
+              <td class="r"><span class="pill pill-green">₹113.23</span></td>
+              <td class="r"><span class="pill pill-amber">75.0</span></td>
+              <td class="r" style="font-family:var(--mono);color:var(--emerald);font-weight:600">+38.2%</td>
+              <td class="r" style="font-family:var(--mono);color:var(--amber);font-weight:600">-3.4%</td>
+              <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.77rem">₹1,453 Cr</td>
+              <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.77rem">₹2 Cr</td>
+              <td style="color:var(--muted);font-size:.78rem">Commercial Services & Supplies</td>
+            </tr>
+            <tr class="srow"
+              data-sym="MANORAMA" data-close="1608.2" data-rs="74.28"
+              data-ema10="1583.64" data-tmc="10151.34" data-tv="28.98"
+              data-indgrp="Food Products" data-ind="">
+              <td>
+                <a class="sym-tag" style="background:var(--amber-lt);border-color:var(--amber-mid);color:var(--amber)"
+                   href="https://www.tradingview.com/chart/?symbol=NSE%3AMANORAMA" target="_blank" rel="noopener">MANORAMA<span class="ib-badge">IB</span></a>
+              </td>
+              <td class="r" style="font-family:var(--mono)">₹1,608.20</td>
+              <td class="r"><span class="pill pill-green">₹1,583.64</span></td>
+              <td class="r"><span class="pill pill-amber">74.3</span></td>
+              <td class="r" style="font-family:var(--mono);color:var(--emerald);font-weight:600">+51.6%</td>
+              <td class="r" style="font-family:var(--mono);color:var(--amber);font-weight:600">-8.6%</td>
+              <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.77rem">₹10,151 Cr</td>
+              <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.77rem">₹29 Cr</td>
+              <td style="color:var(--muted);font-size:.78rem">Food Products</td>
+            </tr></tbody>
+    </table>
+  </div>
+</div>
+
+<footer>Data: NSE India &amp; Yahoo Finance · Generated 15 Jul 2026 · For informational purposes only · Not financial advice</footer>
+
+<script>
+
+function filterRows() {
+  const q = document.getElementById('searchInput').value.toLowerCase();
+  document.querySelectorAll('#tableBody .srow').forEach(r => {
+    const sym    = (r.dataset.sym    || '').toLowerCase();
+    const indgrp = (r.dataset.indgrp || '').toLowerCase();
+    const ind    = (r.dataset.ind    || '').toLowerCase();
+    r.style.display = (sym.includes(q)||indgrp.includes(q)||ind.includes(q)) ? '' : 'none';
+  });
+}
+
+
+let sortCol = null, sortAsc = true;
+document.querySelectorAll('#mainTable thead th').forEach(th => {
+  th.addEventListener('click', () => {
+    const col  = th.dataset.col;
+    const type = th.dataset.type;
+    if (!col) return;
+    sortAsc = (sortCol === col) ? !sortAsc : true;
+    sortCol = col;
+    document.querySelectorAll('#mainTable thead th')
+      .forEach(h => h.classList.remove('sort-asc','sort-desc'));
+    th.classList.add(sortAsc ? 'sort-asc' : 'sort-desc');
+    const tbody = document.getElementById('tableBody');
+    Array.from(tbody.querySelectorAll('.srow'))
+      .sort((a, b) => {
+        let av = a.dataset[col], bv = b.dataset[col];
+        if (type === 'num') {
+          av = parseFloat(av); bv = parseFloat(bv);
+          if (isNaN(av)) av = -Infinity;
+          if (isNaN(bv)) bv = -Infinity;
+          return sortAsc ? av - bv : bv - av;
+        }
+        return sortAsc ? av.localeCompare(bv) : bv.localeCompare(av);
+      })
+      .forEach(r => tbody.appendChild(r));
+  });
+});
+
+</script>
+</body></html>
