@@ -23,11 +23,12 @@ import pandas as pd
 from .config     import DOCS_DIR
 from .data_loader import download_all, load_symbols
 from .nse_client  import enrich_with_market_caps
-from .dashboard   import build_passing_dashboard, build_passing_ema10_dashboard, build_volume_action_dashboard, build_rocket_dashboard, build_industry_drilldown, build_minervini_ranking
+from .dashboard   import build_passing_dashboard, build_passing_ema10_dashboard, build_volume_action_dashboard, build_rocket_dashboard, build_industry_drilldown, build_minervini_ranking, build_new_rs_high_dashboard
 from .result_calendar import get_result_date
 from .indicators  import get_market_sentiment
 from . import net_new_highs as nnh
 from . import minervini_rank as mrank
+from . import new_rs_high
 from . import holidays as nse_holidays
 
 # ── Logging ───────────────────────────────────────────────────────────────────
@@ -241,6 +242,21 @@ def run() -> None:
             known_symbols=known_symbols,
         )
 
+    # ── New RS High — full-universe scan (not just Stage-1-gated stocks) ──────
+    logger.info("Scanning for New RS High stocks…")
+    try:
+        new_rs_df = new_rs_high.compute_new_rs_highs(df, DOCS_DIR, today_str)
+    except Exception as exc:
+        logger.warning("Could not compute New RS High: %s", exc)
+        new_rs_df = pd.DataFrame()
+    build_new_rs_high_dashboard(
+        new_rs_df,
+        out_dir / f"newrshigh_dashboard_{today_str}.html",
+        today_str,
+        universe_size=len(df),
+        known_symbols=known_symbols,
+    )
+
     if not passing_ema10.empty:
         build_passing_ema10_dashboard(
             passing_ema10,
@@ -424,8 +440,9 @@ def _update_index(
         _elite_link  = f"{today_date_display}/elite_dashboard_{today_slug}.html"
         _volume_link = f"{today_date_display}/volume_dashboard_{today_slug}.html"
         _rocket_link = f"{today_date_display}/rocket_dashboard_{today_slug}.html"
+        _newrshigh_link = f"{today_date_display}/newrshigh_dashboard_{today_slug}.html"
     else:
-        _elite_link = _volume_link = _rocket_link = today_dashboard_link
+        _elite_link = _volume_link = _rocket_link = _newrshigh_link = today_dashboard_link
 
     hub_cards = [
         dict(icon="📊", accent="indigo", accent2="blue", title="Momentum Dashboard",
@@ -440,6 +457,9 @@ def _update_index(
         dict(icon="🚀", accent="amber", accent2="red", title="Rocket Stocks",
              desc="Momentum passes coiling inside a tight daily inside-bar, ready to fire.",
              link=_rocket_link),
+        dict(icon="🔥", accent="red", accent2="amber", title="New RS High",
+             desc="Relative Strength hitting a fresh multi-month high across the full NSE universe — leadership emerging, even before price confirms it.",
+             link=_newrshigh_link),
     ]
 
     hub_cards_html = ""
@@ -511,6 +531,7 @@ def _update_index(
   <a href="{_elite_link}" class="btn-link green">⚡ Elite</a>
   <a href="{_volume_link}" class="btn-link blue">🔵 Volume</a>
   <a href="{_rocket_link}" class="btn-link amber">🚀 Rocket</a>
+  <a href="{_newrshigh_link}" class="btn-link red">🔥 New RS High</a>
   <a href="position-size.html" class="btn-link violet">📐 Position Size</a>
   <a href="position-tracker.html" class="btn-link navy">📈 Position Tracker</a>
 </nav>"""
@@ -668,6 +689,8 @@ def _update_index(
   .btn-link.violet:hover{{background:#ede7fd;}}
   .btn-link.navy{{background:var(--navy-lt);border-color:var(--navy-mid);color:var(--navy);}}
   .btn-link.navy:hover{{background:#e2e6f2;}}
+  .btn-link.red{{background:var(--red-lt);border-color:var(--red-mid);color:var(--red);}}
+  .btn-link.red:hover{{background:#fee2e2;}}
   .btn-link.is-active{{box-shadow:0 0 0 1px currentColor inset;font-weight:700;}}
   /* Shared cross-page nav bar — identical component on every generated page */
   .site-nav{{display:flex;flex-wrap:wrap;gap:.5rem;padding:.75rem 2.5rem;
