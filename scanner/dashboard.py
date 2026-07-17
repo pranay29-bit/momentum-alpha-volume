@@ -214,6 +214,8 @@ header h1 {
 .btn-link.violet:hover  { background: #ede7fd; }
 .btn-link.navy    { background: var(--navy-lt, #eef1f8); border-color: var(--navy-mid, #c9d0e3); color: var(--navy); }
 .btn-link.navy:hover    { background: #e2e6f2; }
+.btn-link.red     { background: var(--red-lt);     border-color: var(--red-mid);     color: var(--red); }
+.btn-link.red:hover     { background: #fee2e2; }
 .btn-link.is-active { box-shadow: 0 0 0 1px currentColor inset; font-weight: 700; }
 .hdr-badge {
   font-size: .64rem;
@@ -621,7 +623,7 @@ def _site_nav(active: str, date_str: str) -> str:
     (and mirrored by the nav-tabs on the tool pages) so a visitor can jump
     to Home or any other dashboard from wherever they land.
 
-    `active` is one of: "momentum", "elite", "volume", "rocket".
+    `active` is one of: "momentum", "elite", "volume", "rocket", "newrshigh".
     `date_str` is the scan date in YYYYMMDD form (dashboards for the same
     date live side-by-side in the same folder, so links are relative).
     """
@@ -630,10 +632,11 @@ def _site_nav(active: str, date_str: str) -> str:
         return f'<a href="{href}" class="btn-link {cls}{active_cls}">{label}</a>'
 
     links = "".join([
-        _link("momentum", f"dashboard_{date_str}.html",        "indigo",  "📊 Momentum"),
-        _link("elite",    f"elite_dashboard_{date_str}.html",   "green",   "⚡ Elite"),
-        _link("volume",   f"volume_dashboard_{date_str}.html",  "blue",    "🔵 Volume"),
-        _link("rocket",   f"rocket_dashboard_{date_str}.html",  "amber",   "🚀 Rocket"),
+        _link("momentum",  f"dashboard_{date_str}.html",          "indigo",  "📊 Momentum"),
+        _link("elite",     f"elite_dashboard_{date_str}.html",    "green",   "⚡ Elite"),
+        _link("volume",    f"volume_dashboard_{date_str}.html",   "blue",    "🔵 Volume"),
+        _link("rocket",    f"rocket_dashboard_{date_str}.html",   "amber",   "🚀 Rocket"),
+        _link("newrshigh", f"newrshigh_dashboard_{date_str}.html", "red",    "🔥 New RS High"),
     ])
     return f"""
 <nav class="site-nav">
@@ -1495,6 +1498,169 @@ def build_rocket_dashboard(
 
     out_path.write_text(html, encoding="utf-8")
     logger.info("Rocket dashboard → %s  (%d stocks)", out_path, n_rocket)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  NEW RS HIGH DASHBOARD
+# ─────────────────────────────────────────────────────────────────────────────
+
+def build_new_rs_high_dashboard(
+    new_rs_df: pd.DataFrame,
+    out_path: Path,
+    date_str: str,
+    universe_size: int = 0,
+    lookback_days: int = 60,
+    known_symbols: set[str] | None = None,
+) -> None:
+    """
+    `new_rs_df` is the already-computed output of
+    scanner.new_rs_high.compute_new_rs_highs() — stocks whose rs_percentile
+    is at a fresh trailing-`lookback_days` high today. Unlike the other
+    dashboards, this scans the FULL daily universe, not just Stage-1-gated
+    stocks, so some of these names won't yet clear every Trend Template
+    condition — that's the point: relative strength turning up early,
+    before price necessarily confirms it.
+    """
+    date_display = datetime.strptime(date_str, "%Y%m%d").strftime("%d %b %Y")
+    known = known_symbols or set()
+
+    n_new_rs = len(new_rs_df) if new_rs_df is not None else 0
+
+    if n_new_rs == 0:
+        rows_html = f'<tr><td colspan="7" class="no-data">No stocks made a fresh {lookback_days}-day RS high today.</td></tr>'
+    else:
+        rows_html = ""
+        for _, row in new_rs_df.iterrows():
+            sym       = str(row.get("symbol", "")).replace(".NS", "")
+            link      = _tv_link(row.get("symbol", sym))
+            is_new    = sym not in known
+            new_cls   = " is-new" if is_new else ""
+            close     = row.get("close", np.nan)
+            rs        = row.get("rs_percentile", np.nan)
+            prior_rs  = row.get("prior_rs_high", np.nan)
+            hist_days = row.get("rs_high_history_days", np.nan)
+            also_mom  = bool(row.get("all_conditions_met", False))
+            ind_grp   = str(row.get("industry_group", "")) or "—"
+
+            close_s    = f"₹{float(close):,.2f}" if _safe(close) else "N/A"
+            rs_s       = f"{float(rs):.1f}"       if _safe(rs)    else "N/A"
+            prior_rs_s = f"{float(prior_rs):.1f}"  if _safe(prior_rs) else "N/A"
+            delta_s    = f"{float(rs) - float(prior_rs):+.1f}" if _safe(rs) and _safe(prior_rs) else "N/A"
+            hist_s     = f"{int(hist_days)}d history" if _safe(hist_days) else "—"
+
+            mom_badge = (
+                '<span class="pill pill-green">✓ In Momentum</span>' if also_mom
+                else '<span class="pill" style="background:var(--surface-2);border-color:var(--border);color:var(--muted)">Not yet</span>'
+            )
+
+            rows_html += f"""
+            <tr class="srow{new_cls}"
+              data-sym="{sym}" data-close="{_r(close)}" data-rs="{_r(rs)}"
+              data-indgrp="{ind_grp}" data-ind="">
+              <td>
+                <a class="sym-tag" style="background:var(--red-lt);border-color:var(--red-mid);color:var(--red)"
+                   href="{link}" target="_blank" rel="noopener">{sym}<span class="ib-badge">RS+</span>{_new_star(is_new)}</a>
+              </td>
+              <td class="r" style="font-family:var(--mono)">{close_s}</td>
+              <td class="r"><span class="pill pill-red">{rs_s}</span></td>
+              <td class="r" style="font-family:var(--mono);color:var(--muted)">{prior_rs_s}</td>
+              <td class="r" style="font-family:var(--mono);color:var(--emerald);font-weight:600">{delta_s}</td>
+              <td class="c" style="font-family:var(--mono);color:var(--subtle);font-size:.72rem">{hist_s}</td>
+              <td>{mom_badge}</td>
+            </tr>"""
+
+    n_new = sum(1 for _, r in new_rs_df.iterrows()
+                if str(r.get("symbol", "")).replace(".NS", "") not in known) if n_new_rs > 0 else 0
+    n_also_momentum = int(new_rs_df["all_conditions_met"].sum()) if n_new_rs > 0 and "all_conditions_met" in new_rs_df.columns else 0
+    hit_rate = f"{100*n_new_rs/universe_size:.2f}%" if universe_size > 0 else "N/A"
+
+    html  = _html_head(f"Alpha Momentum — New RS High — {date_display}",
+                       "var(--red)", "var(--amber)", active="newrshigh", date_str=date_str)
+    html += f"""
+<header>
+  <div class="hdr-left">
+    <div class="brand">
+      <div class="brand-dot" style="background:var(--red)"></div>
+      <span class="brand-name">Alpha Momentum · New RS High</span>
+    </div>
+    <h1>New RS High</h1>
+    <p class="hdr-sub">Relative Strength making a fresh {lookback_days}-trading-day high · full NSE universe · {date_display}</p>
+    <div class="badge-row">
+      <span class="hdr-badge" style="background:var(--red-lt);border-color:var(--red-mid);color:var(--red)">🔥 RS at {lookback_days}-day high</span>
+      <span class="hdr-badge" style="background:var(--indigo-lt);border-color:var(--indigo-mid);color:var(--indigo)">Full universe scan</span>
+      {"<span class='hdr-badge' style='background:var(--new-bg);border-color:var(--new-border);color:var(--new-text)'>✦ " + str(n_new) + " New Stocks</span>" if n_new else ""}
+    </div>
+  </div>
+  <div class="date-pill" style="background:var(--red-lt);border-color:var(--red-mid);color:var(--red)">{date_display}</div>
+</header>
+
+<div class="kpi-strip">
+  <div class="kpi" style="--accent:var(--red)">
+    <div class="kpi-lbl">New RS Highs</div>
+    <div class="kpi-val">{n_new_rs}</div>
+    <div class="kpi-hint">of {universe_size} scanned</div>
+  </div>
+  <div class="kpi" style="--accent:var(--indigo)">
+    <div class="kpi-lbl">Hit Rate</div>
+    <div class="kpi-val">{hit_rate}</div>
+    <div class="kpi-hint">of full universe</div>
+  </div>
+  <div class="kpi" style="--accent:var(--emerald)">
+    <div class="kpi-lbl">Also in Momentum</div>
+    <div class="kpi-val">{n_also_momentum}</div>
+    <div class="kpi-hint">already clear all 8 conditions</div>
+  </div>
+  {"<div class='kpi' style='--accent:var(--new-text)'><div class='kpi-lbl'>New Appearances</div><div class='kpi-val'>" + str(n_new) + "</div><div class='kpi-hint'>first time in 10 days</div></div>" if n_new else ""}
+</div>
+
+<div class="callout">
+  <strong style="color:var(--red)">New RS High:</strong>
+  Today's RS percentile is at or above the highest it's been over the trailing {lookback_days} trading days —
+  relative strength turning up, which often leads price. Some of these stocks won't clear every Minervini
+  Trend Template condition yet (see the "Also in Momentum" column) — that's expected, and often the point:
+  catching leadership emerging before it's fully confirmed by price.
+</div>
+
+<div class="table-sec" style="padding-top:1.1rem">
+  <div class="tbl-head">
+    <div>
+      <span class="tbl-title">New RS High</span>
+      <span class="tbl-count tbl-title">[{n_new_rs}]</span>
+    </div>
+    <div class="controls">
+      <div class="legend-row">
+        <div class="leg"><div class="leg-dot" style="background:var(--new-border)"></div>✦ New (10-day)</div>
+      </div>
+      <input class="search" id="searchInput" type="text"
+             placeholder="Search symbol / industry…" oninput="filterRows()"/>
+    </div>
+  </div>
+  <div class="tbl-outer">
+    <table id="mainTable">
+      <thead><tr>
+        <th data-col="sym"  data-type="str">Symbol<i class="si"></i></th>
+        <th class="r" data-col="close" data-type="num">Close ₹<i class="si"></i></th>
+        <th class="r" data-col="rs"    data-type="num">RS %ile Today<i class="si"></i></th>
+        <th class="r">Prior {lookback_days}d High</th>
+        <th class="r">Δ RS</th>
+        <th class="c">History</th>
+        <th>Momentum?</th>
+      </tr></thead>
+      <tbody id="tableBody">{rows_html}</tbody>
+    </table>
+  </div>
+</div>
+
+<footer>Data: NSE India &amp; Yahoo Finance · Generated {date_display} · For informational purposes only · Not financial advice</footer>
+
+<script>
+{_FILTER_JS}
+{_TABLE_SORT_JS}
+</script>
+</body></html>"""
+
+    out_path.write_text(html, encoding="utf-8")
+    logger.info("New RS High dashboard → %s  (%d stocks)", out_path, n_new_rs)
 
 
 # ─────────────────────────────────────────────────────────────────────────────
