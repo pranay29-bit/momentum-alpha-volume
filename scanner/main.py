@@ -23,7 +23,7 @@ import pandas as pd
 from .config     import DOCS_DIR
 from .data_loader import download_all, load_symbols
 from .nse_client  import enrich_with_market_caps
-from .dashboard   import build_passing_dashboard, build_passing_ema10_dashboard, build_volume_action_dashboard, build_rocket_dashboard, build_industry_drilldown, build_minervini_ranking, build_new_rs_high_dashboard, build_breakdown_dashboard, build_stage4_dashboard
+from .dashboard   import build_passing_dashboard, build_passing_ema10_dashboard, build_volume_action_dashboard, build_rocket_dashboard, build_industry_drilldown, build_minervini_ranking, build_new_rs_high_dashboard, build_stage4_dashboard
 from .result_calendar import get_result_date
 from .indicators  import get_market_sentiment
 from . import net_new_highs as nnh
@@ -258,20 +258,6 @@ def run() -> None:
         known_symbols=known_symbols,
     )
 
-    # ── Breakdown Stocks — large-caps recently in Momentum, now below MA50 ────
-    logger.info("Scanning for Breakdown Stocks…")
-    try:
-        breakdown_df = breakdown_stocks.compute_breakdown_stocks(df, DOCS_DIR, today_str)
-    except Exception as exc:
-        logger.warning("Could not compute Breakdown Stocks: %s", exc)
-        breakdown_df = pd.DataFrame()
-    build_breakdown_dashboard(
-        breakdown_df,
-        out_dir / f"breakdown_dashboard_{today_str}.html",
-        today_str,
-        known_symbols=known_symbols,
-    )
-
     # ── Stage 4 Breakdown — large-caps below MA50 (full universe scan) ────────
     logger.info("Scanning for Stage 4 Breakdown stocks…")
     try:
@@ -471,7 +457,6 @@ def _update_index(
         _volume_link = f"{today_date_display}/volume_dashboard_{today_slug}.html"
         _rocket_link = f"{today_date_display}/rocket_dashboard_{today_slug}.html"
         _newrshigh_link = f"{today_date_display}/newrshigh_dashboard_{today_slug}.html"
-        _breakdown_link = f"{today_date_display}/breakdown_dashboard_{today_slug}.html"
         _stage4_link = f"{today_date_display}/stage4_dashboard_{today_slug}.html"
     else:
         _elite_link = _volume_link = _rocket_link = _newrshigh_link = _breakdown_link = _stage4_link = today_dashboard_link
@@ -492,9 +477,6 @@ def _update_index(
         dict(icon="🔥", accent="rose", accent2="amber", title="New RS High",
              desc="Relative Strength hitting a fresh multi-month high across the full NSE universe — leadership emerging, even before price confirms it.",
              link=_newrshigh_link),
-        dict(icon="📉", accent="red", accent2="navy", title="Breakdown Stocks",
-             desc="Large-caps (≥ ₹50,000 Cr) that passed Momentum recently but have since fallen below their 50-day MA — a risk radar, not a buy list.",
-             link=_breakdown_link),
         dict(icon="🪦", accent="slate", accent2="navy", title="Stage 4 Breakdown",
              desc="Large-caps (≥ ₹50,000 Cr) currently trading below their 50-day MA — broader than Breakdown Stocks, no recent-Momentum requirement.",
              link=_stage4_link),
@@ -570,7 +552,6 @@ def _update_index(
   <a href="{_volume_link}" class="btn-link blue">🔵 Volume</a>
   <a href="{_rocket_link}" class="btn-link amber">🚀 Rocket</a>
   <a href="{_newrshigh_link}" class="btn-link rose">🔥 New RS High</a>
-  <a href="{_breakdown_link}" class="btn-link red">📉 Breakdown</a>
   <a href="{_stage4_link}" class="btn-link slate">🪦 Stage 4</a>
   <a href="position-size.html" class="btn-link violet">📐 Position Size</a>
   <a href="position-tracker.html" class="btn-link navy">📈 Position Tracker</a>
