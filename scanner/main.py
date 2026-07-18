@@ -23,12 +23,14 @@ import pandas as pd
 from .config     import DOCS_DIR
 from .data_loader import download_all, load_symbols
 from .nse_client  import enrich_with_market_caps
-from .dashboard   import build_passing_dashboard, build_passing_ema10_dashboard, build_volume_action_dashboard, build_rocket_dashboard, build_industry_drilldown, build_minervini_ranking, build_new_rs_high_dashboard
+from .dashboard   import build_passing_dashboard, build_passing_ema10_dashboard, build_volume_action_dashboard, build_rocket_dashboard, build_industry_drilldown, build_minervini_ranking, build_new_rs_high_dashboard, build_breakdown_dashboard, build_stage4_dashboard
 from .result_calendar import get_result_date
 from .indicators  import get_market_sentiment
 from . import net_new_highs as nnh
 from . import minervini_rank as mrank
 from . import new_rs_high
+from . import breakdown_stocks
+from . import stage4_breakdown
 from . import holidays as nse_holidays
 
 # ── Logging ───────────────────────────────────────────────────────────────────
@@ -257,6 +259,35 @@ def run() -> None:
         known_symbols=known_symbols,
     )
 
+    # ── Breakdown Stocks — large-caps recently in Momentum, now below MA50 ────
+    logger.info("Scanning for Breakdown Stocks…")
+    try:
+        breakdown_df = breakdown_stocks.compute_breakdown_stocks(df, DOCS_DIR, today_str)
+    except Exception as exc:
+        logger.warning("Could not compute Breakdown Stocks: %s", exc)
+        breakdown_df = pd.DataFrame()
+    build_breakdown_dashboard(
+        breakdown_df,
+        out_dir / f"breakdown_dashboard_{today_str}.html",
+        today_str,
+        known_symbols=known_symbols,
+    )
+
+    # ── Stage 4 Breakdown — large-caps below MA50 (full universe scan) ────────
+    logger.info("Scanning for Stage 4 Breakdown stocks…")
+    try:
+        stage4_df = stage4_breakdown.compute_stage4_breakdown(df)
+    except Exception as exc:
+        logger.warning("Could not compute Stage 4 Breakdown: %s", exc)
+        stage4_df = pd.DataFrame()
+    build_stage4_dashboard(
+        stage4_df,
+        out_dir / f"stage4_dashboard_{today_str}.html",
+        today_str,
+        universe_size=len(df),
+        known_symbols=known_symbols,
+    )
+
     if not passing_ema10.empty:
         build_passing_ema10_dashboard(
             passing_ema10,
@@ -441,8 +472,10 @@ def _update_index(
         _volume_link = f"{today_date_display}/volume_dashboard_{today_slug}.html"
         _rocket_link = f"{today_date_display}/rocket_dashboard_{today_slug}.html"
         _newrshigh_link = f"{today_date_display}/newrshigh_dashboard_{today_slug}.html"
+        _breakdown_link = f"{today_date_display}/breakdown_dashboard_{today_slug}.html"
+        _stage4_link = f"{today_date_display}/stage4_dashboard_{today_slug}.html"
     else:
-        _elite_link = _volume_link = _rocket_link = _newrshigh_link = today_dashboard_link
+        _elite_link = _volume_link = _rocket_link = _newrshigh_link = _breakdown_link = _stage4_link = today_dashboard_link
 
     hub_cards = [
         dict(icon="📊", accent="indigo", accent2="blue", title="Momentum Dashboard",
@@ -457,9 +490,15 @@ def _update_index(
         dict(icon="🚀", accent="amber", accent2="red", title="Rocket Stocks",
              desc="Momentum passes coiling inside a tight daily inside-bar, ready to fire.",
              link=_rocket_link),
-        dict(icon="🔥", accent="red", accent2="amber", title="New RS High",
+        dict(icon="🔥", accent="rose", accent2="amber", title="New RS High",
              desc="Relative Strength hitting a fresh multi-month high across the full NSE universe — leadership emerging, even before price confirms it.",
              link=_newrshigh_link),
+        dict(icon="📉", accent="red", accent2="navy", title="Breakdown Stocks",
+             desc="Large-caps (≥ ₹50,000 Cr) that passed Momentum recently but have since fallen below their 50-day MA — a risk radar, not a buy list.",
+             link=_breakdown_link),
+        dict(icon="🪦", accent="slate", accent2="navy", title="Stage 4 Breakdown",
+             desc="Large-caps (≥ ₹50,000 Cr) currently trading below their 50-day MA — broader than Breakdown Stocks, no recent-Momentum requirement.",
+             link=_stage4_link),
     ]
 
     hub_cards_html = ""
@@ -531,7 +570,9 @@ def _update_index(
   <a href="{_elite_link}" class="btn-link green">⚡ Elite</a>
   <a href="{_volume_link}" class="btn-link blue">🔵 Volume</a>
   <a href="{_rocket_link}" class="btn-link amber">🚀 Rocket</a>
-  <a href="{_newrshigh_link}" class="btn-link red">🔥 New RS High</a>
+  <a href="{_newrshigh_link}" class="btn-link rose">🔥 New RS High</a>
+  <a href="{_breakdown_link}" class="btn-link red">📉 Breakdown</a>
+  <a href="{_stage4_link}" class="btn-link slate">🪦 Stage 4</a>
   <a href="position-size.html" class="btn-link violet">📐 Position Size</a>
   <a href="position-tracker.html" class="btn-link navy">📈 Position Tracker</a>
 </nav>"""
@@ -554,6 +595,8 @@ def _update_index(
     --blue:#2563eb;--blue-lt:#eff6ff;--blue-mid:#bfdbfe;
     --amber:#b45309;--amber-lt:#fffbeb;--amber-mid:#fde68a;
     --violet:#7c3aed;--violet-lt:#f5f3ff;--violet-mid:#ddd6fe;
+    --rose:#e11d48;--rose-lt:#fff1f2;--rose-mid:#fecdd3;
+    --slate:#475569;--slate-lt:#f1f5f9;--slate-mid:#cbd5e1;
     --red:#dc2626;--red-lt:#fef2f2;--red-mid:#fca5a5;
     --sans:'Outfit',system-ui,-apple-system,sans-serif;--mono:'DM Mono','SF Mono','Courier New',monospace;
     --radius:12px;--radius-sm:8px;--shadow-sm:0 1px 2px rgba(15,23,42,.04);--shadow-md:0 4px 16px -4px rgba(15,23,42,.08),0 1px 3px rgba(15,23,42,.04);
@@ -691,6 +734,10 @@ def _update_index(
   .btn-link.navy:hover{{background:#e2e6f2;}}
   .btn-link.red{{background:var(--red-lt);border-color:var(--red-mid);color:var(--red);}}
   .btn-link.red:hover{{background:#fee2e2;}}
+  .btn-link.rose{{background:var(--rose-lt);border-color:var(--rose-mid);color:var(--rose);}}
+  .btn-link.rose:hover{{background:#ffe4e6;}}
+  .btn-link.slate{{background:var(--slate-lt);border-color:var(--slate-mid);color:var(--slate);}}
+  .btn-link.slate:hover{{background:#e2e8f0;}}
   .btn-link.is-active{{box-shadow:0 0 0 1px currentColor inset;font-weight:700;}}
   /* Shared cross-page nav bar — identical component on every generated page */
   .site-nav{{display:flex;flex-wrap:wrap;gap:.5rem;padding:.75rem 2.5rem;
