@@ -636,7 +636,7 @@ def _site_nav(active: str, date_str: str) -> str:
     to Home or any other dashboard from wherever they land.
 
     `active` is one of: "momentum", "elite", "volume", "rocket", "newrshigh",
-    "breakdown", "stage4".
+    "stage4".
     `date_str` is the scan date in YYYYMMDD form (dashboards for the same
     date live side-by-side in the same folder, so links are relative).
     """
@@ -650,7 +650,7 @@ def _site_nav(active: str, date_str: str) -> str:
         _link("volume",    f"volume_dashboard_{date_str}.html",    "blue",    "🔵 Volume"),
         _link("rocket",    f"rocket_dashboard_{date_str}.html",    "amber",   "🚀 Rocket"),
         _link("newrshigh", f"newrshigh_dashboard_{date_str}.html", "rose",    "🔥 New RS High"),
-        _link("stage4",    f"stage4_dashboard_{date_str}.html",    "slate",   "🪦 Stage 4"),
+        _link("stage4",    f"stage4_dashboard_{date_str}.html",    "red",     "📉 Stage 4"),
     ])
     return f"""
 <nav class="site-nav">
@@ -1675,8 +1675,6 @@ def build_new_rs_high_dashboard(
 
     out_path.write_text(html, encoding="utf-8")
     logger.info("New RS High dashboard → %s  (%d stocks)", out_path, n_new_rs)
-
-
 # ─────────────────────────────────────────────────────────────────────────────
 #  STAGE 4 BREAKDOWN DASHBOARD
 # ─────────────────────────────────────────────────────────────────────────────
@@ -1693,8 +1691,7 @@ def build_stage4_dashboard(
     `stage4_df` is the already-computed output of
     scanner.stage4_breakdown.compute_stage4_breakdown() — large-cap stocks
     (>= min_market_cap_cr) currently trading below their 50-day MA. The
-    broader of the two weakness dashboards (compare with Breakdown Stocks,
-    which additionally requires a recent Momentum pass).
+    broader of the two weakness dashboards (the site's single weakness/risk-radar dashboard.
     """
     date_display = datetime.strptime(date_str, "%Y%m%d").strftime("%d %b %Y")
     known = known_symbols or set()
@@ -1728,12 +1725,12 @@ def build_stage4_dashboard(
               data-sym="{sym}" data-close="{_r(close)}" data-rs="{_r(rs)}"
               data-tmc="{_r(tmc)}" data-indgrp="{ind_grp}" data-ind="">
               <td>
-                <a class="sym-tag" style="background:var(--slate-lt);border-color:var(--slate-mid);color:var(--slate)"
+                <a class="sym-tag" style="background:var(--red-lt);border-color:var(--red-mid);color:var(--red)"
                    href="{link}" target="_blank" rel="noopener">{sym}<span class="ib-badge">S4</span>{_new_star(is_new)}</a>
               </td>
               <td class="r" style="font-family:var(--mono)">{close_s}</td>
               <td class="r" style="font-family:var(--mono);color:var(--muted)">{ma50_s}</td>
-              <td class="r"><span class="pill pill-slate">{pct_below_s}</span></td>
+              <td class="r"><span class="pill pill-red">{pct_below_s}</span></td>
               <td class="r"><span class="pill pill-amber">{rs_s}</span></td>
               <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.77rem">{tmc_s}</td>
               <td style="color:var(--muted);font-size:.78rem">{ind_grp}</td>
@@ -1744,27 +1741,27 @@ def build_stage4_dashboard(
     hit_rate = f"{100*n_stage4/universe_size:.2f}%" if universe_size > 0 else "N/A"
 
     html  = _html_head(f"Alpha Momentum — Stage 4 Breakdown — {date_display}",
-                       "var(--slate)", "var(--navy)", active="stage4", date_str=date_str)
+                       "var(--red)", "var(--navy)", active="stage4", date_str=date_str)
     html += f"""
 <header>
   <div class="hdr-left">
     <div class="brand">
-      <div class="brand-dot" style="background:var(--slate)"></div>
+      <div class="brand-dot" style="background:var(--red)"></div>
       <span class="brand-name">Alpha Momentum · Stage 4 Breakdown</span>
     </div>
     <h1>Stage 4 Breakdown</h1>
     <p class="hdr-sub">Large-caps (≥ ₹{min_market_cap_cr:,.0f} Cr) currently trading below their 50-day moving average · {date_display}</p>
     <div class="badge-row">
-      <span class="hdr-badge" style="background:var(--slate-lt);border-color:var(--slate-mid);color:var(--slate)">📉 Below 50-day MA</span>
+      <span class="hdr-badge" style="background:var(--red-lt);border-color:var(--red-mid);color:var(--red)">📉 Below 50-day MA</span>
       <span class="hdr-badge" style="background:var(--indigo-lt);border-color:var(--indigo-mid);color:var(--indigo)">Full universe scan</span>
       {"<span class='hdr-badge' style='background:var(--new-bg);border-color:var(--new-border);color:var(--new-text)'>✦ " + str(n_new) + " New Stocks</span>" if n_new else ""}
     </div>
   </div>
-  <div class="date-pill" style="background:var(--slate-lt);border-color:var(--slate-mid);color:var(--slate)">{date_display}</div>
+  <div class="date-pill" style="background:var(--red-lt);border-color:var(--red-mid);color:var(--red)">{date_display}</div>
 </header>
 
 <div class="kpi-strip">
-  <div class="kpi" style="--accent:var(--slate)">
+  <div class="kpi" style="--accent:var(--red)">
     <div class="kpi-lbl">Below 50-day MA</div>
     <div class="kpi-val">{n_stage4}</div>
     <div class="kpi-hint">of {universe_size} scanned</div>
@@ -1783,11 +1780,9 @@ def build_stage4_dashboard(
 </div>
 
 <div class="callout">
-  <strong style="color:var(--slate)">Stage 4 Breakdown:</strong>
+  <strong style="color:var(--red)">Stage 4 Breakdown:</strong>
   Large-caps (≥ ₹{min_market_cap_cr:,.0f} Cr) whose price is currently below the 50-day moving
-  average — no "recently in Momentum" requirement, no RS filter, just the cap floor plus the
-  MA50 break. Broader than Breakdown Stocks, which additionally requires a confirmed Momentum
-  pass within the last 10 days — see that dashboard for the narrower, higher-conviction version.
+  average — no "recently in Momentum" requirement, no RS filter — just the cap floor plus the MA50 break.
 </div>
 
 <div class="table-sec" style="padding-top:1.1rem">
