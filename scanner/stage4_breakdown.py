@@ -23,10 +23,13 @@ large stock currently below its 50-day line.
 
 The MA50 condition itself needs no historical archive reads and no
 network calls (already computed daily for every stock). The market-cap
-floor does require an API call per below-MA50 candidate (same
-`nse_client.enrich_with_market_caps` used elsewhere), but only for
-stocks that already failed the MA50 check — typically a small subset of
-the full universe, not all ~2700 stocks.
+floor uses a persistent on-disk cache (see nse_client.enrich_with_market_
+caps_cached) rather than fetching fresh every day — a below-MA50 day can
+match hundreds of stocks across the full universe, and market cap barely
+moves day to day for an already-large stock, so re-fetching all of them
+every single run was the actual bottleneck that blew a ~10-15 min daily
+workflow up to ~1 hour. After the first run repopulates the cache, only
+genuinely new or 14-day-stale symbols cost a network call.
 
 Public entry point:
 
@@ -57,9 +60,11 @@ def compute_stage4_breakdown(
     Return large-cap stocks (>= min_market_cap_cr) currently trading below
     their 50-day MA.
 
-    `enrich_fn` defaults to `scanner.nse_client.enrich_with_market_caps`
-    (imported lazily to avoid a hard dependency at module load, and to
-    make this trivially testable with a stub).
+    `enrich_fn` defaults to `scanner.nse_client.enrich_with_market_caps_
+    cached` — the disk-cached wrapper, not the always-fresh one — since
+    this candidate set can be large (imported lazily to avoid a hard
+    dependency at module load, and to make this trivially testable with
+    a stub).
     """
     if df is None or df.empty:
         return pd.DataFrame()
@@ -78,7 +83,7 @@ def compute_stage4_breakdown(
     )
 
     if enrich_fn is None:
-        from .nse_client import enrich_with_market_caps as enrich_fn
+        from .nse_client import enrich_with_market_caps_cached as enrich_fn
 
     enriched = enrich_fn(candidates)
 
