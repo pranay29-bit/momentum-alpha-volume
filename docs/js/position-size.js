@@ -32,6 +32,24 @@ const previewRiskPct = document.getElementById("previewRiskPct");
 const previewQty = document.getElementById("previewQty");
 const previewCapital = document.getElementById("previewCapital");
 
+// Never let a single position eat more than this % of the portfolio in
+// capital terms, regardless of how small the risk-based qty's per-share
+// risk makes it look. A stock with a very tight stop can otherwise size
+// up to an enormous, dangerously concentrated position even though its
+// *risk* in rupee terms looks small — this caps that independently.
+const MAX_CAPITAL_PCT = 10;
+
+// Small warning note, inserted dynamically right after the preview box —
+// built in JS rather than assumed to exist in the HTML, so this doesn't
+// depend on markup this file doesn't control.
+const capNote = document.createElement("div");
+capNote.id = "capitalCapNote";
+capNote.style.cssText =
+  "display:none;margin-top:.6rem;padding:.6rem .8rem;border-radius:8px;" +
+  "background:#fffbeb;border:1px solid #fde68a;color:#b45309;" +
+  "font-size:.8rem;line-height:1.4;";
+previewBox.insertAdjacentElement("afterend", capNote);
+
 let settingsSaveTimer = null;
 
 loginBtn.onclick = async () => {
@@ -109,6 +127,7 @@ function calculate() {
 
   if (!(portfolio > 0) || !(riskValue > 0) || !(entry > stop)) {
     previewBox.style.display = "none";
+    capNote.style.display = "none";
     return null;
   }
 
@@ -118,17 +137,42 @@ function calculate() {
 
   const riskPerShare = entry - stop;
   const riskPct = (riskPerShare / entry) * 100; // Entry-SL distance, in %
-  const qty = Math.floor(riskAmount / riskPerShare);
+
+  // Risk-based sizing (existing logic): how many shares does the risk
+  // budget alone allow?
+  const riskBasedQty = Math.floor(riskAmount / riskPerShare);
+
+  // Capital cap: how many shares can we buy before this position alone
+  // would exceed MAX_CAPITAL_PCT of the portfolio?
+  const maxCapital = (portfolio * MAX_CAPITAL_PCT) / 100;
+  const capCappedQty = Math.floor(maxCapital / entry);
+
+  // Whichever is smaller wins — we never violate either limit.
+  const qty = Math.max(0, Math.min(riskBasedQty, capCappedQty));
+  const cappedByCapital = capCappedQty < riskBasedQty;
+
   const capitalRequired = qty * entry;
+  const capitalPct = (capitalRequired / portfolio) * 100;
 
   previewBox.style.display = "flex";
   previewRiskAmount.textContent = formatINR(riskAmount);
   previewRiskPerShare.textContent = riskPerShare.toFixed(2);
   previewRiskPct.textContent = riskPct.toFixed(2) + "%";
   previewQty.textContent = qty;
-  previewCapital.textContent = formatINR(capitalRequired);
+  previewCapital.textContent = `${formatINR(capitalRequired)} (${capitalPct.toFixed(1)}% of portfolio)`;
 
-  return { riskAmount, riskPerShare, riskPct, qty, capitalRequired };
+  if (cappedByCapital && riskBasedQty > 0) {
+    const uncappedCapitalPct = (riskBasedQty * entry / portfolio) * 100;
+    capNote.textContent =
+      `⚠️ Qty reduced from ${riskBasedQty} to ${qty} to stay within the ${MAX_CAPITAL_PCT}% ` +
+      `capital cap — the risk-based quantity alone would have used ${uncappedCapitalPct.toFixed(1)}% ` +
+      `of your portfolio in this one position.`;
+    capNote.style.display = "block";
+  } else {
+    capNote.style.display = "none";
+  }
+
+  return { riskAmount, riskPerShare, riskPct, qty, capitalRequired, capitalPct, riskBasedQty, cappedByCapital };
 }
 
 [portfolioSizeInput, riskTypeSelect, riskValueInput, entryInput, stopInput]
@@ -177,6 +221,9 @@ addBtn.onclick = async () => {
       riskPerShare: result.riskPerShare,
       riskAmount: result.riskAmount,
       riskPct: result.riskPct,
+      capitalRequired: result.capitalRequired,
+      capitalPct: result.capitalPct,
+      cappedByCapital: result.cappedByCapital,
       currentPrice: Number(entryInput.value),
       createdAt: serverTimestamp()
     });
