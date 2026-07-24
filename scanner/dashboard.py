@@ -622,6 +622,62 @@ function filterRows() {
 }
 """
 
+# Populates the "✦ New Stocks (Last 10 Days)" table at the bottom of the
+# page by cloning the header + any .is-new rows out of the main table —
+# same data already on the page, no server-side duplication needed, works
+# identically across every dashboard since it only depends on #mainTable
+# and the existing .is-new row marker.
+_NEW_STOCKS_JS = """
+(function() {
+  var mainTable  = document.getElementById('mainTable');
+  var newSection = document.getElementById('newStocksSection');
+  var newHead    = document.getElementById('newStocksHead');
+  var newBody    = document.getElementById('newStocksBody');
+  var newCount   = document.getElementById('newStocksCount');
+  if (!mainTable || !newSection || !newHead || !newBody) return;
+
+  var headRow = mainTable.querySelector('thead tr');
+  var newRows = Array.prototype.slice.call(mainTable.querySelectorAll('tbody tr.is-new'));
+
+  if (!headRow || newRows.length === 0) {
+    newSection.style.display = 'none';
+    return;
+  }
+
+  newHead.innerHTML = headRow.outerHTML;
+  newRows.forEach(function(row) {
+    newBody.appendChild(row.cloneNode(true));
+  });
+  if (newCount) newCount.textContent = newRows.length;
+})();
+
+function scrollToNewStocks(e) {
+  if (e) e.preventDefault();
+  var el = document.getElementById('newStocksSection');
+  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+"""
+
+# Shared "New Stocks (Last 10 Days)" table shell — same block dropped into
+# every dashboard right before its footer. _NEW_STOCKS_JS fills it in on
+# load; if there are zero new stocks that run, the JS just hides it.
+_NEW_STOCKS_SECTION_HTML = """
+<div class="table-sec" id="newStocksSection" style="padding-top:1.1rem;">
+  <div class="tbl-head">
+    <div>
+      <span class="tbl-title">✦ New Stocks <span style="color:var(--new-text)">(Last 10 Days)</span></span>
+      <span class="tbl-count tbl-title">[<span id="newStocksCount">0</span>]</span>
+    </div>
+  </div>
+  <div class="tbl-outer">
+    <table id="newStocksTable">
+      <thead id="newStocksHead"></thead>
+      <tbody id="newStocksBody"></tbody>
+    </table>
+  </div>
+</div>
+"""
+
 _CHARTJS_DEFAULTS = """
 Chart.defaults.font.family = "'Outfit', sans-serif";
 Chart.defaults.font.size   = 11;
@@ -806,7 +862,7 @@ def build_passing_dashboard(
     <p class="hdr-sub">All 8 Minervini conditions passing · NSE India · {date_display}</p>
     <div class="badge-row">
       <span class="hdr-badge" style="background:var(--indigo-lt);border-color:var(--indigo-mid);color:var(--indigo)">✓ All 8 Conditions</span>
-      {"<span class='hdr-badge' style='background:var(--new-bg);border-color:var(--new-border);color:var(--new-text)'>✦ " + str(n_new) + " New Stocks</span>" if n_new else ""}
+      {"<a href='#newStocksSection' onclick='scrollToNewStocks(event)' class='hdr-badge' style='cursor:pointer;text-decoration:none;background:var(--new-bg);border-color:var(--new-border);color:var(--new-text)'>✦ " + str(n_new) + " New Stocks &rarr;</a>" if n_new else ""}
     </div>
   </div>
   <div class="date-pill" style="background:var(--indigo-lt);border-color:var(--indigo-mid);color:var(--indigo)">{date_display}</div>
@@ -889,6 +945,8 @@ def build_passing_dashboard(
   </div>
 </div>
 
+{_NEW_STOCKS_SECTION_HTML}
+
 <footer>Data: NSE India &amp; Yahoo Finance · Generated {date_display} · For informational purposes only · Not financial advice</footer>
 
 <script>
@@ -922,6 +980,7 @@ new Chart(document.getElementById('barChart'), {{
 }});
 {_FILTER_JS}
 {_TABLE_SORT_JS}
+{_NEW_STOCKS_JS}
 </script>
 </body></html>"""
 
@@ -1048,7 +1107,7 @@ def build_passing_ema10_dashboard(
     <div class="badge-row">
       <span class="hdr-badge" style="background:var(--emerald-lt);border-color:var(--emerald-mid);color:var(--emerald)">✓ 8 Minervini Conditions</span>
       <span class="hdr-badge" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)">✓ Close &gt; EMA10</span>
-      {"<span class='hdr-badge' style='background:var(--new-bg);border-color:var(--new-border);color:var(--new-text)'>✦ " + str(n_new) + " New Stocks</span>" if n_new else ""}
+      {"<a href='#newStocksSection' onclick='scrollToNewStocks(event)' class='hdr-badge' style='cursor:pointer;text-decoration:none;background:var(--new-bg);border-color:var(--new-border);color:var(--new-text)'>✦ " + str(n_new) + " New Stocks &rarr;</a>" if n_new else ""}
     </div>
   </div>
   <div class="date-pill" style="background:var(--emerald-lt);border-color:var(--emerald-mid);color:var(--emerald)">{date_display}</div>
@@ -1130,6 +1189,8 @@ def build_passing_ema10_dashboard(
   </div>
 </div>
 
+{_NEW_STOCKS_SECTION_HTML}
+
 <footer>Data: NSE India &amp; Yahoo Finance · Generated {date_display} · For informational purposes only · Not financial advice</footer>
 
 <script>
@@ -1176,6 +1237,7 @@ new Chart(document.getElementById('tvChart'), {{
 }});
 {_FILTER_JS}
 {_TABLE_SORT_JS}
+{_NEW_STOCKS_JS}
 </script>
 </body></html>"""
 
@@ -1278,7 +1340,7 @@ def build_volume_action_dashboard(
     <p class="hdr-sub">Institutional accumulation signals · NSE India · {date_display}</p>
     <div class="badge-row">
       <span class="hdr-badge" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)">✓ Blue Volume Pivot</span>
-      {"<span class='hdr-badge' style='background:var(--new-bg);border-color:var(--new-border);color:var(--new-text)'>✦ " + str(n_new) + " New Stocks</span>" if n_new else ""}
+      {"<a href='#newStocksSection' onclick='scrollToNewStocks(event)' class='hdr-badge' style='cursor:pointer;text-decoration:none;background:var(--new-bg);border-color:var(--new-border);color:var(--new-text)'>✦ " + str(n_new) + " New Stocks &rarr;</a>" if n_new else ""}
     </div>
   </div>
   <div class="date-pill" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)">{date_display}</div>
@@ -1341,11 +1403,14 @@ def build_volume_action_dashboard(
   </div>
 </div>
 
+{_NEW_STOCKS_SECTION_HTML}
+
 <footer>Data: NSE India &amp; Yahoo Finance · Generated {date_display} · For informational purposes only · Not financial advice</footer>
 
 <script>
 {_FILTER_JS}
 {_TABLE_SORT_JS}
+{_NEW_STOCKS_JS}
 </script>
 </body></html>"""
 
@@ -1439,7 +1504,7 @@ def build_rocket_dashboard(
     <div class="badge-row">
       <span class="hdr-badge" style="background:var(--amber-lt);border-color:var(--amber-mid);color:var(--amber)">✓ 8 Minervini Conditions</span>
       <span class="hdr-badge" style="background:var(--amber-lt);border-color:var(--amber-mid);color:var(--amber)">✓ Inside Bar</span>
-      {"<span class='hdr-badge' style='background:var(--new-bg);border-color:var(--new-border);color:var(--new-text)'>✦ " + str(n_new) + " New Stocks</span>" if n_new else ""}
+      {"<a href='#newStocksSection' onclick='scrollToNewStocks(event)' class='hdr-badge' style='cursor:pointer;text-decoration:none;background:var(--new-bg);border-color:var(--new-border);color:var(--new-text)'>✦ " + str(n_new) + " New Stocks &rarr;</a>" if n_new else ""}
     </div>
   </div>
   <div class="date-pill" style="background:var(--amber-lt);border-color:var(--amber-mid);color:var(--amber)">{date_display}</div>
@@ -1502,11 +1567,14 @@ def build_rocket_dashboard(
   </div>
 </div>
 
+{_NEW_STOCKS_SECTION_HTML}
+
 <footer>Data: NSE India &amp; Yahoo Finance · Generated {date_display} · For informational purposes only · Not financial advice</footer>
 
 <script>
 {_FILTER_JS}
 {_TABLE_SORT_JS}
+{_NEW_STOCKS_JS}
 </script>
 </body></html>"""
 
@@ -1602,7 +1670,7 @@ def build_new_rs_high_dashboard(
     <div class="badge-row">
       <span class="hdr-badge" style="background:var(--rose-lt);border-color:var(--rose-mid);color:var(--rose)">🔥 RS at {lookback_days}-day high</span>
       <span class="hdr-badge" style="background:var(--indigo-lt);border-color:var(--indigo-mid);color:var(--indigo)">Full universe scan</span>
-      {"<span class='hdr-badge' style='background:var(--new-bg);border-color:var(--new-border);color:var(--new-text)'>✦ " + str(n_new) + " New Stocks</span>" if n_new else ""}
+      {"<a href='#newStocksSection' onclick='scrollToNewStocks(event)' class='hdr-badge' style='cursor:pointer;text-decoration:none;background:var(--new-bg);border-color:var(--new-border);color:var(--new-text)'>✦ " + str(n_new) + " New Stocks &rarr;</a>" if n_new else ""}
     </div>
   </div>
   <div class="date-pill" style="background:var(--rose-lt);border-color:var(--rose-mid);color:var(--rose)">{date_display}</div>
@@ -1665,11 +1733,14 @@ def build_new_rs_high_dashboard(
   </div>
 </div>
 
+{_NEW_STOCKS_SECTION_HTML}
+
 <footer>Data: NSE India &amp; Yahoo Finance · Generated {date_display} · For informational purposes only · Not financial advice</footer>
 
 <script>
 {_FILTER_JS}
 {_TABLE_SORT_JS}
+{_NEW_STOCKS_JS}
 </script>
 </body></html>"""
 
@@ -1754,7 +1825,7 @@ def build_stage4_dashboard(
     <div class="badge-row">
       <span class="hdr-badge" style="background:var(--red-lt);border-color:var(--red-mid);color:var(--red)">📉 Below 50-day MA</span>
       <span class="hdr-badge" style="background:var(--indigo-lt);border-color:var(--indigo-mid);color:var(--indigo)">Full universe scan</span>
-      {"<span class='hdr-badge' style='background:var(--new-bg);border-color:var(--new-border);color:var(--new-text)'>✦ " + str(n_new) + " New Stocks</span>" if n_new else ""}
+      {"<a href='#newStocksSection' onclick='scrollToNewStocks(event)' class='hdr-badge' style='cursor:pointer;text-decoration:none;background:var(--new-bg);border-color:var(--new-border);color:var(--new-text)'>✦ " + str(n_new) + " New Stocks &rarr;</a>" if n_new else ""}
     </div>
   </div>
   <div class="date-pill" style="background:var(--red-lt);border-color:var(--red-mid);color:var(--red)">{date_display}</div>
@@ -1815,11 +1886,14 @@ def build_stage4_dashboard(
   </div>
 </div>
 
+{_NEW_STOCKS_SECTION_HTML}
+
 <footer>Data: NSE India &amp; Yahoo Finance · Generated {date_display} · For informational purposes only · Not financial advice</footer>
 
 <script>
 {_FILTER_JS}
 {_TABLE_SORT_JS}
+{_NEW_STOCKS_JS}
 </script>
 </body></html>"""
 
