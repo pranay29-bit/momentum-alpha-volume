@@ -889,7 +889,7 @@ def build_passing_dashboard(
     <div class="kpi-val">{total_tv_s}</div>
     <div class="kpi-hint">today's traded volume</div>
   </div>
-  {"<div class='kpi' style='--accent:var(--new-text)'><div class='kpi-lbl'>New Appearances</div><div class='kpi-val'>" + str(n_new) + "</div><div class='kpi-hint'>first time in 10 days</div></div>" if n_new else ""}
+  {"<a href='#newStocksSection' onclick='scrollToNewStocks(event)' class='kpi' style='--accent:var(--new-text);cursor:pointer;text-decoration:none;display:block'><div class='kpi-lbl'>New Appearances</div><div class='kpi-val'>" + str(n_new) + "</div><div class='kpi-hint'>first time in 10 days</div></a>" if n_new else ""}
 </div>
 
 <div class="callout">
@@ -1129,7 +1129,7 @@ def build_passing_ema10_dashboard(
     <div class="kpi-val">{total_tv_s}</div>
     <div class="kpi-hint">today's traded volume</div>
   </div>
-  {"<div class='kpi' style='--accent:var(--new-text)'><div class='kpi-lbl'>New Appearances</div><div class='kpi-val'>" + str(n_new) + "</div><div class='kpi-hint'>first time in 10 days</div></div>" if n_new else ""}
+  {"<a href='#newStocksSection' onclick='scrollToNewStocks(event)' class='kpi' style='--accent:var(--new-text);cursor:pointer;text-decoration:none;display:block'><div class='kpi-lbl'>New Appearances</div><div class='kpi-val'>" + str(n_new) + "</div><div class='kpi-hint'>first time in 10 days</div></a>" if n_new else ""}
 </div>
 
 <div class="callout">
@@ -1362,7 +1362,7 @@ def build_volume_action_dashboard(
     <div class="kpi-val">{avg_rv_s}</div>
     <div class="kpi-hint">vs. average volume</div>
   </div>
-  {"<div class='kpi' style='--accent:var(--new-text)'><div class='kpi-lbl'>New Appearances</div><div class='kpi-val'>" + str(n_new) + "</div><div class='kpi-hint'>first time in 10 days</div></div>" if n_new else ""}
+  {"<a href='#newStocksSection' onclick='scrollToNewStocks(event)' class='kpi' style='--accent:var(--new-text);cursor:pointer;text-decoration:none;display:block'><div class='kpi-lbl'>New Appearances</div><div class='kpi-val'>" + str(n_new) + "</div><div class='kpi-hint'>first time in 10 days</div></a>" if n_new else ""}
 </div>
 
 <div class="callout">
@@ -1526,7 +1526,7 @@ def build_rocket_dashboard(
     <div class="kpi-val">{hit_rate}</div>
     <div class="kpi-hint">inside bar frequency</div>
   </div>
-  {"<div class='kpi' style='--accent:var(--new-text)'><div class='kpi-lbl'>New Appearances</div><div class='kpi-val'>" + str(n_new) + "</div><div class='kpi-hint'>first time in 10 days</div></div>" if n_new else ""}
+  {"<a href='#newStocksSection' onclick='scrollToNewStocks(event)' class='kpi' style='--accent:var(--new-text);cursor:pointer;text-decoration:none;display:block'><div class='kpi-lbl'>New Appearances</div><div class='kpi-val'>" + str(n_new) + "</div><div class='kpi-hint'>first time in 10 days</div></a>" if n_new else ""}
 </div>
 
 <div class="callout">
@@ -1692,7 +1692,7 @@ def build_new_rs_high_dashboard(
     <div class="kpi-val">{n_also_momentum}</div>
     <div class="kpi-hint">already clear all 8 conditions</div>
   </div>
-  {"<div class='kpi' style='--accent:var(--new-text)'><div class='kpi-lbl'>New Appearances</div><div class='kpi-val'>" + str(n_new) + "</div><div class='kpi-hint'>first time in 10 days</div></div>" if n_new else ""}
+  {"<a href='#newStocksSection' onclick='scrollToNewStocks(event)' class='kpi' style='--accent:var(--new-text);cursor:pointer;text-decoration:none;display:block'><div class='kpi-lbl'>New Appearances</div><div class='kpi-val'>" + str(n_new) + "</div><div class='kpi-hint'>first time in 10 days</div></a>" if n_new else ""}
 </div>
 
 <div class="callout">
@@ -1847,7 +1847,7 @@ def build_stage4_dashboard(
     <div class="kpi-val">{hit_rate}</div>
     <div class="kpi-hint">of full universe</div>
   </div>
-  {"<div class='kpi' style='--accent:var(--new-text)'><div class='kpi-lbl'>New Appearances</div><div class='kpi-val'>" + str(n_new) + "</div><div class='kpi-hint'>first time in 10 days</div></div>" if n_new else ""}
+  {"<a href='#newStocksSection' onclick='scrollToNewStocks(event)' class='kpi' style='--accent:var(--new-text);cursor:pointer;text-decoration:none;display:block'><div class='kpi-lbl'>New Appearances</div><div class='kpi-val'>" + str(n_new) + "</div><div class='kpi-hint'>first time in 10 days</div></a>" if n_new else ""}
 </div>
 
 <div class="callout">
