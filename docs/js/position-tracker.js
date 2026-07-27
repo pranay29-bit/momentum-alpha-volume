@@ -266,8 +266,12 @@ function renderRow(p) {
   const { currentPrice, pnlPct, rMultiple, impactAbs, impactPct } = positionMetrics(p);
   const riskPctDisplay = typeof p.riskPct === "number" ? p.riskPct.toFixed(2) + "%" : "—";
 
+  const stopValue = Number(p.stop);
+  const slHit = Number.isFinite(stopValue) && stopValue > 0 && currentPrice <= stopValue;
+  const slBadge = slHit ? `<span class="sl-hit-badge" title="Current price has fallen to or below the stop loss">SL HIT</span>` : "";
+
   tr.innerHTML = `
-    <td>${escapeHtml(p.symbol)}</td>
+    <td>${slBadge}${escapeHtml(p.symbol)}</td>
     <td>${formatDate(p.dateBought)}</td>
     <td>
       ${p.entry}
