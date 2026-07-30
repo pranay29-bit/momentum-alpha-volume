@@ -459,6 +459,8 @@ function renderBooked() {
   }
   updateBookedSummary();
   updateSortIndicators("booked");
+  renderHeatmap();
+  updateAnalytics();
 }
 
 function holdingDays(p) {
@@ -590,6 +592,279 @@ function escapeHtml(str) {
   const div = document.createElement("div");
   div.textContent = str ?? "";
   return div.innerHTML;
+}
+
+function dayKey(dateVal) {
+  const d = typeof dateVal?.toDate === "function" ? dateVal.toDate() : new Date(dateVal);
+  if (!dateVal || isNaN(d.getTime())) return null;
+  return d.toISOString().slice(0, 10); // YYYY-MM-DD
+}
+
+function blendHex(hex1, hex2, t) {
+  const c1 = parseInt(hex1.slice(1), 16);
+  const c2 = parseInt(hex2.slice(1), 16);
+  const r1 = (c1 >> 16) & 255, g1 = (c1 >> 8) & 255, b1 = c1 & 255;
+  const r2 = (c2 >> 16) & 255, g2 = (c2 >> 8) & 255, b2 = c2 & 255;
+  const r = Math.round(r1 + (r2 - r1) * t);
+  const g = Math.round(g1 + (g2 - g1) * t);
+  const b = Math.round(b1 + (b2 - b1) * t);
+  return `rgb(${r},${g},${b})`;
+}
+
+const HEATMAP_COLORS = {
+  profitLt: "#ecfdf5",
+  profit: "#059669",
+  lossLt: "#fef2f2",
+  loss: "#dc2626",
+};
+
+function renderHeatmap() {
+  const grid = document.getElementById("heatmapGrid");
+  const rangeEl = document.getElementById("heatmapRange");
+  const tooltip = document.getElementById("heatmapTooltip");
+  if (!grid) return;
+  grid.innerHTML = "";
+
+  if (bookedPositions.length === 0) {
+    grid.innerHTML = `<div class="empty-state" style="padding:1.5rem 0;"><span class="icon">🗓️</span>No booked trades yet to plot.</div>`;
+    if (rangeEl) rangeEl.textContent = "";
+    return;
+  }
+
+  const byDay = {}; // "YYYY-MM-DD" -> { total, trades: [] }
+  let minDate = null;
+  let maxDate = null;
+
+  bookedPositions.forEach((p) => {
+    const key = dayKey(p.dateSold);
+    if (!key) return;
+    const d = new Date(key + "T00:00:00");
+    if (!minDate || d < minDate) minDate = d;
+    if (!maxDate || d > maxDate) maxDate = d;
+    if (!byDay[key]) byDay[key] = { total: 0, trades: [] };
+    byDay[key].total += Number(p.impactAbs) || 0;
+    byDay[key].trades.push(p);
+  });
+
+  if (!minDate || !maxDate) {
+    grid.innerHTML = `<div class="empty-state" style="padding:1.5rem 0;"><span class="icon">🗓️</span>No dated trades yet to plot.</div>`;
+    if (rangeEl) rangeEl.textContent = "";
+    return;
+  }
+
+  if (rangeEl) {
+    rangeEl.innerHTML = `🕐 ${minDate.toISOString().slice(0, 10)} to ${maxDate.toISOString().slice(0, 10)}`;
+  }
+
+  const start = new Date(minDate);
+  start.setDate(start.getDate() - start.getDay());
+  const end = new Date(maxDate);
+  end.setDate(end.getDate() + (6 - end.getDay()));
+
+  const maxAbs = Math.max(1, ...Object.values(byDay).map((v) => Math.abs(v.total)));
+  const monthNames = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
+
+  const weeks = [];
+  let cur = new Date(start);
+  while (cur <= end) {
+    const week = [];
+    for (let i = 0; i < 7; i++) {
+      week.push(new Date(cur));
+      cur.setDate(cur.getDate() + 1);
+    }
+    weeks.push(week);
+  }
+
+  const outer = document.createElement("div");
+
+  const monthRow = document.createElement("div");
+  monthRow.style.display = "flex";
+  monthRow.style.gap = "3px";
+  monthRow.style.marginBottom = "4px";
+
+  const weeksRow = document.createElement("div");
+  weeksRow.style.display = "flex";
+  weeksRow.style.gap = "3px";
+
+  let lastMonth = -1;
+  weeks.forEach((week) => {
+    const firstDay = week[0];
+    const monthLbl = document.createElement("div");
+    monthLbl.style.width = "13px";
+    monthLbl.style.flex = "none";
+    monthLbl.style.fontFamily = "var(--mono)";
+    monthLbl.style.fontSize = ".65rem";
+    monthLbl.style.color = "var(--subtle)";
+    monthLbl.style.overflow = "visible";
+    monthLbl.style.whiteSpace = "nowrap";
+    if (firstDay.getMonth() !== lastMonth) {
+      monthLbl.textContent = monthNames[firstDay.getMonth()];
+      lastMonth = firstDay.getMonth();
+    }
+    monthRow.appendChild(monthLbl);
+
+    const col = document.createElement("div");
+    col.className = "heatmap-week";
+    week.forEach((day) => {
+      const key = day.toISOString().slice(0, 10);
+      const cell = document.createElement("div");
+      cell.className = "heatmap-day";
+
+      if (day < minDate || day > maxDate) {
+        cell.style.visibility = "hidden";
+      } else {
+        const info = byDay[key];
+        if (info && Math.abs(info.total) > 0.0001) {
+          cell.classList.add("has-trade");
+          const intensity = Math.min(1, Math.abs(info.total) / maxAbs);
+          cell.style.background =
+            info.total > 0
+              ? blendHex(HEATMAP_COLORS.profitLt, HEATMAP_COLORS.profit, intensity)
+              : blendHex(HEATMAP_COLORS.lossLt, HEATMAP_COLORS.loss, intensity);
+
+          cell.addEventListener("mouseenter", () => {
+            tooltip.style.display = "block";
+            const sign = info.total >= 0 ? "+" : "";
+            tooltip.innerHTML = `<strong>${key}</strong><br/>${info.trades.length} trade${info.trades.length > 1 ? "s" : ""} · ${sign}${formatINR(info.total)}`;
+          });
+          cell.addEventListener("mousemove", (e) => {
+            tooltip.style.left = e.clientX + 14 + "px";
+            tooltip.style.top = e.clientY + 14 + "px";
+          });
+          cell.addEventListener("mouseleave", () => {
+            tooltip.style.display = "none";
+          });
+        }
+      }
+      col.appendChild(cell);
+    });
+    weeksRow.appendChild(col);
+  });
+
+  outer.appendChild(monthRow);
+  outer.appendChild(weeksRow);
+  grid.appendChild(outer);
+}
+
+function updateAnalytics() {
+  const setPnl = (id, val, suffix = "") => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.textContent = formatINR(val) + suffix;
+    el.className = pnlClass(val);
+  };
+
+  if (bookedPositions.length === 0) {
+    setPnl("maxProfitDay", 0);
+    setPnl("maxLossDay", 0);
+    setPnl("avgProfitTrade", 0);
+    setPnl("avgLossTrade", 0);
+    document.getElementById("bestTrade").textContent = "—";
+    document.getElementById("bestTrade").className = "";
+    document.getElementById("worstTrade").textContent = "—";
+    document.getElementById("worstTrade").className = "";
+    document.getElementById("profitFactor").textContent = "—";
+    setPnl("expectancyTrade", 0);
+    document.getElementById("avgHoldWin").textContent = "—";
+    document.getElementById("avgHoldLoss").textContent = "—";
+    document.getElementById("maxWinStreak").textContent = "0";
+    document.getElementById("maxLossStreak").textContent = "0";
+    return;
+  }
+
+  const byDay = {};
+  bookedPositions.forEach((p) => {
+    const key = dayKey(p.dateSold);
+    if (!key) return;
+    byDay[key] = (byDay[key] || 0) + (Number(p.impactAbs) || 0);
+  });
+
+  let maxProfitDayVal = 0;
+  let maxLossDayVal = 0;
+  Object.values(byDay).forEach((v) => {
+    if (v > maxProfitDayVal) maxProfitDayVal = v;
+    if (v < maxLossDayVal) maxLossDayVal = v;
+  });
+
+  const winners = bookedPositions.filter((p) => (Number(p.impactAbs) || 0) > 0.0001);
+  const losers = bookedPositions.filter((p) => (Number(p.impactAbs) || 0) < -0.0001);
+  const sum = (arr) => arr.reduce((s, p) => s + (Number(p.impactAbs) || 0), 0);
+
+  const grossProfit = sum(winners);
+  const grossLoss = Math.abs(sum(losers));
+  const avgProfit = winners.length ? grossProfit / winners.length : 0;
+  const avgLoss = losers.length ? -grossLoss / losers.length : 0;
+
+  let best = null;
+  let worst = null;
+  bookedPositions.forEach((p) => {
+    const v = Number(p.impactAbs) || 0;
+    if (!best || v > (Number(best.impactAbs) || 0)) best = p;
+    if (!worst || v < (Number(worst.impactAbs) || 0)) worst = p;
+  });
+
+  const profitFactor = grossLoss > 0 ? grossProfit / grossLoss : grossProfit > 0 ? Infinity : 0;
+  const expectancy = sum(bookedPositions) / bookedPositions.length;
+
+  const avgHoldDays = (arr) => {
+    const days = arr
+      .map((p) => {
+        const b = typeof p.dateBought?.toDate === "function" ? p.dateBought.toDate() : new Date(p.dateBought);
+        const s = typeof p.dateSold?.toDate === "function" ? p.dateSold.toDate() : new Date(p.dateSold);
+        if (!p.dateBought || !p.dateSold || isNaN(b.getTime()) || isNaN(s.getTime())) return null;
+        return Math.max(0, Math.round((s - b) / 86400000));
+      })
+      .filter((d) => d !== null);
+    return days.length ? days.reduce((a, b) => a + b, 0) / days.length : null;
+  };
+
+  const avgHoldWinDays = avgHoldDays(winners);
+  const avgHoldLossDays = avgHoldDays(losers);
+
+  const sorted = [...bookedPositions]
+    .filter((p) => dayKey(p.dateSold))
+    .sort((a, b) => dayKey(a.dateSold).localeCompare(dayKey(b.dateSold)));
+
+  let curWinStreak = 0, maxWinStreak = 0, curLossStreak = 0, maxLossStreak = 0;
+  sorted.forEach((p) => {
+    const v = Number(p.impactAbs) || 0;
+    if (v > 0.0001) {
+      curWinStreak++;
+      curLossStreak = 0;
+      maxWinStreak = Math.max(maxWinStreak, curWinStreak);
+    } else if (v < -0.0001) {
+      curLossStreak++;
+      curWinStreak = 0;
+      maxLossStreak = Math.max(maxLossStreak, curLossStreak);
+    } else {
+      curWinStreak = 0;
+      curLossStreak = 0;
+    }
+  });
+
+  setPnl("maxProfitDay", maxProfitDayVal);
+  setPnl("maxLossDay", maxLossDayVal);
+  setPnl("avgProfitTrade", avgProfit);
+  setPnl("avgLossTrade", avgLoss);
+
+  const bestEl = document.getElementById("bestTrade");
+  bestEl.textContent = `${best.symbol} · ${formatINR(Number(best.impactAbs) || 0)}`;
+  bestEl.className = pnlClass(Number(best.impactAbs) || 0);
+
+  const worstEl = document.getElementById("worstTrade");
+  worstEl.textContent = `${worst.symbol} · ${formatINR(Number(worst.impactAbs) || 0)}`;
+  worstEl.className = pnlClass(Number(worst.impactAbs) || 0);
+
+  document.getElementById("profitFactor").textContent =
+    grossLoss > 0 ? profitFactor.toFixed(2) : grossProfit > 0 ? "∞" : "—";
+
+  setPnl("expectancyTrade", expectancy);
+
+  document.getElementById("avgHoldWin").textContent = avgHoldWinDays !== null ? avgHoldWinDays.toFixed(1) + "d" : "—";
+  document.getElementById("avgHoldLoss").textContent = avgHoldLossDays !== null ? avgHoldLossDays.toFixed(1) + "d" : "—";
+
+  document.getElementById("maxWinStreak").textContent = maxWinStreak;
+  document.getElementById("maxLossStreak").textContent = maxLossStreak;
 }
 
 switchTab("open");
