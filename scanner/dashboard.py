@@ -197,18 +197,23 @@ header h1 {
 
 /* ── Shared cross-page nav bar (identical component on every page) ── */
 .site-nav {
-  display: flex; flex-wrap: wrap; gap: .5rem;
+  display: flex; flex-wrap: wrap; gap: .5rem; align-items: center;
   padding: .75rem 2.5rem;
-  background: var(--surface-2);
+  background: color-mix(in srgb, var(--surface-2) 88%, transparent);
+  backdrop-filter: blur(10px) saturate(160%);
+  -webkit-backdrop-filter: blur(10px) saturate(160%);
   border-bottom: 1px solid var(--border);
+  position: sticky; top: 0; z-index: 100;
+  box-shadow: 0 6px 18px -10px rgba(15,23,42,.18);
 }
 .btn-link {
   display: inline-flex; align-items: center; gap: .35rem;
   padding: .32rem .9rem; border-radius: 999px;
   font-family: var(--mono); font-size: .72rem; font-weight: 600;
   background: var(--indigo-lt); border: 1px solid var(--indigo-mid); color: var(--indigo);
-  text-decoration: none; transition: background .14s, box-shadow .14s; letter-spacing: .03em;
+  text-decoration: none; transition: background .14s, box-shadow .14s, transform .14s; letter-spacing: .03em;
 }
+.btn-link:hover { transform: translateY(-1px); box-shadow: 0 3px 8px -3px rgba(15,23,42,.18); }
 .btn-link:hover { background: #dde2fb; }
 .btn-link.green   { background: var(--emerald-lt); border-color: var(--emerald-mid); color: var(--emerald); }
 .btn-link.green:hover   { background: #d7f8ea; }
