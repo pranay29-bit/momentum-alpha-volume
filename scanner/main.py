@@ -22,7 +22,7 @@ import pandas as pd
 
 from .config     import DOCS_DIR
 from .data_loader import download_all, load_symbols
-from .nse_client  import enrich_with_market_caps
+from .nse_client  import enrich_with_market_caps, overlay_price_band_from_cache
 from .dashboard   import build_passing_dashboard, build_passing_ema10_dashboard, build_volume_action_dashboard, build_rocket_dashboard, build_industry_drilldown, build_minervini_ranking, build_new_rs_high_dashboard, build_stage4_dashboard
 from .result_calendar import get_result_date
 from .indicators  import get_market_sentiment
@@ -127,6 +127,12 @@ def run() -> None:
 
     if not passing.empty:
         passing = enrich_with_market_caps(passing)
+        # Overlay price_band from data/market_cap_cache.csv (populated by
+        # scripts/update_price_band_cache.py from your daily NSE file), so
+        # your uploaded band data takes priority over the live NSE fetch
+        # above without losing traded_value_cr / traded_volume / TV%MC,
+        # which only the live call above provides.
+        passing = overlay_price_band_from_cache(passing)
 
     passing_path = out_dir / f"passing_stocks_{today_str}.csv"
     passing.to_csv(passing_path, index=False)
