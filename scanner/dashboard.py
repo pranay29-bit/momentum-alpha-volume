@@ -831,7 +831,7 @@ def build_passing_dashboard(
 
         rows_html += f"""
         <tr class="srow{new_cls}"
-          data-sym="{sym}" data-close="{_r(close)}" data-rs="{_r(rs)}"
+          data-sym="{sym}" data-band="{price_band}" data-close="{_r(close)}" data-rs="{_r(rs)}"
           data-ema10="{_r(ema10)}" data-tmc="{_r(tmc)}"
           data-tv="{_r(tv)}" data-tvpct="{_r(tvpct,6)}"
           data-indgrp="{ind_grp}" data-ind="{industry}">
@@ -938,7 +938,7 @@ def build_passing_dashboard(
     <table id="mainTable">
       <thead><tr>
         <th data-col="sym"    data-type="str">Symbol<i class="si"></i></th>
-        <th class="c" title="Circuit price band — the max % a stock can move from previous close">Band</th>
+        <th class="c" data-col="band" data-type="str" title="Circuit price band — the max % a stock can move from previous close">Band<i class="si"></i></th>
         <th class="r" data-col="close"  data-type="num">Close ₹<i class="si"></i></th>
         <th class="r" data-col="ema10"  data-type="num">EMA10 ₹<i class="si"></i></th>
         <th class="r" data-col="rs"     data-type="num">RS %ile<i class="si"></i></th>
@@ -1050,7 +1050,7 @@ def build_passing_ema10_dashboard(
 
         rows_html += f"""
         <tr class="srow{new_cls}"
-          data-sym="{sym}" data-close="{_r(close)}" data-ema10="{_r(ema10)}"
+          data-sym="{sym}" data-band="{price_band}" data-close="{_r(close)}" data-ema10="{_r(ema10)}"
           data-gap="{_r(gap_pct,4)}" data-rs="{_r(rs)}" data-tmc="{_r(tmc)}"
           data-tv="{_r(tv)}" data-tvpct="{_r(tvpct,6)}"
           data-indgrp="{ind_grp}" data-ind="{industry}">
@@ -1181,7 +1181,7 @@ def build_passing_ema10_dashboard(
     <table id="mainTable">
       <thead><tr>
         <th data-col="sym"   data-type="str">Symbol<i class="si"></i></th>
-        <th class="c" title="Circuit price band — the max % a stock can move from previous close">Band</th>
+        <th class="c" data-col="band" data-type="str" title="Circuit price band — the max % a stock can move from previous close">Band<i class="si"></i></th>
         <th class="r" data-col="close"  data-type="num">Close ₹<i class="si"></i></th>
         <th class="r" data-col="ema10"  data-type="num">EMA10 ₹<i class="si"></i></th>
         <th class="r" data-col="gap"    data-type="num">Gap % Above EMA10<i class="si"></i></th>
@@ -1295,6 +1295,7 @@ def build_volume_action_dashboard(
         is_snort  = bool(row.get("bull_snort", False))
         snort_flag = 1 if is_snort else 0
         result_date = str(row.get("result_date", "—"))
+        price_band = str(row.get("price_band", "—"))
 
         close_s  = f"₹{float(close):,.2f}" if _safe(close) else "N/A"
         rs_s     = f"{float(rs):.1f}"       if _safe(rs)    else "N/A"
@@ -1314,12 +1315,13 @@ def build_volume_action_dashboard(
 
         rows_html += f"""
         <tr class="srow{new_cls}"
-          data-sym="{sym}" data-close="{_r(close)}" data-relvol="{_r(relvol)}"
+          data-sym="{sym}" data-band="{price_band}" data-close="{_r(close)}" data-relvol="{_r(relvol)}"
           data-snort="{snort_flag}" data-rs="{_r(rs)}" data-result="{result_date}">
           <td>
             <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
                href="{link}" target="_blank" rel="noopener">{sym}{_new_star(is_new)}</a>
           </td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem" title="Circuit price band">{price_band}</td>
           <td class="r" style="font-family:var(--mono)">{close_s}</td>
           <td>
             <div class="vol-wrap">
@@ -1400,6 +1402,7 @@ def build_volume_action_dashboard(
     <table id="mainTable">
       <thead><tr>
         <th data-col="sym"    data-type="str">Symbol<i class="si"></i></th>
+        <th class="c" data-col="band" data-type="str" title="Circuit price band — the max % a stock can move from previous close">Band<i class="si"></i></th>
         <th class="r" data-col="close"  data-type="num">Close ₹<i class="si"></i></th>
         <th class="r" data-col="relvol" data-type="num">Rel Volume<i class="si"></i></th>
         <th class="c">Signal</th>
@@ -1445,7 +1448,7 @@ def build_rocket_dashboard(
     n_passing = len(passing)
 
     if n_rocket == 0:
-        rows_html = f'<tr><td colspan="9" class="no-data">No Rocket Stocks today — no inside bars among {n_passing} passing stocks.</td></tr>'
+        rows_html = f'<tr><td colspan="10" class="no-data">No Rocket Stocks today — no inside bars among {n_passing} passing stocks.</td></tr>'
     else:
         rows_html = ""
         for _, row in rocket.sort_values("rs_percentile", ascending=False).iterrows():
@@ -1461,6 +1464,7 @@ def build_rocket_dashboard(
             hi52_pct = row.get("pct_from_52w_high", np.nan)
             lo52_pct = row.get("pct_above_52w_low", np.nan)
             ind_grp  = str(row.get("industry_group", "")) or "—"
+            price_band = str(row.get("price_band", "—"))
 
             close_s = f"₹{float(close):,.2f}" if _safe(close) else "N/A"
             ema10_s = f"₹{float(ema10):,.2f}" if _safe(ema10) else "N/A"
@@ -1478,13 +1482,14 @@ def build_rocket_dashboard(
 
             rows_html += f"""
             <tr class="srow{new_cls}"
-              data-sym="{sym}" data-close="{_r(close)}" data-rs="{_r(rs)}"
+              data-sym="{sym}" data-band="{price_band}" data-close="{_r(close)}" data-rs="{_r(rs)}"
               data-ema10="{_r(ema10)}" data-tmc="{_r(tmc)}" data-tv="{_r(tv)}"
               data-indgrp="{ind_grp}" data-ind="">
               <td>
                 <a class="sym-tag" style="background:var(--amber-lt);border-color:var(--amber-mid);color:var(--amber)"
                    href="{link}" target="_blank" rel="noopener">{sym}<span class="ib-badge">IB</span>{_new_star(is_new)}</a>
               </td>
+              <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem" title="Circuit price band">{price_band}</td>
               <td class="r" style="font-family:var(--mono)">{close_s}</td>
               <td class="r"><span class="pill pill-green">{ema10_s}</span></td>
               <td class="r"><span class="pill pill-amber">{rs_s}</span></td>
@@ -1562,6 +1567,7 @@ def build_rocket_dashboard(
     <table id="mainTable">
       <thead><tr>
         <th data-col="sym"  data-type="str">Symbol<i class="si"></i></th>
+        <th class="c" data-col="band" data-type="str" title="Circuit price band — the max % a stock can move from previous close">Band<i class="si"></i></th>
         <th class="r" data-col="close" data-type="num">Close ₹<i class="si"></i></th>
         <th class="r" data-col="ema10" data-type="num">EMA10 ₹<i class="si"></i></th>
         <th class="r" data-col="rs"    data-type="num">RS %ile<i class="si"></i></th>
