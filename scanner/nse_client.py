@@ -470,3 +470,33 @@ def enrich_with_market_caps_cached(
     out["price_band"] = out["symbol"].map(cache_lookup.get("price_band", pd.Series(dtype=object))).fillna(_PRICE_BAND_EMPTY)
 
     return out
+
+
+def overlay_price_band_from_cache(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Overwrite `price_band` in *df* using whatever is currently in
+    data/market_cap_cache.csv, for any symbol present there — without
+    touching total_market_cap_cr, traded_value_cr, traded_volume, or
+    traded_val_pct_mc.
+
+    Intended to run AFTER enrich_with_market_caps(), so a daily manual
+    upload (via scripts/update_price_band_cache.py) takes priority over
+    whatever price_band the live NSE fetch happened to return, while
+    still keeping the live traded-value/volume figures from that call.
+
+    Symbols not present in the cache are left with whatever price_band
+    they already had (e.g. from the live fetch, or "—" if that was empty
+    too).
+    """
+    if df is None or df.empty or "price_band" not in df.columns:
+        return df
+
+    cache = _load_cache()
+    if cache.empty:
+        return df
+
+    band_lookup = cache.set_index("symbol")["price_band"]
+    out = df.copy()
+    overlay = out["symbol"].map(band_lookup)
+    out["price_band"] = overlay.fillna(out["price_band"])
+    return out
