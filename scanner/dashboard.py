@@ -406,7 +406,11 @@ header h1 {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--rl);
-  overflow: hidden;
+  /* Constrain height so the horizontal scrollbar sits right below the
+     visible rows instead of at the very bottom of a (potentially very
+     long) table — no need to scroll the whole page to reach it. */
+  max-height: 72vh;
+  overflow: auto;
 }
 table { width: 100%; border-collapse: collapse; font-size: .82rem; white-space: nowrap; }
 thead tr {
@@ -542,7 +546,7 @@ footer {
 }
 
 /* ── Horizontal scroll wrapper for tables on small screens ── */
-.tbl-outer { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.tbl-outer { -webkit-overflow-scrolling: touch; }
 table { min-width: 640px; }
 
 /* ── Mobile responsiveness ── */
@@ -835,6 +839,7 @@ def build_passing_dashboard(
             <a class="sym-tag" style="background:var(--indigo-lt);border-color:var(--indigo-mid);color:var(--indigo)"
                href="{link}" target="_blank" rel="noopener">{sym}{_new_star(is_new)}</a>
           </td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem" title="Circuit price band">{price_band}</td>
           <td class="r" style="font-family:var(--mono)">{close_s}</td>
           <td class="r"><span class="pill {ema_cls}">{ema10_s}</span></td>
           <td class="r"><span class="pill pill-amber">{rs_s}</span></td>
@@ -844,7 +849,6 @@ def build_passing_dashboard(
           <td style="color:var(--muted);font-size:.78rem;max-width:150px;overflow:hidden;text-overflow:ellipsis">{ind_grp}</td>
           <td style="color:var(--subtle);font-size:.74rem;max-width:130px;overflow:hidden;text-overflow:ellipsis">{industry}</td>
           <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">{result_date}</td>
-          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">{price_band}</td>
         </tr>"""
 
         chart_labels.append(f'"{sym}"')
@@ -934,6 +938,7 @@ def build_passing_dashboard(
     <table id="mainTable">
       <thead><tr>
         <th data-col="sym"    data-type="str">Symbol<i class="si"></i></th>
+        <th class="c" title="Circuit price band — the max % a stock can move from previous close">Band</th>
         <th class="r" data-col="close"  data-type="num">Close ₹<i class="si"></i></th>
         <th class="r" data-col="ema10"  data-type="num">EMA10 ₹<i class="si"></i></th>
         <th class="r" data-col="rs"     data-type="num">RS %ile<i class="si"></i></th>
@@ -943,7 +948,6 @@ def build_passing_dashboard(
         <th          data-col="indgrp" data-type="str">Industry Group<i class="si"></i></th>
         <th          data-col="ind"    data-type="str">Industry<i class="si"></i></th>
         <th class="r">Result Date</th>
-        <th class="c">Band</th>
       </tr></thead>
       <tbody id="tableBody">{rows_html}</tbody>
     </table>
@@ -1054,6 +1058,7 @@ def build_passing_ema10_dashboard(
             <a class="sym-tag" style="background:var(--emerald-lt);border-color:var(--emerald-mid);color:var(--emerald)"
                href="{link}" target="_blank" rel="noopener">{sym}{_new_star(is_new)}</a>
           </td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem" title="Circuit price band">{price_band}</td>
           <td class="r" style="font-family:var(--mono)">{close_s}</td>
           <td class="r"><span class="pill pill-green">{ema10_s}</span></td>
           <td class="r" style="font-family:var(--mono);font-weight:600;color:{gap_col}">{gap_s}</td>
@@ -1064,7 +1069,6 @@ def build_passing_ema10_dashboard(
           <td style="color:var(--muted);font-size:.78rem;max-width:150px;overflow:hidden;text-overflow:ellipsis">{ind_grp}</td>
           <td style="color:var(--subtle);font-size:.74rem;max-width:130px;overflow:hidden;text-overflow:ellipsis">{industry}</td>
           <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">{result_date}</td>
-          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">{price_band}</td>
         </tr>"""
 
     # History charts — filter out any weekend entries (NSE closed Sat/Sun)
@@ -1177,6 +1181,7 @@ def build_passing_ema10_dashboard(
     <table id="mainTable">
       <thead><tr>
         <th data-col="sym"   data-type="str">Symbol<i class="si"></i></th>
+        <th class="c" title="Circuit price band — the max % a stock can move from previous close">Band</th>
         <th class="r" data-col="close"  data-type="num">Close ₹<i class="si"></i></th>
         <th class="r" data-col="ema10"  data-type="num">EMA10 ₹<i class="si"></i></th>
         <th class="r" data-col="gap"    data-type="num">Gap % Above EMA10<i class="si"></i></th>
@@ -1187,7 +1192,6 @@ def build_passing_ema10_dashboard(
         <th          data-col="indgrp" data-type="str">Industry Group<i class="si"></i></th>
         <th          data-col="ind"    data-type="str">Industry<i class="si"></i></th>
         <th class="r">Result Date</th>
-        <th class="c">Band</th>
       </tr></thead>
       <tbody id="tableBody">{rows_html}</tbody>
     </table>
