@@ -693,6 +693,82 @@ Chart.defaults.font.size   = 11;
 Chart.defaults.color       = "#5a6282";
 """
 
+# ── TradingView symbol export (download .txt / copy to clipboard) ──────────
+# Reads whatever rows are currently visible in #tableBody (respects the
+# search box filter), pulls each row's data-sym, and formats them as
+# "NSE:SYMBOL" — the exact format TradingView's watchlist import/paste
+# accepts. Works identically on every dashboard since they all share the
+# same #tableBody / .srow / data-sym markup.
+_TV_EXPORT_JS = """
+function _tvSymbolList() {
+  return Array.from(document.querySelectorAll('#tableBody .srow'))
+    .filter(r => r.style.display !== 'none')
+    .map(r => 'NSE:' + (r.dataset.sym || '').toUpperCase())
+    .filter(s => s !== 'NSE:');
+}
+
+function downloadTVList() {
+  const syms = _tvSymbolList();
+  if (!syms.length) { alert('No symbols to export.'); return; }
+  const blob = new Blob([syms.join(',')], { type: 'text/plain' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href = url;
+  a.download = (document.getElementById('tvFileName') || {}).value
+               || 'tradingview_watchlist.txt';
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
+function copyTVList() {
+  const syms = _tvSymbolList();
+  if (!syms.length) { alert('No symbols to copy.'); return; }
+  const text = syms.join(',');
+  const btn  = document.getElementById('tvCopyBtn');
+  const done = () => {
+    if (!btn) return;
+    const orig = btn.dataset.origLabel || btn.textContent;
+    btn.dataset.origLabel = orig;
+    btn.textContent = '✓ Copied!';
+    setTimeout(() => { btn.textContent = orig; }, 1600);
+  };
+  if (navigator.clipboard && window.isSecureContext) {
+    navigator.clipboard.writeText(text).then(done).catch(() => _tvFallbackCopy(text, done));
+  } else {
+    _tvFallbackCopy(text, done);
+  }
+}
+
+function _tvFallbackCopy(text, done) {
+  const ta = document.createElement('textarea');
+  ta.value = text;
+  ta.style.position = 'fixed';
+  ta.style.opacity = '0';
+  document.body.appendChild(ta);
+  ta.focus();
+  ta.select();
+  try { document.execCommand('copy'); done(); } catch (e) { alert('Copy failed — please copy manually.'); }
+  ta.remove();
+}
+"""
+
+
+def _tv_export_bar(filename: str) -> str:
+    """TradingView watchlist export bar — download .txt / copy to clipboard.
+
+    Both actions read the currently-visible rows of #tableBody, so they
+    honour the search-box filter (export only what's on screen).
+    """
+    return f"""
+<div class="csv-bar">
+  <a class="csv-btn csv-primary" href="javascript:void(0)" onclick="downloadTVList()">⬇ Download TradingView List</a>
+  <a class="csv-btn csv-secondary" id="tvCopyBtn" href="javascript:void(0)" onclick="copyTVList()">⧉ Copy TradingView List</a>
+  <input type="hidden" id="tvFileName" value="{filename}">
+  <span class="csv-label">Format: NSE:SYMBOL, comma-separated — paste directly into a TradingView watchlist</span>
+</div>"""
+
 
 def _site_nav(active: str, date_str: str) -> str:
     """
@@ -860,6 +936,7 @@ def build_passing_dashboard(
     html  = _html_head(f"Alpha Momentum — Passing Stocks — {date_display}",
                        "var(--indigo)", "var(--blue)", active="momentum", date_str=date_str)
     html += _csv_bar_passing(date_str)
+    html += _tv_export_bar(f"tradingview_passing_{date_str}.txt")
     html += f"""
 <header>
   <div class="hdr-left">
@@ -990,6 +1067,7 @@ new Chart(document.getElementById('barChart'), {{
 {_FILTER_JS}
 {_TABLE_SORT_JS}
 {_NEW_STOCKS_JS}
+{_TV_EXPORT_JS}
 </script>
 </body></html>"""
 
@@ -1104,6 +1182,7 @@ def build_passing_ema10_dashboard(
     html  = _html_head(f"Alpha Momentum — Elite Stocks — {date_display}",
                        "var(--emerald)", "var(--blue)", active="elite", date_str=date_str)
     html += _csv_bar_elite(date_str)
+    html += _tv_export_bar(f"tradingview_elite_{date_str}.txt")
     html += f"""
 <header>
   <div class="hdr-left">
@@ -1247,6 +1326,7 @@ new Chart(document.getElementById('tvChart'), {{
 {_FILTER_JS}
 {_TABLE_SORT_JS}
 {_NEW_STOCKS_JS}
+{_TV_EXPORT_JS}
 </script>
 </body></html>"""
 
@@ -1340,6 +1420,7 @@ def build_volume_action_dashboard(
 
     html  = _html_head(f"Alpha Momentum — Volume Action — {date_display}",
                        "var(--blue)", "var(--indigo)", active="volume", date_str=date_str)
+    html += _tv_export_bar(f"tradingview_volume_action_{date_str}.txt")
     html += f"""
 <header>
   <div class="hdr-left">
@@ -1423,6 +1504,7 @@ def build_volume_action_dashboard(
 {_FILTER_JS}
 {_TABLE_SORT_JS}
 {_NEW_STOCKS_JS}
+{_TV_EXPORT_JS}
 </script>
 </body></html>"""
 
@@ -1506,6 +1588,7 @@ def build_rocket_dashboard(
 
     html  = _html_head(f"Alpha Momentum — Rocket Stocks — {date_display}",
                        "var(--amber)", "var(--red)", active="rocket", date_str=date_str)
+    html += _tv_export_bar(f"tradingview_rocket_{date_str}.txt")
     html += f"""
 <header>
   <div class="hdr-left">
@@ -1590,6 +1673,7 @@ def build_rocket_dashboard(
 {_FILTER_JS}
 {_TABLE_SORT_JS}
 {_NEW_STOCKS_JS}
+{_TV_EXPORT_JS}
 </script>
 </body></html>"""
 
@@ -1673,6 +1757,7 @@ def build_new_rs_high_dashboard(
 
     html  = _html_head(f"Alpha Momentum — New RS High — {date_display}",
                        "var(--rose)", "var(--amber)", active="newrshigh", date_str=date_str)
+    html += _tv_export_bar(f"tradingview_newrshigh_{date_str}.txt")
     html += f"""
 <header>
   <div class="hdr-left">
@@ -1756,6 +1841,7 @@ def build_new_rs_high_dashboard(
 {_FILTER_JS}
 {_TABLE_SORT_JS}
 {_NEW_STOCKS_JS}
+{_TV_EXPORT_JS}
 </script>
 </body></html>"""
 
@@ -1828,6 +1914,7 @@ def build_stage4_dashboard(
 
     html  = _html_head(f"Alpha Momentum — Stage 4 Breakdown — {date_display}",
                        "var(--red)", "var(--navy)", active="stage4", date_str=date_str)
+    html += _tv_export_bar(f"tradingview_stage4_{date_str}.txt")
     html += f"""
 <header>
   <div class="hdr-left">
@@ -1909,6 +1996,7 @@ def build_stage4_dashboard(
 {_FILTER_JS}
 {_TABLE_SORT_JS}
 {_NEW_STOCKS_JS}
+{_TV_EXPORT_JS}
 </script>
 </body></html>"""
 
