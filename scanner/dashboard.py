@@ -703,8 +703,8 @@ _TV_EXPORT_JS = """
 function _tvSymbolList() {
   return Array.from(document.querySelectorAll('#tableBody .srow'))
     .filter(r => r.style.display !== 'none')
-    .map(r => 'NSE:' + (r.dataset.sym || '').toUpperCase())
-    .filter(s => s !== 'NSE:');
+    .map(r => (r.dataset.sym || '').toUpperCase())
+    .filter(s => s !== '');
 }
 
 function downloadTVList() {
@@ -766,7 +766,7 @@ def _tv_export_bar(filename: str) -> str:
   <a class="csv-btn csv-primary" href="javascript:void(0)" onclick="downloadTVList()">⬇ Download TradingView List</a>
   <a class="csv-btn csv-secondary" id="tvCopyBtn" href="javascript:void(0)" onclick="copyTVList()">⧉ Copy TradingView List</a>
   <input type="hidden" id="tvFileName" value="{filename}">
-  <span class="csv-label">Format: NSE:SYMBOL, comma-separated — paste directly into a TradingView watchlist</span>
+  <span class="csv-label">Format: SYMBOL, comma-separated — paste directly into a TradingView watchlist</span>
 </div>"""
 
 
