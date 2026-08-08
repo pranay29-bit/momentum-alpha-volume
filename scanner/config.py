@@ -18,6 +18,13 @@ CSV_PATH     = os.getenv("NSE_CSV_PATH", str(DATA_DIR / "NSE_Stocks.csv"))
 SYMBOL_COLUMN = "Symbol"
 EXCHANGE_SUFFIX = ".NS"
 
+# ── SME universe (separate board, separate dashboard) ────────────────────────
+# NSE-listed SME shares trade on Yahoo as "<CODE>-SM.NS"; BSE-listed SME
+# shares (no NSE listing) trade as "<CODE>.BO". Kept fully separate from the
+# main-board CSV/pipeline above so SME stocks never appear in the Momentum
+# or Elite dashboards — they only ever show up in the SME Momentum dashboard.
+SME_CSV_PATH = os.getenv("SME_CSV_PATH", str(DATA_DIR / "SME_Stocks.csv"))
+
 # ── Download ──────────────────────────────────────────────────────────────────
 PERIOD    = "400d"
 INTERVAL  = "1d"
