@@ -115,6 +115,9 @@ _BASE_CSS = """
   --slate:      #475569;
   --slate-lt:   #f1f5f9;
   --slate-mid:  #cbd5e1;
+  --teal:       #0f766e;
+  --teal-lt:    #f0fdfa;
+  --teal-mid:   #99f6e4;
 
   /* NEW badge */
   --new-bg:     #fdf4ff;
@@ -249,6 +252,7 @@ header h1 {
 .btn-link.red     { --acc: var(--red); }     .btn-link.red:hover     { color: var(--red);     background: var(--red-lt);     border-color: var(--red-mid); }
 .btn-link.rose    { --acc: var(--rose); }    .btn-link.rose:hover    { color: var(--rose);    background: var(--rose-lt);    border-color: var(--rose-mid); }
 .btn-link.slate   { --acc: var(--slate); }   .btn-link.slate:hover   { color: var(--slate);   background: var(--slate-lt);   border-color: var(--slate-mid); }
+.btn-link.teal    { --acc: var(--teal); }    .btn-link.teal:hover    { color: var(--teal);    background: var(--teal-lt);    border-color: var(--teal-mid); }
 .btn-link.is-active {
   color: var(--ACCENT1); background: color-mix(in srgb, var(--ACCENT1) 9%, var(--surface));
   border-color: color-mix(in srgb, var(--ACCENT1) 35%, var(--border)); font-weight: 700;
@@ -261,6 +265,7 @@ header h1 {
 .btn-link.red.is-active    { color: var(--red);     background: var(--red-lt);     border-color: var(--red-mid); }
 .btn-link.rose.is-active   { color: var(--rose);    background: var(--rose-lt);    border-color: var(--rose-mid); }
 .btn-link.slate.is-active  { color: var(--slate);   background: var(--slate-lt);   border-color: var(--slate-mid); }
+.btn-link.teal.is-active   { color: var(--teal);    background: var(--teal-lt);    border-color: var(--teal-mid); }
 .hdr-badge {
   font-size: .64rem;
   font-weight: 600;
@@ -880,6 +885,7 @@ def _site_nav(active: str, date_str: str) -> str:
         _link("rocket",    f"rocket_dashboard_{date_str}.html",    "amber",   "🚀 Rocket"),
         _link("newrshigh", f"newrshigh_dashboard_{date_str}.html", "rose",    "🔥 New RS High"),
         _link("stage4",    f"stage4_dashboard_{date_str}.html",    "red",     "📉 Stage 4"),
+        _link("sme",       f"sme_dashboard_{date_str}.html",       "teal",    "🏷️ SME Momentum"),
     ])
     return f"""
 <nav class="site-nav">
@@ -931,7 +937,251 @@ def _csv_bar_passing(date_str: str) -> str:
 </div>"""
 
 
-def _csv_bar_elite(date_str: str) -> str:
+def _csv_bar_sme(date_str: str) -> str:
+    sd = datetime.strptime(date_str, "%Y%m%d").strftime("%Y-%m-%d")
+    pf = f"sme_passing_{date_str}.csv"
+    ff = f"sme_full_results_{date_str}.csv"
+    return f"""
+<div class="csv-bar">
+  <a class="csv-btn csv-primary" href="{pf}" download="{pf}">⬇ Download SME Passing CSV</a>
+  <a class="csv-btn csv-secondary" href="{ff}" download="{ff}">⬇ SME Full Results CSV</a>
+  <span class="csv-label">SME Momentum Stocks · Scan date: {sd}</span>
+</div>"""
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  SME MOMENTUM DASHBOARD
+#  Same Minervini trend-template methodology as the main Momentum dashboard,
+#  run against the separate SME (NSE "-SM.NS" / BSE ".BO") universe so SME
+#  stocks never mix into the main-board Momentum / Elite dashboards.
+# ─────────────────────────────────────────────────────────────────────────────
+
+def build_sme_dashboard(
+    passing: pd.DataFrame,
+    out_path: Path,
+    date_str: str,
+    known_symbols: set[str] | None = None,
+) -> None:
+    date_display = datetime.strptime(date_str, "%Y%m%d").strftime("%d %b %Y")
+    known = known_symbols or set()
+
+    n_stocks    = len(passing)
+    n_above_ema = int(passing.get("cond9_price_above_ema10", pd.Series(dtype=bool)).sum()) \
+                  if "cond9_price_above_ema10" in passing.columns else "N/A"
+    total_tmc_s = fmt_cr(passing["total_market_cap_cr"].dropna().sum()) \
+                  if "total_market_cap_cr" in passing.columns else "N/A"
+    total_tv_s  = fmt_cr(passing["traded_value_cr"].dropna().sum()) \
+                  if "traded_value_cr" in passing.columns else "N/A"
+
+    rows_html = ""
+    chart_labels, chart_total = [], []
+
+    sort_col = "rs_percentile" if "rs_percentile" in passing.columns else "close"
+    for _, row in passing.sort_values(sort_col, ascending=False).iterrows():
+        raw_sym    = str(row.get("symbol", ""))
+        sym        = raw_sym.replace("-SM.NS", "").replace(".NS", "").replace(".BO", "")
+        link       = _tv_link(raw_sym)
+        is_new     = sym not in known
+        new_cls    = " is-new" if is_new else ""
+        close      = row.get("close", np.nan)
+        ema10      = row.get("EMA10",  np.nan)
+        rs         = row.get("rs_percentile", np.nan)
+        tmc        = row.get("total_market_cap_cr", np.nan)
+        tv         = row.get("traded_value_cr", np.nan)
+        tvpct      = row.get("traded_val_pct_mc", np.nan)
+        ind_grp    = str(row.get("industry_group", "")) or "—"
+        industry   = str(row.get("industry",       "")) or "—"
+        result_date = str(row.get("result_date", "—"))
+        board       = "NSE-SME" if "-SM.NS" in raw_sym else ("BSE-SME" if raw_sym.endswith(".BO") else "—")
+
+        close_s = f"₹{float(close):,.2f}" if _safe(close) else "N/A"
+        ema10_s = f"₹{float(ema10):,.2f}" if _safe(ema10) else "N/A"
+        rs_s    = f"{float(rs):.1f}"       if _safe(rs)    else "N/A"
+        tmc_s   = fmt_cr(tmc)
+        tv_s    = fmt_cr(tv)
+        tvpct_s = f"{float(tvpct):.4f}%"  if _safe(tvpct) else "N/A"
+
+        try:
+            above_ema = float(close) > float(ema10)
+            ema_cls = "pill-green" if above_ema else "pill-red"
+        except Exception:
+            ema_cls = "pill-muted"
+
+        rows_html += f"""
+        <tr class="srow{new_cls}"
+          data-sym="{sym}" data-band="{board}" data-close="{_r(close)}" data-rs="{_r(rs)}"
+          data-ema10="{_r(ema10)}" data-tmc="{_r(tmc)}"
+          data-tv="{_r(tv)}" data-tvpct="{_r(tvpct,6)}"
+          data-indgrp="{ind_grp}" data-ind="{industry}">
+          <td>
+            <a class="sym-tag" style="background:var(--teal-lt);border-color:var(--teal-mid);color:var(--teal)"
+               href="{link}" target="_blank" rel="noopener">{sym}{_new_star(is_new)}</a>
+          </td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem" title="Listing board">{board}</td>
+          <td class="r" style="font-family:var(--mono)">{close_s}</td>
+          <td class="r"><span class="pill {ema_cls}">{ema10_s}</span></td>
+          <td class="r"><span class="pill pill-amber">{rs_s}</span></td>
+          <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.77rem">{tmc_s}</td>
+          <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.77rem">{tv_s}</td>
+          <td class="r" style="font-family:var(--mono);color:var(--subtle);font-size:.73rem">{tvpct_s}</td>
+          <td style="color:var(--muted);font-size:.78rem;max-width:150px;overflow:hidden;text-overflow:ellipsis">{ind_grp}</td>
+          <td style="color:var(--subtle);font-size:.74rem;max-width:130px;overflow:hidden;text-overflow:ellipsis">{industry}</td>
+          <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">{result_date}</td>
+        </tr>"""
+
+        chart_labels.append(f'"{sym}"')
+        chart_total.append(_r(tmc))
+
+    n_new = sum(1 for _, r in passing.iterrows()
+                if str(r.get("symbol","")).replace("-SM.NS","").replace(".NS","").replace(".BO","") not in known)
+
+    html  = _html_head(f"Alpha Momentum — SME Momentum — {date_display}",
+                       "var(--teal)", "var(--emerald)", active="sme", date_str=date_str)
+    html += _csv_bar_sme(date_str)
+    html += _tv_export_bar(f"tradingview_sme_{date_str}.txt")
+    html += f"""
+<header>
+  <div class="hdr-left">
+    <div class="brand">
+      <div class="brand-dot" style="background:var(--teal)"></div>
+      <span class="brand-name">Alpha Momentum · SME Scanner</span>
+    </div>
+    <h1>SME Momentum Dashboard</h1>
+    <p class="hdr-sub">Same Minervini trend template · all 8 conditions · NSE-SME (-SM.NS) &amp; BSE-SME (.BO) · {date_display}</p>
+    <div class="badge-row">
+      <span class="hdr-badge" style="background:var(--teal-lt);border-color:var(--teal-mid);color:var(--teal)">✓ All 8 Conditions</span>
+      <span class="hdr-badge" style="background:var(--slate-lt);border-color:var(--slate-mid);color:var(--slate)">SME-only universe</span>
+      {"<a href='#newStocksSection' onclick='scrollToNewStocks(event)' class='hdr-badge' style='cursor:pointer;text-decoration:none;background:var(--new-bg);border-color:var(--new-border);color:var(--new-text)'>✦ " + str(n_new) + " New Stocks &rarr;</a>" if n_new else ""}
+    </div>
+  </div>
+  <div class="date-pill" style="background:var(--teal-lt);border-color:var(--teal-mid);color:var(--teal)">{date_display}</div>
+</header>
+
+<div class="kpi-strip" style="--accent:var(--teal)">
+  <div class="kpi" style="--accent:var(--teal)">
+    <div class="kpi-lbl">Passing SME Stocks</div>
+    <div class="kpi-val">{n_stocks}</div>
+    <div class="kpi-hint">all 8 conditions met</div>
+  </div>
+  <div class="kpi" style="--accent:var(--violet)">
+    <div class="kpi-lbl">Above EMA10</div>
+    <div class="kpi-val">{n_above_ema}</div>
+    <div class="kpi-hint">close &gt; 10-period ema</div>
+  </div>
+  <div class="kpi" style="--accent:var(--emerald)">
+    <div class="kpi-lbl">Combined Market Cap</div>
+    <div class="kpi-val">{total_tmc_s}</div>
+    <div class="kpi-hint">aggregate market cap</div>
+  </div>
+  <div class="kpi" style="--accent:var(--blue)">
+    <div class="kpi-lbl">Total Traded Value</div>
+    <div class="kpi-val">{total_tv_s}</div>
+    <div class="kpi-hint">today's traded volume</div>
+  </div>
+  {"<a href='#newStocksSection' onclick='scrollToNewStocks(event)' class='kpi' style='--accent:var(--new-text);cursor:pointer;text-decoration:none;display:block'><div class='kpi-lbl'>New Appearances</div><div class='kpi-val'>" + str(n_new) + "</div><div class='kpi-hint'>first time in 10 days</div></a>" if n_new else ""}
+</div>
+
+<div class="callout">
+  <strong style="color:var(--teal)">SME Momentum Dashboard:</strong>
+  The exact same Minervini Trend Template as the main Momentum dashboard — price above MA150 &amp; MA200,
+  MA150 &gt; MA200, MA200 trending up ≥ 1 month, MA50 above MA150 &amp; MA200, price above MA50,
+  price ≥ 30% above 52-week low, within 25% of 52-week high, and RS percentile ≥ 70 — applied to the
+  separate NSE-SME / BSE-SME universe only. SME stocks are excluded from the main Momentum and Elite
+  dashboards and only ever appear here.
+</div>
+
+<div class="charts-area" style="grid-template-columns:1fr">
+  <div class="chart-card">
+    <div class="chart-lbl-row"><div class="chart-lbl">Total Market Cap by Stock (₹ Cr)</div><div class="chart-zoom-hint">scroll to zoom · drag to pan · dbl-click to reset</div></div>
+    <div class="chart-wrap">
+      <canvas id="barChart" role="img" aria-label="Market cap bar chart for passing SME stocks"></canvas>
+    </div>
+  </div>
+</div>
+
+<div class="table-sec">
+  <div class="tbl-head">
+    <div>
+      <span class="tbl-title">SME Momentum Stocks Detail</span>
+      <span class="tbl-count tbl-title">[{n_stocks}]</span>
+    </div>
+    <div class="controls">
+      <div class="legend-row">
+        <div class="leg"><div class="leg-dot" style="background:var(--emerald)"></div>Close &gt; EMA10</div>
+        <div class="leg"><div class="leg-dot" style="background:var(--red)"></div>Close ≤ EMA10</div>
+        <div class="leg"><div class="leg-dot" style="background:var(--new-border)"></div>✦ New (10-day)</div>
+      </div>
+      <input class="search" id="searchInput" type="text"
+             placeholder="Search symbol / industry…" oninput="filterRows()"/>
+    </div>
+  </div>
+  <div class="tbl-outer">
+    <table id="mainTable">
+      <thead><tr>
+        <th data-col="sym"    data-type="str">Symbol<i class="si"></i></th>
+        <th class="c" data-col="band" data-type="str" title="Listing board">Board<i class="si"></i></th>
+        <th class="r" data-col="close"  data-type="num">Close ₹<i class="si"></i></th>
+        <th class="r" data-col="ema10"  data-type="num">EMA10 ₹<i class="si"></i></th>
+        <th class="r" data-col="rs"     data-type="num">RS %ile<i class="si"></i></th>
+        <th class="r" data-col="tmc"    data-type="num">Mkt Cap<i class="si"></i></th>
+        <th class="r" data-col="tv"     data-type="num">Traded Val<i class="si"></i></th>
+        <th class="r" data-col="tvpct"  data-type="num">TV % MC<i class="si"></i></th>
+        <th          data-col="indgrp" data-type="str">Industry Group<i class="si"></i></th>
+        <th          data-col="ind"    data-type="str">Industry<i class="si"></i></th>
+        <th class="r">Result Date</th>
+      </tr></thead>
+      <tbody id="tableBody">{rows_html}</tbody>
+    </table>
+  </div>
+</div>
+
+{_NEW_STOCKS_SECTION_HTML}
+
+<footer>Data: NSE/BSE SME India &amp; Yahoo Finance · Generated {date_display} · For informational purposes only · Not financial advice</footer>
+
+<script>
+const labels    = [{",".join(chart_labels)}];
+const totalData = [{",".join(chart_total)}];
+{_CHARTJS_DEFAULTS}
+new Chart(document.getElementById('barChart'), {{
+  type: 'bar',
+  data: {{ labels, datasets: [{{
+    label: 'Mkt Cap (₹ Cr)', data: totalData,
+    backgroundColor: 'rgba(15,118,110,0.14)',
+    borderColor:     'rgba(15,118,110,0.5)',
+    borderWidth: 1, borderRadius: 3,
+  }}]}},
+  options: {{
+    responsive: true, maintainAspectRatio: false,
+    plugins: {{
+      legend: {{ display: false }},
+      tooltip: {{
+        backgroundColor: '#fff', borderColor: '#e2e6f0', borderWidth: 1,
+        titleColor: '#0f1629', bodyColor: '#5a6282', padding: 10,
+        callbacks: {{ label: c => ` ₹${{(c.parsed.y||0).toLocaleString('en-IN')}} Cr` }},
+      }},
+      zoom: {_ZOOM_PLUGIN_OPTS_JS},
+    }},
+    scales: {{
+      x: {{ ticks: {{ color: '#8b93b5', maxTicksLimit: 30 }}, grid: {{ color: '#f1f3f9' }} }},
+      y: {{ ticks: {{ color: '#8b93b5', callback: v => '₹' + Number(v).toLocaleString('en-IN') }},
+            grid: {{ color: '#f1f3f9' }} }},
+    }},
+  }},
+}});
+{_ZOOM_RESET_JS}
+{_FILTER_JS}
+{_TABLE_SORT_JS}
+{_NEW_STOCKS_JS}
+{_TV_EXPORT_JS}
+</script>
+</body></html>"""
+
+    out_path.write_text(html, encoding="utf-8")
+    logger.info("SME dashboard → %s", out_path)
+
+
+
     sd = datetime.strptime(date_str, "%Y%m%d").strftime("%Y-%m-%d")
     ef = f"passing_ema10_{date_str}.csv"
     return f"""
