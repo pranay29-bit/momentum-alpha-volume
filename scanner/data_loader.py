@@ -33,14 +33,65 @@ _RATE_LIMIT_BACKOFF = 30.0
 
 # ── Symbol list & metadata ─────────────────────────────────────────────────────
 
+def _sme_code_to_yahoo(code: str) -> str | None:
+    """
+    Derive the Yahoo Finance ticker for one raw SME code.
+
+    The SME CSV's "Symbols" column mixes both boards in a single field:
+    - Purely numeric   → a BSE scrip code     → "<CODE>.BO"
+    - Alphabetic       → an NSE trading code  → "<CODE>-SM.NS"
+
+    (Numeric codes sometimes round-trip through a spreadsheet as "542155.0"
+    — that trailing ".0" is stripped before use.)
+    """
+    code = (code or "").strip()
+    if not code or code.lower() == "nan":
+        return None
+    if code.endswith(".0") and code[:-2].isdigit():
+        code = code[:-2]
+    return f"{code}.BO" if code.isdigit() else f"{code}-SM.NS"
+
+
+def _sme_rows(csv_path: str = SME_CSV_PATH) -> pd.DataFrame:
+    """
+    Read the SME CSV and return it with a derived 'symbol_ns' column (the
+    Yahoo ticker), handling both the current single-column schema
+    (Name, Symbols, ISIN Code, Industry Group, Industry) and the older
+    two-column schema (Name, BSE Code, NSE Code, ISIN Code, Industry Group,
+    Industry) for backward compatibility.
+    """
+    df = pd.read_csv(csv_path, dtype=str)
+    df.columns = [c.strip() for c in df.columns]
+
+    if "Symbols" in df.columns:
+        df["symbol_ns"] = df["Symbols"].apply(_sme_code_to_yahoo)
+    elif "NSE Code" in df.columns or "BSE Code" in df.columns:
+        def _sym(row) -> str | None:
+            nse_code = str(row.get("NSE Code", "") or "").strip()
+            bse_code = str(row.get("BSE Code", "") or "").strip()
+            if nse_code and nse_code.lower() != "nan":
+                return _sme_code_to_yahoo(nse_code) or f"{nse_code}-SM.NS"
+            if bse_code and bse_code.lower() != "nan":
+                return _sme_code_to_yahoo(bse_code) or f"{bse_code}.BO"
+            return None
+        df["symbol_ns"] = df.apply(_sym, axis=1)
+    else:
+        raise ValueError(
+            f"{csv_path}: expected a 'Symbols' column (or legacy 'NSE Code'/"
+            "'BSE Code' columns) — none found."
+        )
+
+    return df[df["symbol_ns"].notna()].copy()
+
+
 def _sme_raw_codes(csv_path: str = SME_CSV_PATH) -> set[str]:
     """
-    Raw, un-suffixed NSE + BSE codes straight from the SME CSV (e.g. "AGUL",
+    Raw, un-suffixed SME codes straight from the SME CSV (e.g. "AGUL",
     "542155") — used to filter SME rows out of the main-board universe by
     *code*, not by full Yahoo ticker. This matters because NSE_Stocks.csv
-    turns out to already contain ~540 SME-board codes as plain rows (e.g.
-    "AGUL" with no "-SM" marker) — those become "AGUL.NS" once the default
-    ".NS" suffix is appended, which never equals the correct SME ticker
+    turns out to already contain SME-board codes as plain rows (e.g. "AGUL"
+    with no "-SM" marker) — those become "AGUL.NS" once the default ".NS"
+    suffix is appended, which never equals the correct SME ticker
     "AGUL-SM.NS", so a full-ticker comparison silently misses them.
     """
     try:
@@ -48,12 +99,14 @@ def _sme_raw_codes(csv_path: str = SME_CSV_PATH) -> set[str]:
     except Exception:
         return set()
     df.columns = [c.strip() for c in df.columns]
+
     codes: set[str] = set()
-    for col in ("NSE Code", "BSE Code"):
+    cols = ["Symbols"] if "Symbols" in df.columns else ["NSE Code", "BSE Code"]
+    for col in cols:
         if col in df.columns:
             vals = df[col].dropna().astype(str).str.strip()
             vals = vals[vals.str.lower() != "nan"]
-            # BSE codes sometimes round-trip through spreadsheets as "542155.0"
+            # Codes sometimes round-trip through spreadsheets as "542155.0"
             vals = vals.str.replace(r"\.0$", "", regex=True)
             codes.update(vals)
     return codes
@@ -102,55 +155,27 @@ def load_symbols(csv_path: str = CSV_PATH, symbol_col: str = SYMBOL_COLUMN) -> l
 
 def load_sme_symbols(csv_path: str = SME_CSV_PATH) -> list[str]:
     """
-    Build the Yahoo Finance ticker list for the SME universe from the raw
-    SME CSV (columns: Name, BSE Code, NSE Code, ISIN Code, Industry Group,
-    Industry).
+    Build the Yahoo Finance ticker list for the SME universe from the SME
+    CSV (columns: Name, Symbols, ISIN Code, Industry Group, Industry — a
+    numeric "Symbols" value is a BSE code, an alphabetic one is an NSE
+    code; see _sme_code_to_yahoo()).
 
-    - NSE-listed SME shares  → "<NSE CODE>-SM.NS"  (preferred when present)
-    - BSE-only SME shares    → "<BSE CODE>.BO"
-    - Rows with neither code are skipped.
+    - NSE-listed SME shares → "<CODE>-SM.NS"
+    - BSE-listed SME shares → "<CODE>.BO"
     """
-    df = pd.read_csv(csv_path, dtype=str)
-    df.columns = [c.strip() for c in df.columns]
-
-    symbols: list[str] = []
-    for _, row in df.iterrows():
-        nse_code = str(row.get("NSE Code", "") or "").strip()
-        bse_code = str(row.get("BSE Code", "") or "").strip()
-        if nse_code and nse_code.lower() != "nan":
-            symbols.append(f"{nse_code}-SM.NS")
-        elif bse_code and bse_code.lower() != "nan":
-            # BSE codes are numeric but may arrive with a trailing ".0"
-            # from spreadsheet round-tripping — strip that before use.
-            bse_code = bse_code[:-2] if bse_code.endswith(".0") else bse_code
-            symbols.append(f"{bse_code}.BO")
-
+    df = _sme_rows(csv_path)
     # De-duplicate while preserving order
     seen: set[str] = set()
-    unique = [s for s in symbols if not (s in seen or seen.add(s))]
+    unique = [s for s in df["symbol_ns"] if not (s in seen or seen.add(s))]
     return unique
 
 
 def load_sme_metadata(csv_path: str = SME_CSV_PATH) -> pd.DataFrame:
     """
     Same shape as load_symbol_metadata(), but derived from the SME CSV and
-    indexed by the SME Yahoo ticker (e.g. 'SACHEEROME-SM.NS' or '542155.BO').
+    indexed by the SME Yahoo ticker (e.g. 'JALAN-SM.NS' or '542155.BO').
     """
-    df = pd.read_csv(csv_path, dtype=str)
-    df.columns = [c.strip() for c in df.columns]
-
-    def _sym(row) -> str | None:
-        nse_code = str(row.get("NSE Code", "") or "").strip()
-        bse_code = str(row.get("BSE Code", "") or "").strip()
-        if nse_code and nse_code.lower() != "nan":
-            return f"{nse_code}-SM.NS"
-        if bse_code and bse_code.lower() != "nan":
-            bse_code = bse_code[:-2] if bse_code.endswith(".0") else bse_code
-            return f"{bse_code}.BO"
-        return None
-
-    df["symbol_ns"] = df.apply(_sym, axis=1)
-    df = df[df["symbol_ns"].notna()].copy()
+    df = _sme_rows(csv_path)
 
     meta_cols = {"symbol_ns": "symbol_ns"}
     if "Name" in df.columns:
