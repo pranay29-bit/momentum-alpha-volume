@@ -19,14 +19,16 @@ import yfinance as yf
 from .config import (
     CSV_PATH, SYMBOL_COLUMN, EXCHANGE_SUFFIX,
     SME_CSV_PATH,
-    PERIOD, INTERVAL, BATCH_SIZE,
+    PERIOD, INTERVAL, BATCH_SIZE, DOWNLOAD_THREADS,
 )
 from .indicators import add_indicators, evaluate_trend_template, compute_12m_return, compute_volume_action, is_inside_candle
 
 logger = logging.getLogger(__name__)
 
-# Seconds to pause between batches — prevents Yahoo Finance rate limiting
-_BATCH_DELAY        = 1.0
+# Seconds to pause between batches — prevents Yahoo Finance rate limiting.
+# Batches now download concurrently (see DOWNLOAD_THREADS in config.py)
+# instead of one symbol at a time, so a shorter inter-batch pause is enough.
+_BATCH_DELAY        = 0.4
 # Extra back-off when a 429 / rate-limit error is detected
 _RATE_LIMIT_BACKOFF = 30.0
 
@@ -319,7 +321,7 @@ def _retry_with_bse(failed_symbols: list[str], meta: pd.DataFrame) -> list[dict]
         try:
             data = yf.download(
                 tickers=batch, period=PERIOD, interval=INTERVAL,
-                group_by="ticker", auto_adjust=True, threads=False, progress=False,
+                group_by="ticker", auto_adjust=True, threads=DOWNLOAD_THREADS, progress=False,
             )
         except Exception as exc:
             logger.warning("BSE fallback batch %d failed: %s", i, exc)
@@ -380,7 +382,7 @@ def download_all(symbols: list[str], meta_override: pd.DataFrame | None = None) 
                 interval=INTERVAL,
                 group_by="ticker",
                 auto_adjust=True,
-                threads=False,   # sequential within batch — avoids burst 429s
+                threads=DOWNLOAD_THREADS,   # bounded concurrency within the batch
                 progress=False,
             )
         except Exception as exc:
@@ -398,7 +400,7 @@ def download_all(symbols: list[str], meta_override: pd.DataFrame | None = None) 
                         interval=INTERVAL,
                         group_by="ticker",
                         auto_adjust=True,
-                        threads=False,
+                        threads=DOWNLOAD_THREADS,
                         progress=False,
                     )
                 except Exception as exc2:
