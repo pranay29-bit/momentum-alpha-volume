@@ -588,11 +588,18 @@ def _update_index(
     --radius:12px;--radius-sm:8px;--shadow-sm:0 1px 2px rgba(15,23,42,.04);--shadow-md:0 4px 16px -4px rgba(15,23,42,.08),0 1px 3px rgba(15,23,42,.04);
   }}
   *,*::before,*::after{{box-sizing:border-box;margin:0;padding:0;}}
-  html{{font-size:14px;-webkit-font-smoothing:antialiased;}}
-  body{{background:var(--bg);color:var(--text);font-family:var(--sans);line-height:1.6;}}
+  html{{font-size:14px;-webkit-font-smoothing:antialiased;scroll-behavior:smooth;}}
+  body{{background:var(--bg);color:var(--text);font-family:var(--sans);line-height:1.55;}}
+  a,button,.hub-card,.btn-link,.month-accordion,.history-table tr,.sentiment-card{{
+    transition:background-color .16s ease,border-color .16s ease,color .16s ease,
+               box-shadow .18s ease,transform .16s ease,opacity .18s ease;
+  }}
+  @media (prefers-reduced-motion: reduce){{
+    *,*::before,*::after{{transition-duration:.001ms !important;animation-duration:.001ms !important;scroll-behavior:auto !important;}}
+  }}
   .topbar{{height:5px;background:linear-gradient(90deg,var(--navy) 0%,var(--indigo) 40%,var(--blue) 65%,var(--emerald) 100%);}}
   header{{background:var(--surface);border-bottom:1px solid var(--border);
-          padding:1.65rem 2.5rem;text-align:center;position:relative;overflow:hidden;}}
+          padding:1.35rem 2.5rem;text-align:center;position:relative;overflow:hidden;}}
   header::before{{content:'';position:absolute;top:-65%;left:50%;transform:translateX(-50%);
                   width:900px;height:260px;pointer-events:none;
                   background:
@@ -613,7 +620,7 @@ def _update_index(
              letter-spacing:-.025em;margin-bottom:.22rem;position:relative;
              background:linear-gradient(90deg,var(--navy) 0%,var(--indigo) 50%,var(--emerald) 100%);
              -webkit-background-clip:text;background-clip:text;color:transparent;}}
-  header p{{color:var(--muted);font-size:.82rem;font-family:var(--mono);position:relative;}}
+  header p{{color:var(--muted);font-size:.78rem;font-family:var(--mono);position:relative;}}
 
   .container{{max-width:1120px;margin:2rem auto;padding:0 1.5rem;}}
   h2.section-title{{font-family:var(--sans);font-size:1.05rem;font-weight:700;
@@ -633,14 +640,13 @@ def _update_index(
     position:relative;display:flex;flex-direction:column;gap:.6rem;
     background:linear-gradient(165deg,var(--accent-mid) -40%,var(--accent-lt) 15%,var(--surface) 78%);
     border:1px solid var(--border);border-radius:var(--radius);
-    padding:1.35rem 1.4rem 1.25rem;box-shadow:var(--shadow-sm);
+    padding:1.25rem 1.35rem 1.15rem;box-shadow:var(--shadow-sm);
     text-decoration:none;color:inherit;overflow:hidden;
-    transition:transform .18s ease,box-shadow .18s ease,border-color .18s ease;
   }}
   .hub-card::before{{content:'';position:absolute;top:0;left:0;right:0;height:4px;
                      background:linear-gradient(90deg,var(--accent),var(--accent2,var(--accent)));}}
-  .hub-card:hover{{transform:translateY(-3px);border-color:var(--accent-mid);
-                   box-shadow:var(--shadow-sm),0 14px 30px -14px var(--accent);}}
+  .hub-card:hover{{transform:translateY(-2px);border-color:var(--accent-mid);
+                   box-shadow:var(--shadow-sm),0 12px 26px -14px var(--accent);}}
   .hub-tag{{position:absolute;top:.9rem;right:1rem;font-family:var(--mono);font-size:.56rem;font-weight:700;
            letter-spacing:.08em;color:var(--subtle);background:var(--surface-2);border:1px solid var(--border);
            border-radius:999px;padding:.15rem .5rem;}}
