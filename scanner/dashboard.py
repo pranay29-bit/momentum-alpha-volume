@@ -58,6 +58,8 @@ def _tv_link(symbol_ns: str) -> str:
 # ── Shared assets ─────────────────────────────────────────────────────────────
 
 _CDN_CHARTJS  = "https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"
+_CDN_HAMMER   = "https://cdnjs.cloudflare.com/ajax/libs/hammer.js/2.0.8/hammer.min.js"
+_CDN_ZOOM     = "https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-zoom/2.0.1/chartjs-plugin-zoom.min.js"
 _GOOGLE_FONTS = (
     "https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700"
     "&family=DM+Mono:wght@400;500&display=swap"
@@ -135,15 +137,27 @@ _BASE_CSS = """
 }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-html { font-size: 14px; }
+html { font-size: 14px; scroll-behavior: smooth; }
 body {
   background: var(--bg);
   color: var(--text);
   font-family: var(--sans);
-  line-height: 1.6;
+  line-height: 1.55;
   min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
 }
 a { color: inherit; text-decoration: none; }
+
+/* ── Sitewide motion — every interactive surface eases the same way ── */
+a, button, input, .kpi, .btn-link, .csv-btn, .search, .srow, .chart-card,
+.tbl-outer, canvas, .badge, .hdr-badge, .date-pill {
+  transition: background-color .16s ease, border-color .16s ease,
+              color .16s ease, box-shadow .18s ease, transform .16s ease,
+              opacity .18s ease;
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition-duration: .001ms !important; animation-duration: .001ms !important; scroll-behavior: auto !important; }
+}
 
 /* ── Topbar ── */
 .topbar {
@@ -155,7 +169,7 @@ a { color: inherit; text-decoration: none; }
 header {
   background: var(--surface);
   border-bottom: 1px solid var(--border);
-  padding: 1.6rem 2.5rem;
+  padding: 1.25rem 2.5rem;
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
@@ -189,9 +203,10 @@ header h1 {
   color: var(--text);
 }
 .hdr-sub {
-  font-size: .8rem;
-  color: var(--muted);
-  margin-top: .15rem;
+  font-size: .74rem;
+  color: var(--subtle);
+  margin-top: .1rem;
+  font-weight: 400;
 }
 .badge-row { display: flex; gap: .45rem; margin-top: .5rem; flex-wrap: wrap; }
 
@@ -351,15 +366,29 @@ header h1 {
   border-radius: var(--rl);
   padding: 1.1rem 1.3rem .9rem;
 }
+.chart-card:hover { box-shadow: var(--shadow-sm); border-color: var(--border-2); }
+.chart-lbl-row {
+  display: flex; align-items: baseline; justify-content: space-between;
+  gap: .6rem; margin-bottom: .8rem;
+}
 .chart-lbl {
   font-size: .62rem;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: .11em;
   color: var(--muted);
-  margin-bottom: .8rem;
 }
-.chart-wrap { position: relative; height: 220px; }
+.chart-zoom-hint {
+  font-family: var(--mono);
+  font-size: .6rem;
+  color: var(--subtle);
+  opacity: 0;
+  transition: opacity .16s ease;
+  white-space: nowrap;
+}
+.chart-card:hover .chart-zoom-hint { opacity: 1; }
+.chart-wrap { position: relative; height: 220px; cursor: grab; }
+.chart-wrap:active { cursor: grabbing; }
 
 /* ── Table section ── */
 .table-sec { padding: 0 2.5rem 3rem; }
@@ -691,6 +720,38 @@ _CHARTJS_DEFAULTS = """
 Chart.defaults.font.family = "'Outfit', sans-serif";
 Chart.defaults.font.size   = 11;
 Chart.defaults.color       = "#5a6282";
+Chart.defaults.animation.duration = 260;
+Chart.defaults.animation.easing   = "easeOutCubic";
+Chart.defaults.interaction.mode   = "index";
+Chart.defaults.interaction.intersect = false;
+"""
+
+# Smooth wheel-zoom / drag-pan, shared by every chart on every dashboard.
+# Double-click resets to the original view (handled by _ZOOM_RESET_JS below).
+_ZOOM_PLUGIN_OPTS_JS = """{
+    zoom: {
+      wheel: { enabled: true, speed: 0.08 },
+      pinch: { enabled: true },
+      drag:  { enabled: false },
+      mode: 'x',
+      overscroll: 'unclip',
+    },
+    pan: {
+      enabled: true,
+      mode: 'x',
+      modifierKey: null,
+    },
+    limits: { x: { minRange: 3 } },
+  }"""
+
+# Double-click any chart canvas to reset its zoom/pan back to the full range.
+_ZOOM_RESET_JS = """
+document.querySelectorAll('.chart-wrap canvas').forEach(cv => {
+  cv.addEventListener('dblclick', () => {
+    const c = Chart.getChart(cv);
+    if (c && c.resetZoom) c.resetZoom('active');
+  });
+});
 """
 
 # ── TradingView symbol export (download .txt / copy to clipboard) ──────────
@@ -811,6 +872,8 @@ def _html_head(title: str, accent1: str, accent2: str, active: str | None = None
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
 <title>{title}</title>
 <script src="{_CDN_CHARTJS}"></script>
+<script src="{_CDN_HAMMER}"></script>
+<script src="{_CDN_ZOOM}"></script>
 <link href="{_GOOGLE_FONTS}" rel="stylesheet"/>
 <style>
 :root {{ --ACCENT1:{accent1}; --ACCENT2:{accent2}; }}
@@ -988,7 +1051,7 @@ def build_passing_dashboard(
 
 <div class="charts-area" style="grid-template-columns:1fr">
   <div class="chart-card">
-    <div class="chart-lbl">Total Market Cap by Stock (₹ Cr)</div>
+    <div class="chart-lbl-row"><div class="chart-lbl">Total Market Cap by Stock (₹ Cr)</div><div class="chart-zoom-hint">scroll to zoom · drag to pan · dbl-click to reset</div></div>
     <div class="chart-wrap">
       <canvas id="barChart" role="img" aria-label="Market cap bar chart for passing stocks"></canvas>
     </div>
@@ -1056,6 +1119,7 @@ new Chart(document.getElementById('barChart'), {{
         titleColor: '#0f1629', bodyColor: '#5a6282', padding: 10,
         callbacks: {{ label: c => ` ₹${{(c.parsed.y||0).toLocaleString('en-IN')}} Cr` }},
       }},
+      zoom: {_ZOOM_PLUGIN_OPTS_JS},
     }},
     scales: {{
       x: {{ ticks: {{ color: '#8b93b5', maxTicksLimit: 30 }}, grid: {{ color: '#f1f3f9' }} }},
@@ -1064,6 +1128,7 @@ new Chart(document.getElementById('barChart'), {{
     }},
   }},
 }});
+{_ZOOM_RESET_JS}
 {_FILTER_JS}
 {_TABLE_SORT_JS}
 {_NEW_STOCKS_JS}
@@ -1229,15 +1294,15 @@ def build_passing_ema10_dashboard(
 
 <div class="charts-area" style="grid-template-columns:1fr 1fr 1fr">
   <div class="chart-card">
-    <div class="chart-lbl">Elite Stock Count — Daily</div>
+    <div class="chart-lbl-row"><div class="chart-lbl">Elite Stock Count — Daily</div><div class="chart-zoom-hint">scroll to zoom · drag to pan</div></div>
     <div class="chart-wrap"><canvas id="countChart" role="img" aria-label="Elite stock count over time"></canvas></div>
   </div>
   <div class="chart-card">
-    <div class="chart-lbl">Combined Market Cap (₹ Cr) — Daily</div>
+    <div class="chart-lbl-row"><div class="chart-lbl">Combined Market Cap (₹ Cr) — Daily</div><div class="chart-zoom-hint">scroll to zoom · drag to pan</div></div>
     <div class="chart-wrap"><canvas id="mcChart" role="img" aria-label="Combined market cap over time"></canvas></div>
   </div>
   <div class="chart-card">
-    <div class="chart-lbl">Total Traded Value (₹ Cr) — Daily</div>
+    <div class="chart-lbl-row"><div class="chart-lbl">Total Traded Value (₹ Cr) — Daily</div><div class="chart-zoom-hint">scroll to zoom · drag to pan</div></div>
     <div class="chart-wrap"><canvas id="tvChart" role="img" aria-label="Total traded value over time"></canvas></div>
   </div>
 </div>
@@ -1302,6 +1367,7 @@ const lineOpts = (yFmt, tipFmt) => ({{
       titleColor: '#0f1629', bodyColor: '#5a6282', padding: 10,
       callbacks: {{ label: tipFmt }},
     }},
+    zoom: {_ZOOM_PLUGIN_OPTS_JS},
   }},
   scales: {{
     x: {{ ticks: {{ color: '#8b93b5', maxTicksLimit: 10 }}, grid: {{ color: '#f1f3f9' }} }},
@@ -1323,6 +1389,7 @@ new Chart(document.getElementById('tvChart'), {{
   data: {{ labels: histLabels, datasets: [lineDs(histTV, 'rgb(79,70,229)')] }},
   options: lineOpts(v => '₹'+Number(v).toLocaleString('en-IN'), c => ` ₹${{(c.parsed.y||0).toLocaleString('en-IN')}} Cr`),
 }});
+{_ZOOM_RESET_JS}
 {_FILTER_JS}
 {_TABLE_SORT_JS}
 {_NEW_STOCKS_JS}
