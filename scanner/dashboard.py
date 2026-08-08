@@ -1181,7 +1181,7 @@ new Chart(document.getElementById('barChart'), {{
     logger.info("SME dashboard → %s", out_path)
 
 
-
+def _csv_bar_elite(date_str: str) -> str:
     sd = datetime.strptime(date_str, "%Y%m%d").strftime("%Y-%m-%d")
     ef = f"passing_ema10_{date_str}.csv"
     return f"""
