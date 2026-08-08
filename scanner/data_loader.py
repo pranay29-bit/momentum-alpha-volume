@@ -33,14 +33,58 @@ _RATE_LIMIT_BACKOFF = 30.0
 
 # ── Symbol list & metadata ─────────────────────────────────────────────────────
 
+def _sme_raw_codes(csv_path: str = SME_CSV_PATH) -> set[str]:
+    """
+    Raw, un-suffixed NSE + BSE codes straight from the SME CSV (e.g. "AGUL",
+    "542155") — used to filter SME rows out of the main-board universe by
+    *code*, not by full Yahoo ticker. This matters because NSE_Stocks.csv
+    turns out to already contain ~540 SME-board codes as plain rows (e.g.
+    "AGUL" with no "-SM" marker) — those become "AGUL.NS" once the default
+    ".NS" suffix is appended, which never equals the correct SME ticker
+    "AGUL-SM.NS", so a full-ticker comparison silently misses them.
+    """
+    try:
+        df = pd.read_csv(csv_path, dtype=str)
+    except Exception:
+        return set()
+    df.columns = [c.strip() for c in df.columns]
+    codes: set[str] = set()
+    for col in ("NSE Code", "BSE Code"):
+        if col in df.columns:
+            vals = df[col].dropna().astype(str).str.strip()
+            vals = vals[vals.str.lower() != "nan"]
+            # BSE codes sometimes round-trip through spreadsheets as "542155.0"
+            vals = vals.str.replace(r"\.0$", "", regex=True)
+            codes.update(vals)
+    return codes
+
+
 def load_symbols(csv_path: str = CSV_PATH, symbol_col: str = SYMBOL_COLUMN) -> list[str]:
     df  = pd.read_csv(csv_path)
     raw = df[symbol_col].dropna().astype(str).str.strip().unique().tolist()
+
+    # Safety net: drop any row whose *code* is actually an SME listing before
+    # even building the Yahoo ticker, regardless of what NSE_Stocks.csv
+    # contains. SME stocks are scanned/dashboarded separately (see
+    # load_sme_symbols() below) — comparing raw codes (not full suffixed
+    # tickers) is what actually catches SME rows that got exported into the
+    # main-board CSV without their "-SM" marker.
+    try:
+        sme_codes = _sme_raw_codes(csv_path=SME_CSV_PATH)
+    except Exception as exc:
+        logger.debug("Could not load SME code set for exclusion check: %s", exc)
+        sme_codes = set()
+    if sme_codes:
+        before = len(raw)
+        raw = [s for s in raw if s not in sme_codes]
+        removed = before - len(raw)
+        if removed:
+            logger.info("Excluded %d SME code(s) found in main-board CSV.", removed)
+
     symbols = [s if "." in s else s + EXCHANGE_SUFFIX for s in raw]
 
-    # Safety net: never let an SME symbol leak into the main-board universe,
-    # regardless of what NSE_Stocks.csv happens to contain. SME stocks are
-    # scanned/dashboarded separately (see load_sme_symbols() below).
+    # Belt-and-braces: also drop by full Yahoo ticker, in case a code was
+    # already suffixed some other way in the main-board CSV.
     try:
         sme_set = set(load_sme_symbols())
     except Exception as exc:
@@ -51,7 +95,7 @@ def load_symbols(csv_path: str = CSV_PATH, symbol_col: str = SYMBOL_COLUMN) -> l
         symbols = [s for s in symbols if s not in sme_set]
         removed = before - len(symbols)
         if removed:
-            logger.info("Excluded %d SME symbol(s) from main-board universe.", removed)
+            logger.info("Excluded %d SME symbol(s) (full-ticker match) from main-board universe.", removed)
 
     return symbols
 
@@ -128,6 +172,16 @@ def load_symbol_metadata(csv_path: str = CSV_PATH, symbol_col: str = SYMBOL_COLU
     df = pd.read_csv(csv_path)
     df[symbol_col] = df[symbol_col].dropna().astype(str).str.strip()
     df = df[df[symbol_col].str.len() > 0].copy()
+
+    # Same SME-code exclusion as load_symbols() — keeps this metadata table
+    # in sync with the actual main-board universe it gets joined onto.
+    try:
+        sme_codes = _sme_raw_codes(csv_path=SME_CSV_PATH)
+    except Exception:
+        sme_codes = set()
+    if sme_codes:
+        df = df[~df[symbol_col].isin(sme_codes)]
+
     df["symbol_ns"] = df[symbol_col].apply(
         lambda s: s if "." in s else s + EXCHANGE_SUFFIX
     )
