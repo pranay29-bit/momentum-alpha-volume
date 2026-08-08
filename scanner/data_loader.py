@@ -18,6 +18,7 @@ import yfinance as yf
 
 from .config import (
     CSV_PATH, SYMBOL_COLUMN, EXCHANGE_SUFFIX,
+    SME_CSV_PATH,
     PERIOD, INTERVAL, BATCH_SIZE,
 )
 from .indicators import add_indicators, evaluate_trend_template, compute_12m_return, compute_volume_action, is_inside_candle
@@ -35,7 +36,88 @@ _RATE_LIMIT_BACKOFF = 30.0
 def load_symbols(csv_path: str = CSV_PATH, symbol_col: str = SYMBOL_COLUMN) -> list[str]:
     df  = pd.read_csv(csv_path)
     raw = df[symbol_col].dropna().astype(str).str.strip().unique().tolist()
-    return [s if "." in s else s + EXCHANGE_SUFFIX for s in raw]
+    symbols = [s if "." in s else s + EXCHANGE_SUFFIX for s in raw]
+
+    # Safety net: never let an SME symbol leak into the main-board universe,
+    # regardless of what NSE_Stocks.csv happens to contain. SME stocks are
+    # scanned/dashboarded separately (see load_sme_symbols() below).
+    try:
+        sme_set = set(load_sme_symbols())
+    except Exception as exc:
+        logger.debug("Could not load SME symbol set for exclusion check: %s", exc)
+        sme_set = set()
+    if sme_set:
+        before = len(symbols)
+        symbols = [s for s in symbols if s not in sme_set]
+        removed = before - len(symbols)
+        if removed:
+            logger.info("Excluded %d SME symbol(s) from main-board universe.", removed)
+
+    return symbols
+
+
+def load_sme_symbols(csv_path: str = SME_CSV_PATH) -> list[str]:
+    """
+    Build the Yahoo Finance ticker list for the SME universe from the raw
+    SME CSV (columns: Name, BSE Code, NSE Code, ISIN Code, Industry Group,
+    Industry).
+
+    - NSE-listed SME shares  → "<NSE CODE>-SM.NS"  (preferred when present)
+    - BSE-only SME shares    → "<BSE CODE>.BO"
+    - Rows with neither code are skipped.
+    """
+    df = pd.read_csv(csv_path, dtype=str)
+    df.columns = [c.strip() for c in df.columns]
+
+    symbols: list[str] = []
+    for _, row in df.iterrows():
+        nse_code = str(row.get("NSE Code", "") or "").strip()
+        bse_code = str(row.get("BSE Code", "") or "").strip()
+        if nse_code and nse_code.lower() != "nan":
+            symbols.append(f"{nse_code}-SM.NS")
+        elif bse_code and bse_code.lower() != "nan":
+            # BSE codes are numeric but may arrive with a trailing ".0"
+            # from spreadsheet round-tripping — strip that before use.
+            bse_code = bse_code[:-2] if bse_code.endswith(".0") else bse_code
+            symbols.append(f"{bse_code}.BO")
+
+    # De-duplicate while preserving order
+    seen: set[str] = set()
+    unique = [s for s in symbols if not (s in seen or seen.add(s))]
+    return unique
+
+
+def load_sme_metadata(csv_path: str = SME_CSV_PATH) -> pd.DataFrame:
+    """
+    Same shape as load_symbol_metadata(), but derived from the SME CSV and
+    indexed by the SME Yahoo ticker (e.g. 'SACHEEROME-SM.NS' or '542155.BO').
+    """
+    df = pd.read_csv(csv_path, dtype=str)
+    df.columns = [c.strip() for c in df.columns]
+
+    def _sym(row) -> str | None:
+        nse_code = str(row.get("NSE Code", "") or "").strip()
+        bse_code = str(row.get("BSE Code", "") or "").strip()
+        if nse_code and nse_code.lower() != "nan":
+            return f"{nse_code}-SM.NS"
+        if bse_code and bse_code.lower() != "nan":
+            bse_code = bse_code[:-2] if bse_code.endswith(".0") else bse_code
+            return f"{bse_code}.BO"
+        return None
+
+    df["symbol_ns"] = df.apply(_sym, axis=1)
+    df = df[df["symbol_ns"].notna()].copy()
+
+    meta_cols = {"symbol_ns": "symbol_ns"}
+    if "Name" in df.columns:
+        meta_cols["Name"] = "name"
+    if "Industry Group" in df.columns:
+        meta_cols["Industry Group"] = "industry_group"
+    if "Industry" in df.columns:
+        meta_cols["Industry"] = "industry"
+
+    meta = df[[c for c in meta_cols]].rename(columns=meta_cols)
+    return meta.drop_duplicates(subset=["symbol_ns"]).set_index("symbol_ns")
 
 
 def load_symbol_metadata(csv_path: str = CSV_PATH, symbol_col: str = SYMBOL_COLUMN) -> pd.DataFrame:
@@ -136,9 +218,14 @@ def _retry_with_bse(failed_symbols: list[str], meta: pd.DataFrame) -> list[dict]
     The output row's `symbol` field keeps the ORIGINAL .NS name (so industry
     metadata joins / dashboard links stay consistent) even though the price
     data underneath actually came from BSE.
+
+    NSE-SME tickers ("<CODE>-SM.NS") are skipped here: their BSE code is
+    unrelated to the NSE code, so a naive ".NS" → ".BO" suffix swap would
+    build a bogus ticker. SME stocks without an NSE listing are already
+    downloaded directly as "<BSE CODE>.BO" by load_sme_symbols().
     """
     recovered: list[dict] = []
-    bo_candidates = [s for s in failed_symbols if s.endswith(".NS")]
+    bo_candidates = [s for s in failed_symbols if s.endswith(".NS") and "-SM.NS" not in s]
     if not bo_candidates:
         return recovered
 
@@ -174,7 +261,7 @@ def _retry_with_bse(failed_symbols: list[str], meta: pd.DataFrame) -> list[dict]
     return recovered
 
 
-def download_all(symbols: list[str]) -> pd.DataFrame:
+def download_all(symbols: list[str], meta_override: pd.DataFrame | None = None) -> pd.DataFrame:
     """
     Download price history for all *symbols* in batches and return a
     consolidated DataFrame with indicators + trend-template flags,
@@ -182,13 +269,20 @@ def download_all(symbols: list[str]) -> pd.DataFrame:
 
     Any symbol that fails to fetch on NSE (.NS) is automatically retried
     on BSE (.BO) before being dropped — see _retry_with_bse().
+
+    Pass `meta_override` (e.g. load_sme_metadata()) to enrich with a
+    different metadata source than the default main-board CSV — used for
+    the SME universe, which lives in its own CSV.
     """
     # Load industry metadata once
-    try:
-        meta = load_symbol_metadata()
-    except Exception as exc:
-        logger.warning("Could not load symbol metadata: %s", exc)
-        meta = pd.DataFrame()
+    if meta_override is not None:
+        meta = meta_override
+    else:
+        try:
+            meta = load_symbol_metadata()
+        except Exception as exc:
+            logger.warning("Could not load symbol metadata: %s", exc)
+            meta = pd.DataFrame()
 
     all_rows: list[dict] = []
     failed_symbols: list[str] = []
