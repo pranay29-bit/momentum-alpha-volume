@@ -35,7 +35,7 @@ BATCH_SIZE = 75
 # slowest part of the whole pipeline. A small, fixed worker count keeps
 # concurrency polite/bounded (unlike threads=True, which lets yfinance use
 # an unbounded pool) while still being many times faster than serial.
-DOWNLOAD_THREADS = int(os.getenv("DOWNLOAD_THREADS", "5"))
+DOWNLOAD_THREADS = int(os.getenv("DOWNLOAD_THREADS", "8"))
 
 # ── Indicator windows ─────────────────────────────────────────────────────────
 RS_LOOKBACK  = 252
