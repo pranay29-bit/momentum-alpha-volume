@@ -461,6 +461,147 @@ function renderBooked() {
   updateSortIndicators("booked");
   renderHeatmap();
   updateAnalytics();
+  updateKelly();
+}
+
+// ── Kelly Criterion, computed from the user's real booked trades ─────────
+let kellyChartInstance = null;
+const MIN_TRADES_FOR_KELLY = 5; // fewer than this and win-rate/R estimates are too noisy to trust
+
+function kellyGrowthRate(f, W, a, b) {
+  // g(f) = W*ln(1+b*f) + (1-W)*ln(1-a*f)
+  const term1 = (1 + b * f) > 0 ? W * Math.log(1 + b * f) : -Infinity;
+  const term2 = (1 - a * f) > 0 ? (1 - W) * Math.log(1 - a * f) : -Infinity;
+  const g = term1 + term2;
+  return Number.isFinite(g) ? g : null;
+}
+
+function updateKelly() {
+  const nEl = document.getElementById("kellyN");
+  const wrEl = document.getElementById("kellyWinRate");
+  const winEl = document.getElementById("kellyAvgWin");
+  const lossEl = document.getElementById("kellyAvgLoss");
+  const fullEl = document.getElementById("kellyFull");
+  const halfEl = document.getElementById("kellyHalf");
+  const actualEl = document.getElementById("kellyActual");
+  const verdictEl = document.getElementById("kellyVerdict");
+  const noteEl = document.getElementById("kellyNote");
+  if (!nEl) return; // panel not on this page
+
+  const n = bookedPositions.length;
+  nEl.textContent = n;
+
+  const winners = bookedPositions.filter((p) => (Number(p.rMultiple) || 0) > 0.001);
+  const losers = bookedPositions.filter((p) => (Number(p.rMultiple) || 0) < -0.001);
+
+  if (n < MIN_TRADES_FOR_KELLY) {
+    wrEl.textContent = "—";
+    winEl.textContent = "—";
+    lossEl.textContent = "—";
+    fullEl.textContent = "—";
+    halfEl.textContent = "—";
+    actualEl.textContent = "—";
+    verdictEl.textContent = "Not enough data";
+    verdictEl.className = "";
+    noteEl.textContent = n === 0
+      ? "Book some closed trades above — once you have at least " + MIN_TRADES_FOR_KELLY +
+        " booked trades, your real Kelly sizing will appear here."
+      : `You have ${n} booked trade${n === 1 ? "" : "s"} — Kelly needs at least ${MIN_TRADES_FOR_KELLY} to give a` +
+        ` win-rate/R estimate that isn't mostly noise. Keep logging trades.`;
+    if (kellyChartInstance) { kellyChartInstance.destroy(); kellyChartInstance = null; }
+    const canvas = document.getElementById("kellyGrowthChart");
+    if (canvas) { const ctx = canvas.getContext("2d"); ctx.clearRect(0, 0, canvas.width, canvas.height); }
+    return;
+  }
+
+  const W = winners.length / n;
+  const b = winners.length
+    ? winners.reduce((s, p) => s + (Number(p.rMultiple) || 0), 0) / winners.length
+    : 0;
+  const a = losers.length
+    ? Math.abs(losers.reduce((s, p) => s + (Number(p.rMultiple) || 0), 0) / losers.length)
+    : 1; // fallback: assume a full 1R stop-out if somehow no losers logged
+
+  wrEl.textContent = (W * 100).toFixed(0) + "%";
+  winEl.textContent = b.toFixed(2) + "R";
+  lossEl.textContent = "-" + a.toFixed(2) + "R";
+
+  let fStar = (W / a) - ((1 - W) / b || 0);
+  if (!Number.isFinite(fStar) || fStar < 0) fStar = 0;
+  const halfKelly = fStar / 2;
+
+  fullEl.textContent = (fStar * 100).toFixed(2) + "%";
+  halfEl.textContent = (halfKelly * 100).toFixed(2) + "%";
+
+  const riskVals = bookedPositions.map((p) => Number(p.riskPct)).filter((v) => Number.isFinite(v));
+  const actualAvgRisk = riskVals.length ? riskVals.reduce((s, v) => s + v, 0) / riskVals.length / 100 : null;
+  actualEl.textContent = actualAvgRisk !== null ? (actualAvgRisk * 100).toFixed(2) + "%" : "—";
+
+  if (fStar <= 0) {
+    verdictEl.textContent = "No edge — review strategy";
+    verdictEl.className = "loss";
+  } else if (actualAvgRisk === null) {
+    verdictEl.textContent = "Kelly computed";
+    verdictEl.className = "";
+  } else if (actualAvgRisk > fStar) {
+    verdictEl.textContent = "Over-sized — undertrade";
+    verdictEl.className = "loss";
+  } else if (actualAvgRisk < halfKelly) {
+    verdictEl.textContent = "Under-sized vs. half-Kelly";
+    verdictEl.className = "";
+  } else {
+    verdictEl.textContent = "Within a sensible Kelly range";
+    verdictEl.className = "profit";
+  }
+
+  const dangerF = 2 * fStar; // beyond 2x Kelly, expected growth turns negative
+  noteEl.innerHTML =
+    `Based on ${n} booked trades: <b>${(W * 100).toFixed(0)}% win rate</b>, average winner ` +
+    `<b>${b.toFixed(2)}R</b>, average loser <b>-${a.toFixed(2)}R</b>. Full Kelly says risk ` +
+    `<b>${(fStar * 100).toFixed(2)}%</b> of your portfolio per trade for max long-run growth ` +
+    `(green peak below) — but past <b>${(dangerF * 100).toFixed(2)}%</b> (roughly 2× Kelly), ` +
+    `expected growth turns negative, so that's the line where you should actively cut size and ` +
+    `start under-trading. Half-Kelly (<b>${(halfKelly * 100).toFixed(2)}%</b>) is the safer, ` +
+    `commonly-used practical target given how few trades most traders have logged.`;
+
+  // ── growth curve chart ──
+  const maxF = Math.min(0.95, Math.max(dangerF * 1.3, fStar * 2.5, 0.1));
+  const step = maxF / 80;
+  const labels = [];
+  const data = [];
+  for (let f = 0; f <= maxF; f += step) {
+    labels.push((f * 100).toFixed(1));
+    data.push(kellyGrowthRate(f, W, a, b));
+  }
+
+  const canvas = document.getElementById("kellyGrowthChart");
+  if (canvas && window.Chart) {
+    if (kellyChartInstance) kellyChartInstance.destroy();
+    kellyChartInstance = new Chart(canvas, {
+      type: "line",
+      data: {
+        labels,
+        datasets: [{
+          label: "Expected growth rate g(f)",
+          data,
+          borderColor: "#5b5fef",
+          backgroundColor: "rgba(91,95,239,0.08)",
+          fill: true,
+          tension: 0.25,
+          pointRadius: 0,
+          borderWidth: 2.5,
+        }],
+      },
+      options: {
+        responsive: true,
+        plugins: { legend: { display: false } },
+        scales: {
+          x: { title: { display: true, text: "Capital risked per trade (%)" } },
+          y: { title: { display: true, text: "Expected log-growth rate" } },
+        },
+      },
+    });
+  }
 }
 
 function holdingDays(p) {
