@@ -491,8 +491,22 @@ function updateKelly() {
   const n = bookedPositions.length;
   nEl.textContent = n;
 
-  const winners = bookedPositions.filter((p) => (Number(p.rMultiple) || 0) > 0.001);
-  const losers = bookedPositions.filter((p) => (Number(p.rMultiple) || 0) < -0.001);
+  // Effective R per trade: prefer the stored rMultiple, but fall back to
+  // pnlPct / riskPct if rMultiple is missing/0/invalid (this happens when
+  // riskPerShare wasn't set on a booking, which makes stored rMultiple
+  // silently come out as 0 for that trade).
+  function effectiveR(p) {
+    const stored = Number(p.rMultiple);
+    if (Number.isFinite(stored) && Math.abs(stored) > 0.0001) return stored;
+    const pnl = Number(p.pnlPct);
+    const risk = Number(p.riskPct);
+    if (Number.isFinite(pnl) && Number.isFinite(risk) && risk > 0) return pnl / risk;
+    return 0;
+  }
+
+  const rValues = bookedPositions.map(effectiveR);
+  const winners = rValues.filter((r) => r > 0.001);
+  const losers = rValues.filter((r) => r < -0.001);
 
   if (n < MIN_TRADES_FOR_KELLY) {
     wrEl.textContent = "—";
@@ -516,10 +530,10 @@ function updateKelly() {
 
   const W = winners.length / n;
   const b = winners.length
-    ? winners.reduce((s, p) => s + (Number(p.rMultiple) || 0), 0) / winners.length
+    ? winners.reduce((s, r) => s + r, 0) / winners.length
     : 0;
   const a = losers.length
-    ? Math.abs(losers.reduce((s, p) => s + (Number(p.rMultiple) || 0), 0) / losers.length)
+    ? Math.abs(losers.reduce((s, r) => s + r, 0) / losers.length)
     : 1; // fallback: assume a full 1R stop-out if somehow no losers logged
 
   wrEl.textContent = (W * 100).toFixed(0) + "%";
