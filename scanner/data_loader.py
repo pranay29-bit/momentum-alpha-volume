@@ -25,32 +25,12 @@ from .indicators import add_indicators, evaluate_trend_template, compute_12m_ret
 
 logger = logging.getLogger(__name__)
 
-# yfinance logs its own "possibly delisted; no price data found" line
-# directly at ERROR level for every ticker it can't return history for —
-# this fires even for a completely normal case: a recently-listed SME
-# stock that simply doesn't have `period` (400d) days of trading history
-# yet, or a genuinely delisted one. It's not an exception we can catch
-# (yf.download() still returns successfully with that symbol just missing
-# from the result), and download_all() below already handles the missing
-# symbol gracefully (dropped from the passing set, counted in the
-# "excluded/recovered/failed" summary logs), so this is purely noise —
-# quieten yfinance's own logger only; our own INFO/WARNING summary lines
-# are untouched.
-logging.getLogger("yfinance").setLevel(logging.CRITICAL)
-
 # Seconds to pause between batches — prevents Yahoo Finance rate limiting.
 # Batches now download concurrently (see DOWNLOAD_THREADS in config.py)
 # instead of one symbol at a time, so a shorter inter-batch pause is enough.
 _BATCH_DELAY        = 0.4
-# Rate-limit back-off schedule: yfinance's threaded downloads are known to
-# trip Yahoo's per-session rate limit under concurrent load (see e.g.
-# ranaroussi/yfinance #2128, #2614). A single short back-off isn't always
-# enough — if the limit trips partway through a long run (as can happen to
-# the SME batch, which runs after the ~2,400-symbol main-board scan has
-# already used up part of the session's budget), that failure cascades
-# through every batch after it. Retry a few times with increasing pauses
-# instead of giving up after one attempt.
-_RATE_LIMIT_BACKOFFS = [20.0, 60.0, 120.0]
+# Extra back-off when a 429 / rate-limit error is detected
+_RATE_LIMIT_BACKOFF = 30.0
 
 
 # ── Symbol list & metadata ─────────────────────────────────────────────────────
@@ -311,64 +291,6 @@ def _process_symbol(sym: str, data: pd.DataFrame, is_multi: bool) -> dict | None
         return None
 
 
-def _is_rate_limit_error(exc: Exception) -> bool:
-    err_str = str(exc).lower()
-    return "too many requests" in err_str or "rate limit" in err_str or "429" in err_str
-
-
-def _download_batch_with_retries(batch: list[str], batch_label: str) -> pd.DataFrame | None:
-    """
-    yf.download() a single batch, retrying with an increasing back-off
-    schedule (_RATE_LIMIT_BACKOFFS) if Yahoo rate-limits the request.
-    Returns None if every attempt fails.
-    """
-    kwargs = dict(
-        tickers=batch, period=PERIOD, interval=INTERVAL,
-        group_by="ticker", auto_adjust=True, threads=DOWNLOAD_THREADS, progress=False,
-    )
-    attempt = 0
-    while True:
-        try:
-            return yf.download(**kwargs)
-        except Exception as exc:
-            if _is_rate_limit_error(exc) and attempt < len(_RATE_LIMIT_BACKOFFS):
-                wait = _RATE_LIMIT_BACKOFFS[attempt]
-                attempt += 1
-                logger.warning(
-                    "Rate limited on %s (attempt %d/%d) — backing off %ds…",
-                    batch_label, attempt, len(_RATE_LIMIT_BACKOFFS), wait,
-                )
-                time.sleep(wait)
-                continue
-            logger.error("%s download failed%s: %s", batch_label,
-                         " after all retries" if attempt else "", exc)
-            return None
-
-
-_crumb_warmed = False
-
-
-def _warm_up_crumb() -> None:
-    """
-    Fetch Yahoo's cookie+crumb once, single-threaded, before the first
-    concurrent batch. yfinance's crumb/cookie handshake isn't reliably
-    thread-safe (see ranaroussi/yfinance #2557) — if the very first batch
-    fires DOWNLOAD_THREADS requests at once before any crumb is cached,
-    several threads can race to fetch it simultaneously. Priming it with
-    one single-ticker request first means every later batch (concurrent
-    or not) reuses an already-valid session.
-    """
-    global _crumb_warmed
-    if _crumb_warmed:
-        return
-    try:
-        yf.download(tickers="RELIANCE.NS", period="5d", interval="1d",
-                    threads=False, progress=False)
-    except Exception as exc:
-        logger.debug("Crumb warm-up call failed (non-fatal): %s", exc)
-    _crumb_warmed = True
-
-
 def _retry_with_bse(failed_symbols: list[str], meta: pd.DataFrame) -> list[dict]:
     """
     Retry any symbols that failed to fetch on NSE (.NS) using the BSE (.BO)
@@ -396,7 +318,14 @@ def _retry_with_bse(failed_symbols: list[str], meta: pd.DataFrame) -> list[dict]
     for i, batch in enumerate(_chunk(bo_symbols, BATCH_SIZE), start=1):
         if i > 1:
             time.sleep(_BATCH_DELAY)
-        data = _download_batch_with_retries(batch, f"BSE fallback batch {i}")
+        try:
+            data = yf.download(
+                tickers=batch, period=PERIOD, interval=INTERVAL,
+                group_by="ticker", auto_adjust=True, threads=DOWNLOAD_THREADS, progress=False,
+            )
+        except Exception as exc:
+            logger.warning("BSE fallback batch %d failed: %s", i, exc)
+            continue
         if data is None or data.empty:
             continue
 
@@ -436,10 +365,6 @@ def download_all(symbols: list[str], meta_override: pd.DataFrame | None = None) 
             logger.warning("Could not load symbol metadata: %s", exc)
             meta = pd.DataFrame()
 
-    # Prime Yahoo's cookie+crumb once, single-threaded, before any
-    # concurrent batch fires — see _warm_up_crumb() for why.
-    _warm_up_crumb()
-
     all_rows: list[dict] = []
     failed_symbols: list[str] = []
     total = ceil(len(symbols) / BATCH_SIZE)
@@ -450,7 +375,42 @@ def download_all(symbols: list[str], meta_override: pd.DataFrame | None = None) 
             time.sleep(_BATCH_DELAY)
 
         logger.info("=== Batch %d/%d (%d symbols) ===", i, total, len(batch))
-        data = _download_batch_with_retries(batch, f"Batch {i}/{total}")
+        try:
+            data = yf.download(
+                tickers=batch,
+                period=PERIOD,
+                interval=INTERVAL,
+                group_by="ticker",
+                auto_adjust=True,
+                threads=DOWNLOAD_THREADS,   # bounded concurrency within the batch
+                progress=False,
+            )
+        except Exception as exc:
+            err_str = str(exc).lower()
+            if "too many requests" in err_str or "rate limit" in err_str or "429" in err_str:
+                logger.warning(
+                    "Rate limited on batch %d — backing off %ds then retrying once…",
+                    i, _RATE_LIMIT_BACKOFF,
+                )
+                time.sleep(_RATE_LIMIT_BACKOFF)
+                try:
+                    data = yf.download(
+                        tickers=batch,
+                        period=PERIOD,
+                        interval=INTERVAL,
+                        group_by="ticker",
+                        auto_adjust=True,
+                        threads=DOWNLOAD_THREADS,
+                        progress=False,
+                    )
+                except Exception as exc2:
+                    logger.error("Batch %d retry also failed: %s", i, exc2)
+                    failed_symbols.extend(batch)
+                    continue
+            else:
+                logger.error("Batch %d download failed: %s", i, exc)
+                failed_symbols.extend(batch)
+                continue
 
         if data is None or data.empty:
             failed_symbols.extend(batch)
@@ -479,27 +439,5 @@ def download_all(symbols: list[str], meta_override: pd.DataFrame | None = None) 
     # Merge industry metadata
     if not df.empty and not meta.empty:
         df = df.join(meta, on="symbol", how="left")
-
-    # Split success/failure counts by exchange suffix — makes it obvious at
-    # a glance whether a shortfall is concentrated in one segment (e.g. all
-    # of it landing on NSE-SME "-SM.NS" symbols specifically, which is a
-    # useful signal that something exchange-specific is wrong, vs. a flat
-    # percentage failure rate across everything, which usually just means
-    # rate-limiting).
-    if symbols:
-        def _bucket(s: str) -> str:
-            if "-SM.NS" in s:
-                return "NSE-SME"
-            if s.endswith(".BO"):
-                return "BSE"
-            return "NSE main-board"
-
-        got = set(df["symbol"]) if not df.empty else set()
-        from collections import Counter
-        req_counts = Counter(_bucket(s) for s in symbols)
-        got_counts = Counter(_bucket(s) for s in symbols if s in got)
-        for bucket, req_n in req_counts.items():
-            got_n = got_counts.get(bucket, 0)
-            logger.info("  %-15s: %d/%d symbols returned data", bucket, got_n, req_n)
 
     return df
