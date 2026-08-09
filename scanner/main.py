@@ -15,6 +15,7 @@ import logging
 import sys
 import os
 import json
+import time
 from datetime import datetime
 from pathlib import Path
 
@@ -315,6 +316,16 @@ def run() -> None:
         except Exception as exc:
             logger.warning("Could not load SME metadata: %s", exc)
             sme_meta = pd.DataFrame()
+
+        # Short cool-down before the SME scan. The main-board scan just
+        # above this can send ~2,400+ symbols' worth of requests to Yahoo
+        # in one continuous burst; if that partially trips a rate limit
+        # near the end, the SME batch — which runs immediately after —
+        # would inherit that limit even though nothing is wrong with the
+        # SME symbols themselves. A short pause here lets any transient
+        # limit clear before SME's own batches start.
+        logger.info("Pausing 10s before SME scan (lets any main-scan rate-limit cool down)…")
+        time.sleep(10)
 
         sme_df = download_all(sme_symbols, meta_override=sme_meta)
         if sme_df.empty:
