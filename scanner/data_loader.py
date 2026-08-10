@@ -41,7 +41,7 @@ def _sme_code_to_yahoo(code: str) -> str | None:
 
     The SME CSV's "Symbols" column mixes both boards in a single field:
     - Purely numeric   → a BSE scrip code     → "<CODE>.BO"
-    - Alphabetic       → an NSE trading code  → "<CODE>-SM.NS"
+    - Alphabetic       → an NSE trading code  → "<CODE>-.NS"
 
     (Numeric codes sometimes round-trip through a spreadsheet as "542155.0"
     — that trailing ".0" is stripped before use.)
@@ -51,7 +51,7 @@ def _sme_code_to_yahoo(code: str) -> str | None:
         return None
     if code.endswith(".0") and code[:-2].isdigit():
         code = code[:-2]
-    return f"{code}.BO" if code.isdigit() else f"{code}-SM.NS"
+    return f"{code}.BO" if code.isdigit() else f"{code}-.NS"
 
 
 def _sme_rows(csv_path: str = SME_CSV_PATH) -> pd.DataFrame:
@@ -72,7 +72,7 @@ def _sme_rows(csv_path: str = SME_CSV_PATH) -> pd.DataFrame:
             nse_code = str(row.get("NSE Code", "") or "").strip()
             bse_code = str(row.get("BSE Code", "") or "").strip()
             if nse_code and nse_code.lower() != "nan":
-                return _sme_code_to_yahoo(nse_code) or f"{nse_code}-SM.NS"
+                return _sme_code_to_yahoo(nse_code) or f"{nse_code}-.NS"
             if bse_code and bse_code.lower() != "nan":
                 return _sme_code_to_yahoo(bse_code) or f"{bse_code}.BO"
             return None
@@ -94,7 +94,7 @@ def _sme_raw_codes(csv_path: str = SME_CSV_PATH) -> set[str]:
     turns out to already contain SME-board codes as plain rows (e.g. "AGUL"
     with no "-SM" marker) — those become "AGUL.NS" once the default ".NS"
     suffix is appended, which never equals the correct SME ticker
-    "AGUL-SM.NS", so a full-ticker comparison silently misses them.
+    "AGUL-.NS", so a full-ticker comparison silently misses them.
     """
     try:
         df = pd.read_csv(csv_path, dtype=str)
@@ -162,7 +162,7 @@ def load_sme_symbols(csv_path: str = SME_CSV_PATH) -> list[str]:
     numeric "Symbols" value is a BSE code, an alphabetic one is an NSE
     code; see _sme_code_to_yahoo()).
 
-    - NSE-listed SME shares → "<CODE>-SM.NS"
+    - NSE-listed SME shares → "<CODE>-.NS"
     - BSE-listed SME shares → "<CODE>.BO"
     """
     df = _sme_rows(csv_path)
@@ -175,7 +175,7 @@ def load_sme_symbols(csv_path: str = SME_CSV_PATH) -> list[str]:
 def load_sme_metadata(csv_path: str = SME_CSV_PATH) -> pd.DataFrame:
     """
     Same shape as load_symbol_metadata(), but derived from the SME CSV and
-    indexed by the SME Yahoo ticker (e.g. 'JALAN-SM.NS' or '542155.BO').
+    indexed by the SME Yahoo ticker (e.g. 'JALAN-.NS' or '542155.BO').
     """
     df = _sme_rows(csv_path)
 
@@ -300,13 +300,13 @@ def _retry_with_bse(failed_symbols: list[str], meta: pd.DataFrame) -> list[dict]
     metadata joins / dashboard links stay consistent) even though the price
     data underneath actually came from BSE.
 
-    NSE-SME tickers ("<CODE>-SM.NS") are skipped here: their BSE code is
+    NSE-SME tickers ("<CODE>-.NS") are skipped here: their BSE code is
     unrelated to the NSE code, so a naive ".NS" → ".BO" suffix swap would
     build a bogus ticker. SME stocks without an NSE listing are already
     downloaded directly as "<BSE CODE>.BO" by load_sme_symbols().
     """
     recovered: list[dict] = []
-    bo_candidates = [s for s in failed_symbols if s.endswith(".NS") and "-SM.NS" not in s]
+    bo_candidates = [s for s in failed_symbols if s.endswith(".NS") and "-.NS" not in s]
     if not bo_candidates:
         return recovered
 
