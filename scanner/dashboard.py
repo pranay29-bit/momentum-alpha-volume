@@ -58,8 +58,6 @@ def _tv_link(symbol_ns: str) -> str:
 # ── Shared assets ─────────────────────────────────────────────────────────────
 
 _CDN_CHARTJS  = "https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"
-_CDN_HAMMER   = "https://cdnjs.cloudflare.com/ajax/libs/hammer.js/2.0.8/hammer.min.js"
-_CDN_ZOOM     = "https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-zoom/2.0.1/chartjs-plugin-zoom.min.js"
 _GOOGLE_FONTS = (
     "https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700"
     "&family=DM+Mono:wght@400;500&display=swap"
@@ -115,9 +113,6 @@ _BASE_CSS = """
   --slate:      #475569;
   --slate-lt:   #f1f5f9;
   --slate-mid:  #cbd5e1;
-  --teal:       #0f766e;
-  --teal-lt:    #f0fdfa;
-  --teal-mid:   #99f6e4;
 
   /* NEW badge */
   --new-bg:     #fdf4ff;
@@ -136,33 +131,19 @@ _BASE_CSS = """
   --radius-sm: 8px;
   --shadow-sm: 0 1px 2px rgba(15,23,42,.04);
   --shadow-md: 0 4px 16px -4px rgba(15,23,42,.08), 0 1px 3px rgba(15,23,42,.04);
-  --shadow-lg: 0 12px 32px -12px rgba(15,23,42,.16), 0 2px 6px -1px rgba(15,23,42,.05);
   --rxl: 16px;
-  --tick: 'tabular-nums';
 }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-html { font-size: 14px; scroll-behavior: smooth; }
+html { font-size: 14px; }
 body {
   background: var(--bg);
   color: var(--text);
   font-family: var(--sans);
-  line-height: 1.55;
+  line-height: 1.6;
   min-height: 100vh;
-  -webkit-font-smoothing: antialiased;
 }
 a { color: inherit; text-decoration: none; }
-
-/* ── Sitewide motion — every interactive surface eases the same way ── */
-a, button, input, .kpi, .btn-link, .csv-btn, .search, .srow, .chart-card,
-.tbl-outer, canvas, .badge, .hdr-badge, .date-pill {
-  transition: background-color .16s ease, border-color .16s ease,
-              color .16s ease, box-shadow .18s ease, transform .16s ease,
-              opacity .18s ease;
-}
-@media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after { transition-duration: .001ms !important; animation-duration: .001ms !important; scroll-behavior: auto !important; }
-}
 
 /* ── Topbar ── */
 .topbar {
@@ -174,13 +155,12 @@ a, button, input, .kpi, .btn-link, .csv-btn, .search, .srow, .chart-card,
 header {
   background: var(--surface);
   border-bottom: 1px solid var(--border);
-  padding: 1.25rem 2.5rem;
+  padding: 1.6rem 2.5rem;
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
   gap: 1rem;
   flex-wrap: wrap;
-  box-shadow: var(--shadow-sm);
 }
 .hdr-left { display: flex; flex-direction: column; gap: .2rem; }
 .brand {
@@ -207,65 +187,51 @@ header h1 {
   letter-spacing: -.03em;
   line-height: 1.1;
   color: var(--text);
-  font-variant-numeric: tabular-nums;
 }
 .hdr-sub {
-  font-size: .74rem;
-  color: var(--subtle);
-  margin-top: .1rem;
-  font-weight: 400;
+  font-size: .8rem;
+  color: var(--muted);
+  margin-top: .15rem;
 }
 .badge-row { display: flex; gap: .45rem; margin-top: .5rem; flex-wrap: wrap; }
 
 /* ── Shared cross-page nav bar (identical component on every page) ── */
 .site-nav {
-  display: flex; flex-wrap: wrap; gap: .35rem; align-items: center;
-  padding: .65rem 2.5rem;
-  background: color-mix(in srgb, var(--surface) 92%, transparent);
+  display: flex; flex-wrap: wrap; gap: .5rem; align-items: center;
+  padding: .75rem 2.5rem;
+  background: color-mix(in srgb, var(--surface-2) 88%, transparent);
   backdrop-filter: blur(10px) saturate(160%);
   -webkit-backdrop-filter: blur(10px) saturate(160%);
   border-bottom: 1px solid var(--border);
   position: sticky; top: 0; z-index: 100;
-  box-shadow: var(--shadow-sm);
+  box-shadow: 0 6px 18px -10px rgba(15,23,42,.18);
 }
-/* Ghost/ounlined nav pills — neutral by default, accent color only shows on
-   hover / active so the bar reads as a clean instrument panel rather than
-   a row of candy-coloured buttons. */
 .btn-link {
-  display: inline-flex; align-items: center; gap: .4rem;
-  padding: .34rem .85rem; border-radius: 7px;
-  font-family: var(--mono); font-size: .71rem; font-weight: 600;
-  background: transparent; border: 1px solid transparent; color: var(--muted);
-  text-decoration: none; transition: background .14s, border-color .14s, color .14s, transform .12s;
-  letter-spacing: .02em;
+  display: inline-flex; align-items: center; gap: .35rem;
+  padding: .32rem .9rem; border-radius: 999px;
+  font-family: var(--mono); font-size: .72rem; font-weight: 600;
+  background: var(--indigo-lt); border: 1px solid var(--indigo-mid); color: var(--indigo);
+  text-decoration: none; transition: background .14s, box-shadow .14s, transform .14s; letter-spacing: .03em;
 }
-.btn-link::before {
-  content: ''; width: 5px; height: 5px; border-radius: 50%;
-  background: currentColor; opacity: .55; flex-shrink: 0;
-}
-.btn-link:hover { color: var(--ACCENT1); background: var(--surface2); border-color: var(--border); transform: translateY(-1px); }
-.btn-link.green   { --acc: var(--emerald); } .btn-link.green:hover   { color: var(--emerald); background: var(--emerald-lt); border-color: var(--emerald-mid); }
-.btn-link.blue    { --acc: var(--blue); }    .btn-link.blue:hover    { color: var(--blue);    background: var(--blue-lt);    border-color: var(--blue-mid); }
-.btn-link.amber   { --acc: var(--amber); }   .btn-link.amber:hover   { color: var(--amber);   background: var(--amber-lt);   border-color: var(--amber-mid); }
-.btn-link.violet  { --acc: var(--violet); }  .btn-link.violet:hover  { color: var(--violet);  background: var(--violet-lt);  border-color: var(--violet-mid); }
-.btn-link.navy    { --acc: var(--navy); }    .btn-link.navy:hover    { color: var(--navy);    background: var(--navy-lt, #eef1f8); border-color: var(--navy-mid, #c9d0e3); }
-.btn-link.red     { --acc: var(--red); }     .btn-link.red:hover     { color: var(--red);     background: var(--red-lt);     border-color: var(--red-mid); }
-.btn-link.rose    { --acc: var(--rose); }    .btn-link.rose:hover    { color: var(--rose);    background: var(--rose-lt);    border-color: var(--rose-mid); }
-.btn-link.slate   { --acc: var(--slate); }   .btn-link.slate:hover   { color: var(--slate);   background: var(--slate-lt);   border-color: var(--slate-mid); }
-.btn-link.teal    { --acc: var(--teal); }    .btn-link.teal:hover    { color: var(--teal);    background: var(--teal-lt);    border-color: var(--teal-mid); }
-.btn-link.is-active {
-  color: var(--ACCENT1); background: color-mix(in srgb, var(--ACCENT1) 9%, var(--surface));
-  border-color: color-mix(in srgb, var(--ACCENT1) 35%, var(--border)); font-weight: 700;
-}
-.btn-link.green.is-active  { color: var(--emerald); background: var(--emerald-lt); border-color: var(--emerald-mid); }
-.btn-link.blue.is-active   { color: var(--blue);    background: var(--blue-lt);    border-color: var(--blue-mid); }
-.btn-link.amber.is-active  { color: var(--amber);   background: var(--amber-lt);   border-color: var(--amber-mid); }
-.btn-link.violet.is-active { color: var(--violet);  background: var(--violet-lt);  border-color: var(--violet-mid); }
-.btn-link.navy.is-active   { color: var(--navy);    background: var(--navy-lt, #eef1f8); border-color: var(--navy-mid, #c9d0e3); }
-.btn-link.red.is-active    { color: var(--red);     background: var(--red-lt);     border-color: var(--red-mid); }
-.btn-link.rose.is-active   { color: var(--rose);    background: var(--rose-lt);    border-color: var(--rose-mid); }
-.btn-link.slate.is-active  { color: var(--slate);   background: var(--slate-lt);   border-color: var(--slate-mid); }
-.btn-link.teal.is-active   { color: var(--teal);    background: var(--teal-lt);    border-color: var(--teal-mid); }
+.btn-link:hover { transform: translateY(-1px); box-shadow: 0 3px 8px -3px rgba(15,23,42,.18); }
+.btn-link:hover { background: #dde2fb; }
+.btn-link.green   { background: var(--emerald-lt); border-color: var(--emerald-mid); color: var(--emerald); }
+.btn-link.green:hover   { background: #d7f8ea; }
+.btn-link.blue    { background: var(--blue-lt);    border-color: var(--blue-mid);    color: var(--blue); }
+.btn-link.blue:hover    { background: #dee9fd; }
+.btn-link.amber   { background: var(--amber-lt);   border-color: var(--amber-mid);   color: var(--amber); }
+.btn-link.amber:hover   { background: #fef3c7; }
+.btn-link.violet  { background: var(--violet-lt);  border-color: var(--violet-mid);  color: var(--violet); }
+.btn-link.violet:hover  { background: #ede7fd; }
+.btn-link.navy    { background: var(--navy-lt, #eef1f8); border-color: var(--navy-mid, #c9d0e3); color: var(--navy); }
+.btn-link.navy:hover    { background: #e2e6f2; }
+.btn-link.red     { background: var(--red-lt);     border-color: var(--red-mid);     color: var(--red); }
+.btn-link.red:hover     { background: #fee2e2; }
+.btn-link.rose    { background: var(--rose-lt);    border-color: var(--rose-mid);    color: var(--rose); }
+.btn-link.rose:hover    { background: #ffe4e6; }
+.btn-link.slate   { background: var(--slate-lt);   border-color: var(--slate-mid);   color: var(--slate); }
+.btn-link.slate:hover   { background: #e2e8f0; }
+.btn-link.is-active { box-shadow: 0 0 0 1px currentColor inset; font-weight: 700; }
 .hdr-badge {
   font-size: .64rem;
   font-weight: 600;
@@ -277,10 +243,10 @@ header h1 {
 }
 .date-pill {
   font-family: var(--mono);
-  font-size: .71rem;
+  font-size: .72rem;
   font-weight: 500;
-  padding: .38rem 1rem;
-  border-radius: 7px;
+  padding: .4rem 1.1rem;
+  border-radius: 999px;
   border: 1px solid;
   white-space: nowrap;
   letter-spacing: .04em;
@@ -334,39 +300,33 @@ header h1 {
 /* ── KPI strip ── */
 .kpi-strip {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-  gap: .75rem;
-  padding: 1.1rem 2.5rem;
-  background: var(--surface-2);
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
   border-bottom: 1px solid var(--border);
 }
 .kpi {
   background: var(--surface);
-  padding: 1rem 1.25rem;
-  border: 1px solid var(--border);
-  border-radius: var(--r);
+  padding: 1.1rem 1.6rem;
+  border-right: 1px solid var(--border);
   position: relative;
-  box-shadow: var(--shadow-sm);
 }
-.kpi:hover { box-shadow: var(--shadow-md); border-color: var(--border-2); transform: translateY(-1px); }
+.kpi:last-child { border-right: none; }
 .kpi::after {
   content: '';
   position: absolute;
   top: 0; left: 0; right: 0;
-  height: 2.5px;
-  border-radius: var(--r) var(--r) 0 0;
+  height: 2px;
+  border-radius: 0 0 2px 2px;
   background: var(--accent);
 }
 .kpi-lbl {
-  font-size: .6rem;
+  font-size: .62rem;
   font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: .1em;
+  letter-spacing: .11em;
   color: var(--muted);
-  margin-bottom: .3rem;
+  margin-bottom: .35rem;
 }
 .kpi-val {
-  font-variant-numeric: tabular-nums;
   font-size: clamp(1.1rem, 2vw, 1.65rem);
   font-weight: 700;
   letter-spacing: -.02em;
@@ -391,29 +351,15 @@ header h1 {
   border-radius: var(--rl);
   padding: 1.1rem 1.3rem .9rem;
 }
-.chart-card:hover { box-shadow: var(--shadow-sm); border-color: var(--border-2); }
-.chart-lbl-row {
-  display: flex; align-items: baseline; justify-content: space-between;
-  gap: .6rem; margin-bottom: .8rem;
-}
 .chart-lbl {
   font-size: .62rem;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: .11em;
   color: var(--muted);
+  margin-bottom: .8rem;
 }
-.chart-zoom-hint {
-  font-family: var(--mono);
-  font-size: .6rem;
-  color: var(--subtle);
-  opacity: 0;
-  transition: opacity .16s ease;
-  white-space: nowrap;
-}
-.chart-card:hover .chart-zoom-hint { opacity: 1; }
-.chart-wrap { position: relative; height: 220px; cursor: grab; }
-.chart-wrap:active { cursor: grabbing; }
+.chart-wrap { position: relative; height: 220px; }
 
 /* ── Table section ── */
 .table-sec { padding: 0 2.5rem 3rem; }
@@ -460,23 +406,17 @@ header h1 {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--rl);
-  box-shadow: var(--shadow-sm);
   /* Constrain height so the horizontal scrollbar sits right below the
      visible rows instead of at the very bottom of a (potentially very
      long) table — no need to scroll the whole page to reach it. */
   max-height: 72vh;
   overflow: auto;
 }
-.tbl-outer::-webkit-scrollbar { width: 9px; height: 9px; }
-.tbl-outer::-webkit-scrollbar-track { background: transparent; }
-.tbl-outer::-webkit-scrollbar-thumb { background: var(--border-2); border-radius: 99px; border: 2px solid var(--surface); }
-.tbl-outer::-webkit-scrollbar-thumb:hover { background: var(--subtle); }
-table { width: 100%; border-collapse: collapse; font-size: .82rem; white-space: nowrap; font-variant-numeric: tabular-nums; }
+table { width: 100%; border-collapse: collapse; font-size: .82rem; white-space: nowrap; }
 thead tr {
   background: var(--surface2);
   border-bottom: 1px solid var(--border);
   position: sticky; top: 0; z-index: 2;
-  box-shadow: 0 1px 0 var(--border);
 }
 th {
   font-size: .62rem;
@@ -499,7 +439,7 @@ th.sort-desc .si::after { content: '▼'; opacity: 1; color: var(--ACCENT1); }
 th:not(.sort-asc):not(.sort-desc) .si::after { content: '⇅'; }
 .srow { border-bottom: 1px solid var(--border); transition: background .1s; }
 .srow:last-child { border-bottom: none; }
-.srow:hover { background: var(--surface2); }
+.srow:hover { background: var(--bg); }
 td { padding: .65rem 1rem; vertical-align: middle; }
 td.r { text-align: right; } td.c { text-align: center; }
 
@@ -586,22 +526,21 @@ td.r { text-align: right; } td.c { text-align: center; }
 
 /* ── Info callout ── */
 .callout {
-  padding: .65rem 2.5rem;
+  padding: .6rem 2.5rem;
   font-size: .78rem;
   color: var(--muted);
   border-bottom: 1px solid var(--border);
-  background: var(--surface-2);
-  border-left: 3px solid var(--ACCENT1);
+  background: var(--surface);
 }
 
 /* ── Footer ── */
 footer {
   text-align: center;
-  padding: 1.1rem;
+  padding: 1rem;
   font-size: .68rem;
   color: var(--subtle);
   border-top: 1px solid var(--border);
-  background: var(--surface-2);
+  background: var(--surface);
   font-family: var(--mono);
   letter-spacing: .04em;
 }
@@ -752,38 +691,6 @@ _CHARTJS_DEFAULTS = """
 Chart.defaults.font.family = "'Outfit', sans-serif";
 Chart.defaults.font.size   = 11;
 Chart.defaults.color       = "#5a6282";
-Chart.defaults.animation.duration = 260;
-Chart.defaults.animation.easing   = "easeOutCubic";
-Chart.defaults.interaction.mode   = "index";
-Chart.defaults.interaction.intersect = false;
-"""
-
-# Smooth wheel-zoom / drag-pan, shared by every chart on every dashboard.
-# Double-click resets to the original view (handled by _ZOOM_RESET_JS below).
-_ZOOM_PLUGIN_OPTS_JS = """{
-    zoom: {
-      wheel: { enabled: true, speed: 0.08 },
-      pinch: { enabled: true },
-      drag:  { enabled: false },
-      mode: 'x',
-      overscroll: 'unclip',
-    },
-    pan: {
-      enabled: true,
-      mode: 'x',
-      modifierKey: null,
-    },
-    limits: { x: { minRange: 3 } },
-  }"""
-
-# Double-click any chart canvas to reset its zoom/pan back to the full range.
-_ZOOM_RESET_JS = """
-document.querySelectorAll('.chart-wrap canvas').forEach(cv => {
-  cv.addEventListener('dblclick', () => {
-    const c = Chart.getChart(cv);
-    if (c && c.resetZoom) c.resetZoom('active');
-  });
-});
 """
 
 # ── TradingView symbol export (download .txt / copy to clipboard) ──────────
@@ -885,7 +792,6 @@ def _site_nav(active: str, date_str: str) -> str:
         _link("rocket",    f"rocket_dashboard_{date_str}.html",    "amber",   "🚀 Rocket"),
         _link("newrshigh", f"newrshigh_dashboard_{date_str}.html", "rose",    "🔥 New RS High"),
         _link("stage4",    f"stage4_dashboard_{date_str}.html",    "red",     "📉 Stage 4"),
-        _link("sme",       f"sme_dashboard_{date_str}.html",       "teal",    "🏷️ SME Momentum"),
     ])
     return f"""
 <nav class="site-nav">
@@ -905,8 +811,6 @@ def _html_head(title: str, accent1: str, accent2: str, active: str | None = None
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
 <title>{title}</title>
 <script src="{_CDN_CHARTJS}"></script>
-<script src="{_CDN_HAMMER}"></script>
-<script src="{_CDN_ZOOM}"></script>
 <link href="{_GOOGLE_FONTS}" rel="stylesheet"/>
 <style>
 :root {{ --ACCENT1:{accent1}; --ACCENT2:{accent2}; }}
@@ -935,250 +839,6 @@ def _csv_bar_passing(date_str: str) -> str:
   <a class="csv-btn csv-secondary" href="{ff}" download="{ff}">⬇ Full Results CSV</a>
   <span class="csv-label">Passing Stocks · Scan date: {sd}</span>
 </div>"""
-
-
-def _csv_bar_sme(date_str: str) -> str:
-    sd = datetime.strptime(date_str, "%Y%m%d").strftime("%Y-%m-%d")
-    pf = f"sme_passing_{date_str}.csv"
-    ff = f"sme_full_results_{date_str}.csv"
-    return f"""
-<div class="csv-bar">
-  <a class="csv-btn csv-primary" href="{pf}" download="{pf}">⬇ Download SME Passing CSV</a>
-  <a class="csv-btn csv-secondary" href="{ff}" download="{ff}">⬇ SME Full Results CSV</a>
-  <span class="csv-label">SME Momentum Stocks · Scan date: {sd}</span>
-</div>"""
-
-
-# ─────────────────────────────────────────────────────────────────────────────
-#  SME MOMENTUM DASHBOARD
-#  Same Minervini trend-template methodology as the main Momentum dashboard,
-#  run against the separate SME (NSE "-SM.NS" / BSE ".BO") universe so SME
-#  stocks never mix into the main-board Momentum / Elite dashboards.
-# ─────────────────────────────────────────────────────────────────────────────
-
-def build_sme_dashboard(
-    passing: pd.DataFrame,
-    out_path: Path,
-    date_str: str,
-    known_symbols: set[str] | None = None,
-) -> None:
-    date_display = datetime.strptime(date_str, "%Y%m%d").strftime("%d %b %Y")
-    known = known_symbols or set()
-
-    n_stocks    = len(passing)
-    n_above_ema = int(passing.get("cond9_price_above_ema10", pd.Series(dtype=bool)).sum()) \
-                  if "cond9_price_above_ema10" in passing.columns else "N/A"
-    total_tmc_s = fmt_cr(passing["total_market_cap_cr"].dropna().sum()) \
-                  if "total_market_cap_cr" in passing.columns else "N/A"
-    total_tv_s  = fmt_cr(passing["traded_value_cr"].dropna().sum()) \
-                  if "traded_value_cr" in passing.columns else "N/A"
-
-    rows_html = ""
-    chart_labels, chart_total = [], []
-
-    sort_col = "rs_percentile" if "rs_percentile" in passing.columns else "close"
-    for _, row in passing.sort_values(sort_col, ascending=False).iterrows():
-        raw_sym    = str(row.get("symbol", ""))
-        sym        = raw_sym.replace("-SM.NS", "").replace(".NS", "").replace(".BO", "")
-        link       = _tv_link(raw_sym)
-        is_new     = sym not in known
-        new_cls    = " is-new" if is_new else ""
-        close      = row.get("close", np.nan)
-        ema10      = row.get("EMA10",  np.nan)
-        rs         = row.get("rs_percentile", np.nan)
-        tmc        = row.get("total_market_cap_cr", np.nan)
-        tv         = row.get("traded_value_cr", np.nan)
-        tvpct      = row.get("traded_val_pct_mc", np.nan)
-        ind_grp    = str(row.get("industry_group", "")) or "—"
-        industry   = str(row.get("industry",       "")) or "—"
-        result_date = str(row.get("result_date", "—"))
-        board       = "NSE-SME" if "-SM.NS" in raw_sym else ("BSE-SME" if raw_sym.endswith(".BO") else "—")
-
-        close_s = f"₹{float(close):,.2f}" if _safe(close) else "N/A"
-        ema10_s = f"₹{float(ema10):,.2f}" if _safe(ema10) else "N/A"
-        rs_s    = f"{float(rs):.1f}"       if _safe(rs)    else "N/A"
-        tmc_s   = fmt_cr(tmc)
-        tv_s    = fmt_cr(tv)
-        tvpct_s = f"{float(tvpct):.4f}%"  if _safe(tvpct) else "N/A"
-
-        try:
-            above_ema = float(close) > float(ema10)
-            ema_cls = "pill-green" if above_ema else "pill-red"
-        except Exception:
-            ema_cls = "pill-muted"
-
-        rows_html += f"""
-        <tr class="srow{new_cls}"
-          data-sym="{sym}" data-band="{board}" data-close="{_r(close)}" data-rs="{_r(rs)}"
-          data-ema10="{_r(ema10)}" data-tmc="{_r(tmc)}"
-          data-tv="{_r(tv)}" data-tvpct="{_r(tvpct,6)}"
-          data-indgrp="{ind_grp}" data-ind="{industry}">
-          <td>
-            <a class="sym-tag" style="background:var(--teal-lt);border-color:var(--teal-mid);color:var(--teal)"
-               href="{link}" target="_blank" rel="noopener">{sym}{_new_star(is_new)}</a>
-          </td>
-          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem" title="Listing board">{board}</td>
-          <td class="r" style="font-family:var(--mono)">{close_s}</td>
-          <td class="r"><span class="pill {ema_cls}">{ema10_s}</span></td>
-          <td class="r"><span class="pill pill-amber">{rs_s}</span></td>
-          <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.77rem">{tmc_s}</td>
-          <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.77rem">{tv_s}</td>
-          <td class="r" style="font-family:var(--mono);color:var(--subtle);font-size:.73rem">{tvpct_s}</td>
-          <td style="color:var(--muted);font-size:.78rem;max-width:150px;overflow:hidden;text-overflow:ellipsis">{ind_grp}</td>
-          <td style="color:var(--subtle);font-size:.74rem;max-width:130px;overflow:hidden;text-overflow:ellipsis">{industry}</td>
-          <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">{result_date}</td>
-        </tr>"""
-
-        chart_labels.append(f'"{sym}"')
-        chart_total.append(_r(tmc))
-
-    n_new = sum(1 for _, r in passing.iterrows()
-                if str(r.get("symbol","")).replace("-SM.NS","").replace(".NS","").replace(".BO","") not in known)
-
-    html  = _html_head(f"Alpha Momentum — SME Momentum — {date_display}",
-                       "var(--teal)", "var(--emerald)", active="sme", date_str=date_str)
-    html += _csv_bar_sme(date_str)
-    html += _tv_export_bar(f"tradingview_sme_{date_str}.txt")
-    html += f"""
-<header>
-  <div class="hdr-left">
-    <div class="brand">
-      <div class="brand-dot" style="background:var(--teal)"></div>
-      <span class="brand-name">Alpha Momentum · SME Scanner</span>
-    </div>
-    <h1>SME Momentum Dashboard</h1>
-    <p class="hdr-sub">Same Minervini trend template · all 8 conditions · NSE-SME (-SM.NS) &amp; BSE-SME (.BO) · {date_display}</p>
-    <div class="badge-row">
-      <span class="hdr-badge" style="background:var(--teal-lt);border-color:var(--teal-mid);color:var(--teal)">✓ All 8 Conditions</span>
-      <span class="hdr-badge" style="background:var(--slate-lt);border-color:var(--slate-mid);color:var(--slate)">SME-only universe</span>
-      {"<a href='#newStocksSection' onclick='scrollToNewStocks(event)' class='hdr-badge' style='cursor:pointer;text-decoration:none;background:var(--new-bg);border-color:var(--new-border);color:var(--new-text)'>✦ " + str(n_new) + " New Stocks &rarr;</a>" if n_new else ""}
-    </div>
-  </div>
-  <div class="date-pill" style="background:var(--teal-lt);border-color:var(--teal-mid);color:var(--teal)">{date_display}</div>
-</header>
-
-<div class="kpi-strip" style="--accent:var(--teal)">
-  <div class="kpi" style="--accent:var(--teal)">
-    <div class="kpi-lbl">Passing SME Stocks</div>
-    <div class="kpi-val">{n_stocks}</div>
-    <div class="kpi-hint">all 8 conditions met</div>
-  </div>
-  <div class="kpi" style="--accent:var(--violet)">
-    <div class="kpi-lbl">Above EMA10</div>
-    <div class="kpi-val">{n_above_ema}</div>
-    <div class="kpi-hint">close &gt; 10-period ema</div>
-  </div>
-  <div class="kpi" style="--accent:var(--emerald)">
-    <div class="kpi-lbl">Combined Market Cap</div>
-    <div class="kpi-val">{total_tmc_s}</div>
-    <div class="kpi-hint">aggregate market cap</div>
-  </div>
-  <div class="kpi" style="--accent:var(--blue)">
-    <div class="kpi-lbl">Total Traded Value</div>
-    <div class="kpi-val">{total_tv_s}</div>
-    <div class="kpi-hint">today's traded volume</div>
-  </div>
-  {"<a href='#newStocksSection' onclick='scrollToNewStocks(event)' class='kpi' style='--accent:var(--new-text);cursor:pointer;text-decoration:none;display:block'><div class='kpi-lbl'>New Appearances</div><div class='kpi-val'>" + str(n_new) + "</div><div class='kpi-hint'>first time in 10 days</div></a>" if n_new else ""}
-</div>
-
-<div class="callout">
-  <strong style="color:var(--teal)">SME Momentum Dashboard:</strong>
-  The exact same Minervini Trend Template as the main Momentum dashboard — price above MA150 &amp; MA200,
-  MA150 &gt; MA200, MA200 trending up ≥ 1 month, MA50 above MA150 &amp; MA200, price above MA50,
-  price ≥ 30% above 52-week low, within 25% of 52-week high, and RS percentile ≥ 70 — applied to the
-  separate NSE-SME / BSE-SME universe only. SME stocks are excluded from the main Momentum and Elite
-  dashboards and only ever appear here.
-</div>
-
-<div class="charts-area" style="grid-template-columns:1fr">
-  <div class="chart-card">
-    <div class="chart-lbl-row"><div class="chart-lbl">Total Market Cap by Stock (₹ Cr)</div><div class="chart-zoom-hint">scroll to zoom · drag to pan · dbl-click to reset</div></div>
-    <div class="chart-wrap">
-      <canvas id="barChart" role="img" aria-label="Market cap bar chart for passing SME stocks"></canvas>
-    </div>
-  </div>
-</div>
-
-<div class="table-sec">
-  <div class="tbl-head">
-    <div>
-      <span class="tbl-title">SME Momentum Stocks Detail</span>
-      <span class="tbl-count tbl-title">[{n_stocks}]</span>
-    </div>
-    <div class="controls">
-      <div class="legend-row">
-        <div class="leg"><div class="leg-dot" style="background:var(--emerald)"></div>Close &gt; EMA10</div>
-        <div class="leg"><div class="leg-dot" style="background:var(--red)"></div>Close ≤ EMA10</div>
-        <div class="leg"><div class="leg-dot" style="background:var(--new-border)"></div>✦ New (10-day)</div>
-      </div>
-      <input class="search" id="searchInput" type="text"
-             placeholder="Search symbol / industry…" oninput="filterRows()"/>
-    </div>
-  </div>
-  <div class="tbl-outer">
-    <table id="mainTable">
-      <thead><tr>
-        <th data-col="sym"    data-type="str">Symbol<i class="si"></i></th>
-        <th class="c" data-col="band" data-type="str" title="Listing board">Board<i class="si"></i></th>
-        <th class="r" data-col="close"  data-type="num">Close ₹<i class="si"></i></th>
-        <th class="r" data-col="ema10"  data-type="num">EMA10 ₹<i class="si"></i></th>
-        <th class="r" data-col="rs"     data-type="num">RS %ile<i class="si"></i></th>
-        <th class="r" data-col="tmc"    data-type="num">Mkt Cap<i class="si"></i></th>
-        <th class="r" data-col="tv"     data-type="num">Traded Val<i class="si"></i></th>
-        <th class="r" data-col="tvpct"  data-type="num">TV % MC<i class="si"></i></th>
-        <th          data-col="indgrp" data-type="str">Industry Group<i class="si"></i></th>
-        <th          data-col="ind"    data-type="str">Industry<i class="si"></i></th>
-        <th class="r">Result Date</th>
-      </tr></thead>
-      <tbody id="tableBody">{rows_html}</tbody>
-    </table>
-  </div>
-</div>
-
-{_NEW_STOCKS_SECTION_HTML}
-
-<footer>Data: NSE/BSE SME India &amp; Yahoo Finance · Generated {date_display} · For informational purposes only · Not financial advice</footer>
-
-<script>
-const labels    = [{",".join(chart_labels)}];
-const totalData = [{",".join(chart_total)}];
-{_CHARTJS_DEFAULTS}
-new Chart(document.getElementById('barChart'), {{
-  type: 'bar',
-  data: {{ labels, datasets: [{{
-    label: 'Mkt Cap (₹ Cr)', data: totalData,
-    backgroundColor: 'rgba(15,118,110,0.14)',
-    borderColor:     'rgba(15,118,110,0.5)',
-    borderWidth: 1, borderRadius: 3,
-  }}]}},
-  options: {{
-    responsive: true, maintainAspectRatio: false,
-    plugins: {{
-      legend: {{ display: false }},
-      tooltip: {{
-        backgroundColor: '#fff', borderColor: '#e2e6f0', borderWidth: 1,
-        titleColor: '#0f1629', bodyColor: '#5a6282', padding: 10,
-        callbacks: {{ label: c => ` ₹${{(c.parsed.y||0).toLocaleString('en-IN')}} Cr` }},
-      }},
-      zoom: {_ZOOM_PLUGIN_OPTS_JS},
-    }},
-    scales: {{
-      x: {{ ticks: {{ color: '#8b93b5', maxTicksLimit: 30 }}, grid: {{ color: '#f1f3f9' }} }},
-      y: {{ ticks: {{ color: '#8b93b5', callback: v => '₹' + Number(v).toLocaleString('en-IN') }},
-            grid: {{ color: '#f1f3f9' }} }},
-    }},
-  }},
-}});
-{_ZOOM_RESET_JS}
-{_FILTER_JS}
-{_TABLE_SORT_JS}
-{_NEW_STOCKS_JS}
-{_TV_EXPORT_JS}
-</script>
-</body></html>"""
-
-    out_path.write_text(html, encoding="utf-8")
-    logger.info("SME dashboard → %s", out_path)
 
 
 def _csv_bar_elite(date_str: str) -> str:
@@ -1328,7 +988,7 @@ def build_passing_dashboard(
 
 <div class="charts-area" style="grid-template-columns:1fr">
   <div class="chart-card">
-    <div class="chart-lbl-row"><div class="chart-lbl">Total Market Cap by Stock (₹ Cr)</div><div class="chart-zoom-hint">scroll to zoom · drag to pan · dbl-click to reset</div></div>
+    <div class="chart-lbl">Total Market Cap by Stock (₹ Cr)</div>
     <div class="chart-wrap">
       <canvas id="barChart" role="img" aria-label="Market cap bar chart for passing stocks"></canvas>
     </div>
@@ -1396,7 +1056,6 @@ new Chart(document.getElementById('barChart'), {{
         titleColor: '#0f1629', bodyColor: '#5a6282', padding: 10,
         callbacks: {{ label: c => ` ₹${{(c.parsed.y||0).toLocaleString('en-IN')}} Cr` }},
       }},
-      zoom: {_ZOOM_PLUGIN_OPTS_JS},
     }},
     scales: {{
       x: {{ ticks: {{ color: '#8b93b5', maxTicksLimit: 30 }}, grid: {{ color: '#f1f3f9' }} }},
@@ -1405,7 +1064,6 @@ new Chart(document.getElementById('barChart'), {{
     }},
   }},
 }});
-{_ZOOM_RESET_JS}
 {_FILTER_JS}
 {_TABLE_SORT_JS}
 {_NEW_STOCKS_JS}
@@ -1571,15 +1229,15 @@ def build_passing_ema10_dashboard(
 
 <div class="charts-area" style="grid-template-columns:1fr 1fr 1fr">
   <div class="chart-card">
-    <div class="chart-lbl-row"><div class="chart-lbl">Elite Stock Count — Daily</div><div class="chart-zoom-hint">scroll to zoom · drag to pan</div></div>
+    <div class="chart-lbl">Elite Stock Count — Daily</div>
     <div class="chart-wrap"><canvas id="countChart" role="img" aria-label="Elite stock count over time"></canvas></div>
   </div>
   <div class="chart-card">
-    <div class="chart-lbl-row"><div class="chart-lbl">Combined Market Cap (₹ Cr) — Daily</div><div class="chart-zoom-hint">scroll to zoom · drag to pan</div></div>
+    <div class="chart-lbl">Combined Market Cap (₹ Cr) — Daily</div>
     <div class="chart-wrap"><canvas id="mcChart" role="img" aria-label="Combined market cap over time"></canvas></div>
   </div>
   <div class="chart-card">
-    <div class="chart-lbl-row"><div class="chart-lbl">Total Traded Value (₹ Cr) — Daily</div><div class="chart-zoom-hint">scroll to zoom · drag to pan</div></div>
+    <div class="chart-lbl">Total Traded Value (₹ Cr) — Daily</div>
     <div class="chart-wrap"><canvas id="tvChart" role="img" aria-label="Total traded value over time"></canvas></div>
   </div>
 </div>
@@ -1644,7 +1302,6 @@ const lineOpts = (yFmt, tipFmt) => ({{
       titleColor: '#0f1629', bodyColor: '#5a6282', padding: 10,
       callbacks: {{ label: tipFmt }},
     }},
-    zoom: {_ZOOM_PLUGIN_OPTS_JS},
   }},
   scales: {{
     x: {{ ticks: {{ color: '#8b93b5', maxTicksLimit: 10 }}, grid: {{ color: '#f1f3f9' }} }},
@@ -1666,7 +1323,6 @@ new Chart(document.getElementById('tvChart'), {{
   data: {{ labels: histLabels, datasets: [lineDs(histTV, 'rgb(79,70,229)')] }},
   options: lineOpts(v => '₹'+Number(v).toLocaleString('en-IN'), c => ` ₹${{(c.parsed.y||0).toLocaleString('en-IN')}} Cr`),
 }});
-{_ZOOM_RESET_JS}
 {_FILTER_JS}
 {_TABLE_SORT_JS}
 {_NEW_STOCKS_JS}
