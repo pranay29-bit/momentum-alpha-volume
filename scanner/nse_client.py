@@ -40,13 +40,12 @@ from __future__ import annotations
 import logging
 import random
 import time
-from concurrent.futures import ThreadPoolExecutor, as_completed
 
 import numpy as np
 import pandas as pd
 import yfinance as yf
 
-from .config import NSE_REQUEST_DELAY, DATA_DIR, ENRICH_THREADS
+from .config import NSE_REQUEST_DELAY, DATA_DIR
 
 logger = logging.getLogger(__name__)
 
@@ -316,42 +315,11 @@ def enrich_with_market_caps(passing_df: pd.DataFrame) -> pd.DataFrame:
     back to NSE's own API per symbol when needed), and always queries NSE
     once per symbol for the price band (circuit filter %), since that data
     is NSE-exclusive. Returns an enriched copy.
-
-    Fetches run concurrently across a small worker pool (ENRICH_THREADS)
-    instead of one symbol at a time — each individual worker still paces
-    itself the same as before (NSE_REQUEST_DELAY, yfinance retry backoff),
-    so per-connection behavior toward Yahoo/NSE is unchanged; only the
-    number of symbols in flight at once goes up, which is what actually
-    cuts wall-clock time for this step (previously ~1.5-2s of pure sleep
-    *per symbol*, fully serial, before any network time was even counted).
     """
     if passing_df.empty:
         return passing_df
 
-    symbols = list(passing_df["symbol"])
-    n = len(symbols)
-    logger.info("Fetching market-cap and price-band data for %d stocks (%d concurrent)…",
-                n, ENRICH_THREADS)
-
-    results: list[dict] = [None] * n  # type: ignore[list-item]
-    done = 0
-
-    with ThreadPoolExecutor(max_workers=ENRICH_THREADS) as pool:
-        future_to_idx = {pool.submit(fetch_market_cap, sym): idx for idx, sym in enumerate(symbols)}
-        for future in as_completed(future_to_idx):
-            idx = future_to_idx[future]
-            sym = symbols[idx]
-            try:
-                caps = future.result()
-            except Exception as exc:
-                logger.debug("Market-cap fetch raised for %s: %s", sym, exc)
-                caps = _EMPTY.copy()
-            results[idx] = caps
-            done += 1
-            if _is_complete(caps):
-                logger.info("  [%d/%d] %s ✓ (band: %s)", done, n, sym, caps.get("price_band", "—"))
-            else:
-                logger.debug("  [%d/%d] %s — still incomplete after all sources", done, n, sym)
+    logger.info("Fetching market-cap and price-band data for %d stocks…", len(passing_df))
 
     cols: dict[str, list] = {
         "total_market_cap_cr": [],
@@ -360,10 +328,16 @@ def enrich_with_market_caps(passing_df: pd.DataFrame) -> pd.DataFrame:
         "traded_val_pct_mc":   [],
         "price_band":          [],
     }
-    for caps in results:
-        caps = caps or _EMPTY
+
+    for i, sym in enumerate(passing_df["symbol"], start=1):
+        caps = fetch_market_cap(sym)
+        if _is_complete(caps):
+            logger.info("  [%d/%d] %s ✓ (band: %s)", i, len(passing_df), sym, caps.get("price_band", "—"))
+        else:
+            logger.debug("  [%d/%d] %s — still incomplete after all sources", i, len(passing_df), sym)
         for key in cols:
             cols[key].append(caps.get(key, np.nan if key != "price_band" else _PRICE_BAND_EMPTY))
+        time.sleep(0.3)   # polite delay to avoid rate-limiting
 
     out = passing_df.copy()
     for key, values in cols.items():
