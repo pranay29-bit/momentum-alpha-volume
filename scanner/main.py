@@ -15,16 +15,15 @@ import logging
 import sys
 import os
 import json
-import time
 from datetime import datetime
 from pathlib import Path
 
 import pandas as pd
 
 from .config     import DOCS_DIR
-from .data_loader import download_all, load_symbols, load_sme_symbols, load_sme_metadata
+from .data_loader import download_all, load_symbols
 from .nse_client  import enrich_with_market_caps, overlay_price_band_from_cache
-from .dashboard   import build_passing_dashboard, build_passing_ema10_dashboard, build_volume_action_dashboard, build_rocket_dashboard, build_industry_drilldown, build_minervini_ranking, build_new_rs_high_dashboard, build_stage4_dashboard, build_sme_dashboard
+from .dashboard   import build_passing_dashboard, build_passing_ema10_dashboard, build_volume_action_dashboard, build_rocket_dashboard, build_industry_drilldown, build_minervini_ranking, build_new_rs_high_dashboard, build_stage4_dashboard
 from .result_calendar import get_result_date
 from .indicators  import get_market_sentiment
 from . import net_new_highs as nnh
@@ -297,71 +296,6 @@ def run() -> None:
             known_symbols=known_symbols,
         )
 
-    # ── 8c. SME Momentum — separate universe, separate dashboard ──────────────
-    # NSE-SME shares fetch on Yahoo as "<CODE>-SM.NS", BSE-SME as "<CODE>.BO".
-    # This is a fully independent scan of the SME CSV — it never touches the
-    # main-board `symbols`/`df` above, so SME stocks cannot appear in the
-    # Momentum or Elite dashboards; they only ever show up here.
-    try:
-        sme_symbols = load_sme_symbols()
-    except Exception as exc:
-        logger.warning("Could not load SME symbols: %s", exc)
-        sme_symbols = []
-
-    sme_passing = pd.DataFrame()
-    if sme_symbols:
-        logger.info("Loaded %d SME symbols.", len(sme_symbols))
-        try:
-            sme_meta = load_sme_metadata()
-        except Exception as exc:
-            logger.warning("Could not load SME metadata: %s", exc)
-            sme_meta = pd.DataFrame()
-
-        # Short cool-down before the SME scan. The main-board scan just
-        # above this can send ~2,400+ symbols' worth of requests to Yahoo
-        # in one continuous burst; if that partially trips a rate limit
-        # near the end, the SME batch — which runs immediately after —
-        # would inherit that limit even though nothing is wrong with the
-        # SME symbols themselves. A short pause here lets any transient
-        # limit clear before SME's own batches start.
-        logger.info("Pausing 10s before SME scan (lets any main-scan rate-limit cool down)…")
-        time.sleep(10)
-
-        sme_df = download_all(sme_symbols, meta_override=sme_meta)
-        if sme_df.empty:
-            logger.warning("No valid SME data collected.")
-        else:
-            logger.info("Collected rows for %d SME symbols.", len(sme_df))
-            # Same Minervini trend-template methodology as the main scan,
-            # with RS percentile computed within the SME universe itself.
-            sme_df["rs_percentile"]        = sme_df["12m_return_pct"].rank(pct=True) * 100.0
-            sme_df["cond8_rs_at_least_70"] = sme_df["rs_percentile"] >= 70.0
-            sme_df["all_conditions_met"]   = sme_df[COND_COLS].all(axis=1)
-
-            sme_full_path = out_dir / f"sme_full_results_{today_str}.csv"
-            sme_df.to_csv(sme_full_path, index=False)
-
-            sme_passing = sme_df[sme_df["all_conditions_met"]].copy()
-            if not sme_passing.empty:
-                try:
-                    sme_passing = enrich_with_market_caps(sme_passing)
-                    sme_passing = overlay_price_band_from_cache(sme_passing)
-                except Exception as exc:
-                    logger.warning("Could not enrich SME passing stocks with market caps: %s", exc)
-
-            sme_passing_path = out_dir / f"sme_passing_{today_str}.csv"
-            sme_passing.to_csv(sme_passing_path, index=False)
-            logger.info("SME passing stocks (%d) → %s", len(sme_passing), sme_passing_path)
-
-            build_sme_dashboard(
-                sme_passing,
-                out_dir / f"sme_dashboard_{today_str}.html",
-                today_str,
-                known_symbols=known_symbols,
-            )
-    else:
-        logger.info("No SME symbols found — skipping SME Momentum dashboard.")
-
     # ── 9b. Market Sentiment (NIFTY SMALLCAP 250 index) ──────────────────────
     logger.info("Fetching market sentiment (NIFTY SMALLCAP 250)…")
     sentiment = get_market_sentiment()
@@ -412,7 +346,6 @@ def run() -> None:
     logger.info("  Passing + EMA10 : %d", len(passing_ema10))
     logger.info("  Fresh crossovers: %d", len(fresh))
     logger.info("  Volume action   : %d", len(volume_action))
-    logger.info("  SME passing     : %d", len(sme_passing))
 
 # ── Landing-page updater ──────────────────────────────────────────────────────
 
@@ -531,9 +464,8 @@ def _update_index(
         _rocket_link = f"{today_date_display}/rocket_dashboard_{today_slug}.html"
         _newrshigh_link = f"{today_date_display}/newrshigh_dashboard_{today_slug}.html"
         _stage4_link = f"{today_date_display}/stage4_dashboard_{today_slug}.html"
-        _sme_link = f"{today_date_display}/sme_dashboard_{today_slug}.html"
     else:
-        _elite_link = _volume_link = _rocket_link = _newrshigh_link = _stage4_link = _sme_link = today_dashboard_link
+        _elite_link = _volume_link = _rocket_link = _newrshigh_link = _stage4_link = today_dashboard_link
 
     hub_cards = [
         dict(icon="📊", accent="indigo", accent2="blue", title="Momentum Dashboard",
@@ -554,9 +486,6 @@ def _update_index(
         dict(icon="📉", accent="red", accent2="navy", title="Stage 4 Breakdown",
              desc="Large-caps (≥ ₹50,000 Cr) currently trading below their 50-day MA — a risk radar, not a buy list.",
              link=_stage4_link),
-        dict(icon="🏷️", accent="teal", accent2="emerald", title="SME Momentum",
-             desc="The same Minervini trend template, run separately on the NSE-SME / BSE-SME universe.",
-             link=_sme_link),
     ]
 
     hub_cards_html = ""
@@ -620,6 +549,20 @@ def _update_index(
     #    still defined below so it's a one-line change to bring it back.
     nnh_html = nnh.build_html(nnh_stats or {})
 
+    # ── Shared cross-page nav bar — identical component on every page ─────────
+    site_nav_html = f"""
+<nav class="site-nav">
+  <a href="index.html" class="btn-link navy is-active">🏠 Home</a>
+  <a href="{today_dashboard_link}" class="btn-link indigo">📊 Momentum</a>
+  <a href="{_elite_link}" class="btn-link green">⚡ Elite</a>
+  <a href="{_volume_link}" class="btn-link blue">🔵 Volume</a>
+  <a href="{_rocket_link}" class="btn-link amber">🚀 Rocket</a>
+  <a href="{_newrshigh_link}" class="btn-link rose">🔥 New RS High</a>
+  <a href="{_stage4_link}" class="btn-link red">📉 Stage 4</a>
+  <a href="position-size.html" class="btn-link violet">📐 Position Size</a>
+  <a href="position-tracker.html" class="btn-link navy">📈 Position Tracker</a>
+</nav>"""
+
     html = f"""<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -640,25 +583,16 @@ def _update_index(
     --violet:#7c3aed;--violet-lt:#f5f3ff;--violet-mid:#ddd6fe;
     --rose:#e11d48;--rose-lt:#fff1f2;--rose-mid:#fecdd3;
     --slate:#475569;--slate-lt:#f1f5f9;--slate-mid:#cbd5e1;
-    --teal:#0f766e;--teal-lt:#f0fdfa;--teal-mid:#99f6e4;
     --red:#dc2626;--red-lt:#fef2f2;--red-mid:#fca5a5;
     --sans:'Outfit',system-ui,-apple-system,sans-serif;--mono:'DM Mono','SF Mono','Courier New',monospace;
     --radius:12px;--radius-sm:8px;--shadow-sm:0 1px 2px rgba(15,23,42,.04);--shadow-md:0 4px 16px -4px rgba(15,23,42,.08),0 1px 3px rgba(15,23,42,.04);
   }}
   *,*::before,*::after{{box-sizing:border-box;margin:0;padding:0;}}
-  html{{font-size:14px;-webkit-font-smoothing:antialiased;scroll-behavior:smooth;}}
-  body{{background:var(--bg);color:var(--text);font-family:var(--sans);line-height:1.55;}}
-  a,button,.hub-card,.btn-link,.month-accordion,.history-table tr,.sentiment-card{{
-    transition:background-color .16s ease,border-color .16s ease,color .16s ease,
-               box-shadow .18s ease,transform .16s ease,opacity .18s ease;
-  }}
-  @media (prefers-reduced-motion: reduce){{
-    *,*::before,*::after{{transition-duration:.001ms !important;animation-duration:.001ms !important;scroll-behavior:auto !important;}}
-  }}
+  html{{font-size:14px;-webkit-font-smoothing:antialiased;}}
+  body{{background:var(--bg);color:var(--text);font-family:var(--sans);line-height:1.6;}}
   .topbar{{height:5px;background:linear-gradient(90deg,var(--navy) 0%,var(--indigo) 40%,var(--blue) 65%,var(--emerald) 100%);}}
   header{{background:var(--surface);border-bottom:1px solid var(--border);
-          padding:1.35rem 2.5rem;text-align:center;position:relative;overflow:hidden;
-          box-shadow:var(--shadow-sm);}}
+          padding:1.65rem 2.5rem;text-align:center;position:relative;overflow:hidden;}}
   header::before{{content:'';position:absolute;top:-65%;left:50%;transform:translateX(-50%);
                   width:900px;height:260px;pointer-events:none;
                   background:
@@ -679,78 +613,7 @@ def _update_index(
              letter-spacing:-.025em;margin-bottom:.22rem;position:relative;
              background:linear-gradient(90deg,var(--navy) 0%,var(--indigo) 50%,var(--emerald) 100%);
              -webkit-background-clip:text;background-clip:text;color:transparent;}}
-  header p{{color:var(--muted);font-size:.78rem;font-family:var(--mono);position:relative;}}
-
-  /* ── Top nav (screener.in-style: logo · links · search · account) ── */
-  .topnav{{background:var(--surface);border-bottom:1px solid var(--border);
-           padding:0 2.5rem;display:flex;align-items:center;justify-content:space-between;
-           gap:1.5rem;height:64px;position:sticky;top:0;z-index:200;box-shadow:var(--shadow-sm);
-           text-align:left;overflow:visible;}}
-  .topnav::before{{display:none;}}
-  .topnav-logo{{display:flex;align-items:center;gap:.5rem;font-family:var(--mono);
-                font-weight:600;font-size:.72rem;letter-spacing:.16em;text-transform:uppercase;
-                color:var(--navy);flex-shrink:0;}}
-  .topnav-logo .brand-dot{{width:7px;height:7px;border-radius:50%;background:var(--emerald);
-                box-shadow:0 0 0 3px var(--emerald-lt);flex-shrink:0;}}
-  .topnav-links{{display:flex;align-items:center;gap:1.7rem;flex:1;padding-left:1.4rem;}}
-  .topnav-link{{font-family:var(--sans);font-size:.86rem;font-weight:600;color:var(--muted);
-               letter-spacing:.01em;text-decoration:none;display:flex;align-items:center;gap:.3rem;
-               padding:.4rem 0;position:relative;}}
-  .topnav-link:hover{{color:var(--text);}}
-  .topnav-link svg{{width:12px;height:12px;transition:transform .14s;}}
-  .topnav-item{{position:relative;}}
-  .topnav-item:hover .topnav-link svg{{transform:rotateX(180deg);}}
-  .topnav-menu{{position:absolute;top:calc(100% + 10px);left:0;min-width:240px;
-               background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
-               box-shadow:var(--shadow-lg);padding:.4rem;opacity:0;visibility:hidden;
-               transform:translateY(-4px);transition:opacity .14s,transform .14s,visibility .14s;z-index:50;}}
-  .topnav-item:hover .topnav-menu{{opacity:1;visibility:visible;transform:translateY(0);}}
-  .topnav-menu a{{display:flex;align-items:center;gap:.55rem;padding:.55rem .7rem;border-radius:7px;
-                  font-family:var(--sans);font-size:.83rem;font-weight:500;color:var(--text);
-                  text-decoration:none;transition:background .12s;}}
-  .topnav-menu a:hover{{background:var(--surface-2);}}
-  .topnav-menu .menu-ic{{font-size:.95rem;width:18px;text-align:center;flex-shrink:0;}}
-  .topnav-menu .menu-divider{{height:1px;background:var(--border);margin:.35rem .3rem;}}
-  .topnav-right{{display:flex;align-items:center;gap:.7rem;flex-shrink:0;}}
-  .topnav-search{{display:flex;align-items:center;gap:.5rem;background:var(--surface);
-                  border:1px solid var(--border-2);border-radius:8px;padding:.5rem .8rem;
-                  width:220px;transition:border-color .14s,box-shadow .14s;}}
-  .topnav-search:focus-within{{border-color:var(--indigo);box-shadow:0 0 0 3px var(--indigo-lt);}}
-  .topnav-search svg{{width:14px;height:14px;color:var(--subtle);flex-shrink:0;}}
-  .topnav-search input{{border:none;outline:none;font-family:var(--sans);font-size:.82rem;
-                        color:var(--text);background:transparent;width:100%;padding:0;}}
-  .topnav-search input::placeholder{{color:var(--subtle);}}
-  .account-pill{{display:flex;align-items:center;gap:.4rem;padding:.42rem .8rem .42rem .65rem;
-                 border:1px solid var(--border-2);border-radius:8px;background:var(--surface);
-                 font-family:var(--sans);font-size:.8rem;font-weight:700;color:var(--indigo);
-                 cursor:pointer;letter-spacing:.02em;transition:border-color .14s,background .14s;
-                 white-space:nowrap;}}
-  .account-pill:hover{{background:var(--surface-2);border-color:var(--indigo-mid);}}
-  .account-pill svg.chev{{width:11px;height:11px;color:var(--muted);}}
-  .account-pill svg.user-ic{{width:14px;height:14px;color:var(--indigo);}}
-  @media (max-width:900px){{
-    .topnav-search{{display:none;}}
-    .topnav-links{{gap:1.1rem;padding-left:.8rem;}}
-  }}
-  @media (max-width:700px){{
-    .topnav-links{{display:none;}}
-  }}
-
-  /* ── Hero (page title, moved out of the slim top nav) ── */
-  .hero{{background:var(--surface);border-bottom:1px solid var(--border);
-        padding:1.7rem 2.5rem 1.9rem;text-align:center;position:relative;overflow:hidden;}}
-  .hero::before{{content:'';position:absolute;top:-65%;left:50%;transform:translateX(-50%);
-                width:900px;height:260px;pointer-events:none;
-                background:
-                  radial-gradient(ellipse 260px 180px at 20% 60%,var(--indigo-lt) 0%,rgba(255,255,255,0) 72%),
-                  radial-gradient(ellipse 260px 180px at 50% 40%,var(--emerald-lt) 0%,rgba(255,255,255,0) 72%),
-                  radial-gradient(ellipse 260px 180px at 80% 60%,var(--blue-lt) 0%,rgba(255,255,255,0) 72%);
-                opacity:.9;}}
-  .hero h1{{font-family:var(--sans);font-size:clamp(1.45rem,2.6vw,1.9rem);font-weight:800;
-           letter-spacing:-.025em;margin-bottom:.22rem;position:relative;
-           background:linear-gradient(90deg,var(--navy) 0%,var(--indigo) 50%,var(--emerald) 100%);
-           -webkit-background-clip:text;background-clip:text;color:transparent;}}
-  .hero p{{color:var(--muted);font-size:.78rem;font-family:var(--mono);position:relative;}}
+  header p{{color:var(--muted);font-size:.82rem;font-family:var(--mono);position:relative;}}
 
   .container{{max-width:1120px;margin:2rem auto;padding:0 1.5rem;}}
   h2.section-title{{font-family:var(--sans);font-size:1.05rem;font-weight:700;
@@ -770,13 +633,14 @@ def _update_index(
     position:relative;display:flex;flex-direction:column;gap:.6rem;
     background:linear-gradient(165deg,var(--accent-mid) -40%,var(--accent-lt) 15%,var(--surface) 78%);
     border:1px solid var(--border);border-radius:var(--radius);
-    padding:1.25rem 1.35rem 1.15rem;box-shadow:var(--shadow-sm);
+    padding:1.35rem 1.4rem 1.25rem;box-shadow:var(--shadow-sm);
     text-decoration:none;color:inherit;overflow:hidden;
+    transition:transform .18s ease,box-shadow .18s ease,border-color .18s ease;
   }}
   .hub-card::before{{content:'';position:absolute;top:0;left:0;right:0;height:4px;
                      background:linear-gradient(90deg,var(--accent),var(--accent2,var(--accent)));}}
-  .hub-card:hover{{transform:translateY(-2px);border-color:var(--accent-mid);
-                   box-shadow:var(--shadow-sm),0 12px 26px -14px var(--accent);}}
+  .hub-card:hover{{transform:translateY(-3px);border-color:var(--accent-mid);
+                   box-shadow:var(--shadow-sm),0 14px 30px -14px var(--accent);}}
   .hub-tag{{position:absolute;top:.9rem;right:1rem;font-family:var(--mono);font-size:.56rem;font-weight:700;
            letter-spacing:.08em;color:var(--subtle);background:var(--surface-2);border:1px solid var(--border);
            border-radius:999px;padding:.15rem .5rem;}}
@@ -839,36 +703,36 @@ def _update_index(
   .history-table tr:last-child td{{border-bottom:none;}}
   .history-table tr:hover td{{background:var(--surface-2);}}
   .date-cell{{font-family:var(--mono);font-weight:600;font-size:.8rem;color:var(--text);}}
-  .btn-link{{display:inline-flex;align-items:center;gap:.4rem;padding:.34rem .85rem;border-radius:7px;
-             font-family:var(--mono);font-size:.71rem;font-weight:600;
-             background:transparent;border:1px solid transparent;color:var(--muted);
-             text-decoration:none;transition:background .14s,border-color .14s,color .14s,transform .12s;letter-spacing:.02em;}}
-  .btn-link::before{{content:'';width:5px;height:5px;border-radius:50%;background:currentColor;opacity:.55;flex-shrink:0;}}
-  .btn-link:hover{{color:var(--indigo);background:var(--surface-2);border-color:var(--border);transform:translateY(-1px);}}
-  .btn-link.green:hover{{color:var(--emerald);background:var(--emerald-lt);border-color:var(--emerald-mid);}}
-  .btn-link.amber:hover{{color:var(--amber);background:var(--amber-lt);border-color:var(--amber-mid);}}
-  .btn-link.blue:hover{{color:var(--blue);background:var(--blue-lt);border-color:var(--blue-mid);}}
-  .btn-link.violet:hover{{color:var(--violet);background:var(--violet-lt);border-color:var(--violet-mid);}}
-  .btn-link.navy:hover{{color:var(--navy);background:var(--navy-lt);border-color:var(--navy-mid);}}
-  .btn-link.red:hover{{color:var(--red);background:var(--red-lt);border-color:var(--red-mid);}}
-  .btn-link.rose:hover{{color:var(--rose);background:var(--rose-lt);border-color:var(--rose-mid);}}
-  .btn-link.slate:hover{{color:var(--slate);background:var(--slate-lt);border-color:var(--slate-mid);}}
-  .btn-link.is-active{{color:var(--indigo);background:var(--indigo-lt);border-color:var(--indigo-mid);font-weight:700;}}
-  .btn-link.green.is-active{{color:var(--emerald);background:var(--emerald-lt);border-color:var(--emerald-mid);}}
-  .btn-link.blue.is-active{{color:var(--blue);background:var(--blue-lt);border-color:var(--blue-mid);}}
-  .btn-link.amber.is-active{{color:var(--amber);background:var(--amber-lt);border-color:var(--amber-mid);}}
-  .btn-link.violet.is-active{{color:var(--violet);background:var(--violet-lt);border-color:var(--violet-mid);}}
-  .btn-link.navy.is-active{{color:var(--navy);background:var(--navy-lt);border-color:var(--navy-mid);}}
-  .btn-link.red.is-active{{color:var(--red);background:var(--red-lt);border-color:var(--red-mid);}}
-  .btn-link.rose.is-active{{color:var(--rose);background:var(--rose-lt);border-color:var(--rose-mid);}}
-  .btn-link.slate.is-active{{color:var(--slate);background:var(--slate-lt);border-color:var(--slate-mid);}}
+  .btn-link{{display:inline-flex;align-items:center;gap:.35rem;padding:.32rem .9rem;border-radius:999px;
+             font-family:var(--mono);font-size:.72rem;font-weight:600;
+             background:var(--indigo-lt);border:1px solid var(--indigo-mid);color:var(--indigo);
+             text-decoration:none;transition:background .14s,box-shadow .14s,transform .14s;letter-spacing:.03em;}}
+  .btn-link:hover{{transform:translateY(-1px);box-shadow:0 3px 8px -3px rgba(15,23,42,.18);}}
+  .btn-link:hover{{background:#dde2fb;}}
+  .btn-link.green{{background:var(--emerald-lt);border-color:var(--emerald-mid);color:var(--emerald);}}
+  .btn-link.green:hover{{background:#d7f8ea;}}
+  .btn-link.amber{{background:var(--amber-lt);border-color:var(--amber-mid);color:var(--amber);}}
+  .btn-link.amber:hover{{background:#fef3c7;}}
+  .btn-link.blue{{background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue);}}
+  .btn-link.blue:hover{{background:#dee9fd;}}
+  .btn-link.violet{{background:var(--violet-lt);border-color:var(--violet-mid);color:var(--violet);}}
+  .btn-link.violet:hover{{background:#ede7fd;}}
+  .btn-link.navy{{background:var(--navy-lt);border-color:var(--navy-mid);color:var(--navy);}}
+  .btn-link.navy:hover{{background:#e2e6f2;}}
+  .btn-link.red{{background:var(--red-lt);border-color:var(--red-mid);color:var(--red);}}
+  .btn-link.red:hover{{background:#fee2e2;}}
+  .btn-link.rose{{background:var(--rose-lt);border-color:var(--rose-mid);color:var(--rose);}}
+  .btn-link.rose:hover{{background:#ffe4e6;}}
+  .btn-link.slate{{background:var(--slate-lt);border-color:var(--slate-mid);color:var(--slate);}}
+  .btn-link.slate:hover{{background:#e2e8f0;}}
+  .btn-link.is-active{{box-shadow:0 0 0 1px currentColor inset;font-weight:700;}}
   /* Shared cross-page nav bar — identical component on every generated page */
-  .site-nav{{display:flex;flex-wrap:wrap;gap:.35rem;align-items:center;padding:.65rem 2.5rem;
-            background:color-mix(in srgb, var(--surface) 92%, transparent);
+  .site-nav{{display:flex;flex-wrap:wrap;gap:.5rem;align-items:center;padding:.75rem 2.5rem;
+            background:color-mix(in srgb, var(--surface-2) 88%, transparent);
             backdrop-filter:blur(10px) saturate(160%);-webkit-backdrop-filter:blur(10px) saturate(160%);
             border-bottom:1px solid var(--border);
             position:sticky;top:0;z-index:100;
-            box-shadow:var(--shadow-sm);}}
+            box-shadow:0 6px 18px -10px rgba(15,23,42,.18);}}
   footer{{text-align:center;padding:1.5rem;font-family:var(--mono);font-size:.68rem;
           color:var(--subtle);border-top:1px solid var(--border);
           background:var(--surface);letter-spacing:.04em;margin-top:3rem;}}
@@ -939,72 +803,17 @@ def _update_index(
 </head>
 <body>
 <div class="topbar"></div>
-
-<header class="topnav">
-  <a href="index.html" class="topnav-logo">Alpha Momentum
-    <span class="topnav-logo-bars"><span></span><span></span><span></span></span>
-  </a>
-
-  <nav class="topnav-links">
-    <a href="index.html" class="topnav-link">Feed</a>
-
-    <div class="topnav-item">
-      <a href="#" class="topnav-link">Screens
-        <svg viewBox="0 0 12 8" fill="none"><path d="M1 1.5L6 6.5L11 1.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
-      </a>
-      <div class="topnav-menu">
-        <a href="{today_dashboard_link}"><span class="menu-ic">📊</span>Momentum</a>
-        <a href="{_elite_link}"><span class="menu-ic">⚡</span>Elite</a>
-        <a href="{_volume_link}"><span class="menu-ic">🔵</span>Volume Action</a>
-        <a href="{_rocket_link}"><span class="menu-ic">🚀</span>Rocket Stocks</a>
-        <a href="{_newrshigh_link}"><span class="menu-ic">🔥</span>New RS High</a>
-        <a href="{_stage4_link}"><span class="menu-ic">📉</span>Stage 4</a>
-        <div class="menu-divider"></div>
-        <a href="{_sme_link}"><span class="menu-ic">🏷️</span>SME Momentum</a>
-      </div>
+<header>
+  <div class="brand-name-idx"><div class="brand-dot"></div>Alpha Momentum</div>
+  <div class="header-row">
+    <div class="header-titles">
+      <h1>NSE Trend Scanner</h1>
+      <p>Daily Minervini trend-template scans · Free-float &amp; liquidity data · NSE India</p>
     </div>
-
-    <div class="topnav-item">
-      <a href="#" class="topnav-link">Tools
-        <svg viewBox="0 0 12 8" fill="none"><path d="M1 1.5L6 6.5L11 1.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
-      </a>
-      <div class="topnav-menu">
-        <a href="position-size.html"><span class="menu-ic">📐</span>Position Size Calculator</a>
-        <a href="position-tracker.html"><span class="menu-ic">📈</span>Position Tracker</a>
-      </div>
-    </div>
-  </nav>
-
-  <div class="topnav-right">
-    <label class="topnav-search">
-      <svg viewBox="0 0 20 20" fill="none"><circle cx="9" cy="9" r="6.5" stroke="currentColor" stroke-width="1.6"/><path d="M18 18L13.8 13.8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
-      <input id="quickJump" type="text" placeholder="Jump to a dashboard…" autocomplete="off"
-             list="quickJumpList" onkeydown="if(event.key==='Enter'){{const o=[...document.getElementById('quickJumpList').options].find(o=>o.value.toLowerCase()===this.value.toLowerCase());if(o)location.href=o.dataset.href;}}"/>
-      <datalist id="quickJumpList">
-        <option value="Momentum" data-href="{today_dashboard_link}"></option>
-        <option value="Elite" data-href="{_elite_link}"></option>
-        <option value="Volume Action" data-href="{_volume_link}"></option>
-        <option value="Rocket Stocks" data-href="{_rocket_link}"></option>
-        <option value="New RS High" data-href="{_newrshigh_link}"></option>
-        <option value="Stage 4" data-href="{_stage4_link}"></option>
-        <option value="SME Momentum" data-href="{_sme_link}"></option>
-        <option value="Position Size" data-href="position-size.html"></option>
-        <option value="Position Tracker" data-href="position-tracker.html"></option>
-      </datalist>
-    </label>
-
-    <button id="acctBtn" class="account-pill">
-      <svg class="user-ic" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="6.5" r="3.2" stroke="currentColor" stroke-width="1.5"/><path d="M3.5 17c1.2-3.6 4-5.2 6.5-5.2S15.3 13.4 16.5 17" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
-      <span id="acctLabel">Login</span>
-      <svg class="chev" viewBox="0 0 12 8" fill="none"><path d="M1 1.5L6 6.5L11 1.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
-    </button>
   </div>
 </header>
 
-<div class="hero">
-  <h1>NSE Trend Scanner</h1>
-  <p>Daily Minervini trend-template scans · Free-float &amp; liquidity data · NSE India</p>
-</div>
+{site_nav_html}
 
 {nnh_html}
 
@@ -1032,32 +841,6 @@ function toggleMonth(btn) {{
   body.classList.toggle('open', !open);
   btn.setAttribute('aria-expanded', String(!open));
 }}
-</script>
-<script type="module">
-  import {{ auth, login, logout, onAuthStateChanged }} from "./js/firebase.js";
-
-  const acctBtn = document.getElementById('acctBtn');
-  const acctLabel = document.getElementById('acctLabel');
-
-  acctBtn.onclick = async () => {{
-    if (auth.currentUser) {{
-      await logout();
-    }} else {{
-      try {{ await login(); }}
-      catch (err) {{ console.error(err); alert('Login failed. Please try again.'); }}
-    }}
-  }};
-
-  onAuthStateChanged(auth, (user) => {{
-    if (user) {{
-      const name = (user.displayName || user.email || 'Account').split(' ')[0];
-      acctLabel.textContent = name.length > 12 ? name.slice(0, 11) + '…' : name;
-      acctBtn.title = 'Click to logout (' + (user.displayName || user.email) + ')';
-    }} else {{
-      acctLabel.textContent = 'Login';
-      acctBtn.title = '';
-    }}
-  }});
 </script>
 </body>
 </html>"""
