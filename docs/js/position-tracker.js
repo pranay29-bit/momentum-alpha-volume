@@ -277,7 +277,7 @@ function renderRow(p) {
       ${p.entry}
       <input type="number" class="price-input entry-input" placeholder="override" data-id="${p.id}"/>
     </td>
-    <td>${p.stop}</td>
+    <td class="sl-value">${p.stop}</td>
     <td>${riskPctDisplay}</td>
     <td>
       ${p.qty}
@@ -640,7 +640,7 @@ function renderBookedRow(p) {
     <td>${formatDate(p.dateSold)}</td>
     <td>${holdingDays(p)}</td>
     <td>${p.entry}</td>
-    <td>${p.stop}</td>
+    <td class="sl-value">${p.stop}</td>
     <td>${p.exitPrice}</td>
     <td>${riskPctDisplay}</td>
     <td>${p.qty}</td>
