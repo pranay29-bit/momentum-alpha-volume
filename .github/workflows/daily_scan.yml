@@ -1,7 +1,9 @@
 name: Daily NSE Trend Scan
 
 on:
-  workflow_dispatch: {}
+  schedule:
+    - cron: "30 12 * * 1-5"
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -71,7 +73,27 @@ jobs:
 
           git commit -m "chore: scan results $(date -u +'%Y-%m-%d')"
 
-          git push origin HEAD:main
+          # main may have moved since the scan started (manual pushes, other
+          # workflows, etc.) — rebase onto the latest remote right before
+          # pushing, retrying a few times in case of a tight race.
+          for attempt in 1 2 3 4 5; do
+            git fetch origin main
+            if git rebase origin/main; then
+              if git push origin HEAD:main; then
+                echo "Pushed successfully on attempt $attempt."
+                break
+              fi
+            else
+              echo "Rebase failed — aborting rebase."
+              git rebase --abort || true
+            fi
+            if [ "$attempt" -eq 5 ]; then
+              echo "Failed to push after 5 attempts."
+              exit 1
+            fi
+            echo "Push attempt $attempt failed, retrying in 10s..."
+            sleep 10
+          done
 
   deploy:
     needs: scan
