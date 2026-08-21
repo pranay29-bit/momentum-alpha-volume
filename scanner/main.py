@@ -23,7 +23,7 @@ import pandas as pd
 from .config     import DOCS_DIR
 from .data_loader import download_all, load_symbols
 from .nse_client  import enrich_with_market_caps, overlay_price_band_from_cache
-from .dashboard   import build_passing_dashboard, build_passing_ema10_dashboard, build_volume_action_dashboard, build_rocket_dashboard, build_industry_drilldown, build_new_rs_high_dashboard, build_stage4_dashboard
+from .dashboard   import build_passing_dashboard, build_passing_ema10_dashboard, build_volume_action_dashboard, build_rocket_dashboard, build_industry_drilldown, build_new_rs_high_dashboard, build_stage4_dashboard, build_chartink_embed
 from .result_calendar import get_result_date
 from .indicators  import get_market_sentiment
 from . import net_new_highs as nnh
@@ -445,6 +445,16 @@ def _update_index(
         logger.warning("Could not build industry drill-down widget: %s", exc)
         industry_html = ""
 
+    # ── Build the Chartink live-screener embed widget ──────────────────────────
+    try:
+        chartink_html = build_chartink_embed(
+            chartink_url="https://chartink.com/dashboard/160633",
+            title="Atlas MB — Chartink Screener",
+        )
+    except Exception as exc:
+        logger.warning("Could not build Chartink embed widget: %s", exc)
+        chartink_html = ""
+
     # ── Build the "Dashboards" hub — every scanner + tool, arranged as cards ───
     if dated_dirs:
         _elite_link  = f"{today_date_display}/elite_dashboard_{today_slug}.html"
@@ -808,6 +818,8 @@ def _update_index(
 {hub_html}
 
 {tools_html}
+
+{chartink_html}
 
 {industry_html}
 
