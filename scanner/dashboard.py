@@ -2455,64 +2455,51 @@ if (typeof window.toggleAccordion !== 'function') {
 def build_chartink_embed(
     chartink_url: str = "https://chartink.com/dashboard/160633",
     title: str = "Chartink Screener",
-    height_px: int = 720,
 ) -> str:
     """
-    Build a self-contained HTML fragment that embeds a Chartink dashboard
-    inline via iframe, with a fallback "open in new tab" link in case the
-    iframe is blocked by Chartink's frame-ancestors / X-Frame-Options policy.
+    Build a self-contained HTML fragment linking out to a Chartink dashboard.
+    Chartink sends X-Frame-Options / CSP headers that block iframing on other
+    domains, so rather than a blank/broken iframe box, this renders a styled
+    launch card that opens the live screener in a new tab.
     """
     safe_url = html.escape(chartink_url, quote=True)
     return f"""
 <div class="chartink-section" id="chartink-section">
-  <div class="chartink-titlebar">
-    <div class="chartink-titlewrap">
+  <a href="{safe_url}" target="_blank" rel="noopener" class="chartink-card">
+    <div class="chartink-cardtext">
       <div class="chartink-eyebrow"><span class="chartink-dot"></span>LIVE SCREENER</div>
       <h2 class="chartink-heading">{html.escape(title)}</h2>
-      <p class="chartink-sub">Live Chartink screener embedded below — if it doesn't load (Chartink sometimes blocks embedding), use the button to open it directly.</p>
+      <p class="chartink-sub">Opens the live Chartink screener in a new tab — Chartink doesn't allow embedding its dashboards inline, so this links straight through.</p>
     </div>
-    <a href="{safe_url}" target="_blank" rel="noopener" class="btn-link violet">↗ Open in Chartink</a>
-  </div>
-
-  <div class="chartink-card">
-    <iframe
-      src="{safe_url}"
-      class="chartink-iframe"
-      loading="lazy"
-      referrerpolicy="no-referrer-when-downgrade"
-      title="{html.escape(title)}">
-    </iframe>
-    <noscript>
-      <div class="chartink-fallback">
-        JavaScript is required to view this embedded screener.
-        <a href="{safe_url}" target="_blank" rel="noopener">Open it directly on Chartink →</a>
-      </div>
-    </noscript>
-  </div>
+    <div class="chartink-cta">Open in Chartink&nbsp;↗</div>
+  </a>
 </div>
-{_CHARTINK_STYLE.replace("__HEIGHT__", str(height_px))}
+{_CHARTINK_STYLE}
 """
 
 
 _CHARTINK_STYLE = """
 <style>
 .chartink-section{max-width:1120px;margin:0 auto 2.2rem;padding:0 1.5rem;}
-.chartink-titlebar{display:flex;justify-content:space-between;align-items:flex-start;gap:1.25rem;flex-wrap:wrap;margin-bottom:1rem;}
-.chartink-titlewrap{min-width:220px;flex:1;}
+.chartink-card{display:flex;justify-content:space-between;align-items:center;gap:1.5rem;flex-wrap:wrap;
+              border-radius:14px;border:1px solid var(--border);background:var(--surface);
+              box-shadow:var(--shadow-sm);padding:1.5rem 1.75rem;text-decoration:none;
+              transition:border-color .15s ease, box-shadow .15s ease;}
+.chartink-card:hover{border-color:var(--indigo-mid);box-shadow:0 2px 10px rgba(79,70,229,.12);}
+.chartink-cardtext{min-width:220px;flex:1;}
 .chartink-eyebrow{display:flex;align-items:center;gap:.45rem;font-family:var(--mono);font-size:.62rem;
               font-weight:700;letter-spacing:.14em;color:var(--indigo);margin-bottom:.4rem;}
 .chartink-dot{width:6px;height:6px;border-radius:50%;background:var(--emerald);box-shadow:0 0 0 3px var(--emerald-lt);}
-.chartink-heading{font-size:1.35rem;font-weight:700;margin:0 0 .3rem;color:var(--ink);}
+.chartink-heading{font-size:1.2rem;font-weight:700;margin:0 0 .3rem;color:var(--text);}
 .chartink-sub{font-size:.85rem;color:var(--muted);margin:0;max-width:640px;line-height:1.5;}
-.chartink-card{border-radius:14px;overflow:hidden;border:1px solid var(--border);background:var(--panel);box-shadow:var(--shadow-sm);}
-.chartink-iframe{width:100%;height:__HEIGHT__px;border:0;display:block;background:var(--panel);}
-.chartink-fallback{padding:2rem;text-align:center;font-size:.9rem;color:var(--muted);}
-.chartink-fallback a{color:var(--indigo);font-weight:600;}
+.chartink-cta{flex-shrink:0;font-weight:700;font-size:.85rem;padding:.6rem 1.1rem;border-radius:999px;
+              background:var(--indigo-lt);border:1px solid var(--indigo-mid);color:var(--indigo);white-space:nowrap;}
+.chartink-card:hover .chartink-cta{background:var(--indigo);color:#fff;border-color:var(--indigo);}
 
 @media (max-width:768px){
   .chartink-section{padding:0 1rem;}
-  .chartink-heading{font-size:1.1rem;}
-  .chartink-iframe{height:520px;}
+  .chartink-card{padding:1.25rem 1.4rem;}
+  .chartink-heading{font-size:1.05rem;}
 }
 </style>
 """
