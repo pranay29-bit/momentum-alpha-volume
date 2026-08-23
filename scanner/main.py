@@ -459,7 +459,7 @@ def _update_index(
     # ── Build the EMA-Based Allocation Model scorecard (Nifty 50 / Midcap
     #    Select / Smallcap 100) ─────────────────────────────────────────────
     try:
-        ema_alloc_results = compute_ema_allocation_all()
+        ema_alloc_results = compute_ema_allocation_all(history_days=20)
         ema_alloc_html = build_ema_allocation_table(ema_alloc_results)
     except Exception as exc:
         logger.warning("Could not build EMA allocation widget: %s", exc)
