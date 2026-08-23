@@ -2522,15 +2522,6 @@ _EMA_ALLOC_RULE_LABELS = [
 ]
 
 
-def _ema_alloc_pip(value: int | None) -> str:
-    """Render a single ±1 rule score as a small colored pip."""
-    if value is None:
-        return '<span class="ema-pip ema-pip-na">–</span>'
-    cls = "ema-pip-pos" if value > 0 else "ema-pip-neg"
-    glyph = "▲" if value > 0 else "▼"
-    return f'<span class="ema-pip {cls}">{glyph}</span>'
-
-
 def _ema_alloc_row(row: dict) -> str:
     name = html.escape(row["name"])
 
@@ -2538,19 +2529,13 @@ def _ema_alloc_row(row: dict) -> str:
         return f"""
         <tr class="ema-row ema-row-na">
           <td class="ema-cell-name">{name}</td>
-          <td colspan="9" class="ema-cell-na">Data unavailable</td>
+          <td class="ema-cell-na" colspan="2">Data unavailable</td>
         </tr>"""
-
-    rule_cells = "".join(
-        f'<td class="ema-cell-pip">{_ema_alloc_pip(row["rules"].get(key))}</td>'
-        for key, _ in _EMA_ALLOC_RULE_LABELS
-    )
-
-    signal = row["signal"]
-    signal_cls = {"bullish": "emerald", "bearish": "rose", "neutral": "slate"}.get(signal, "slate")
 
     score = row["score"]
     score_str = f"{score:+d}" if score is not None else "–"
+    signal = row["signal"]
+    score_cls = {"bullish": "emerald", "bearish": "rose", "neutral": "slate"}.get(signal, "slate")
 
     alloc = row["allocation_pct"]
     alloc_str = f"{alloc}%" if alloc is not None else "–"
@@ -2561,13 +2546,7 @@ def _ema_alloc_row(row: dict) -> str:
         <div class="ema-name">{name}</div>
         <div class="ema-asof">as of {html.escape(row.get('as_of') or '–')}</div>
       </td>
-      <td class="ema-cell-num">{row['close']}</td>
-      <td class="ema-cell-num">{row['ema21']}</td>
-      <td class="ema-cell-num">{row['ema50']}</td>
-      <td class="ema-cell-num">{row['ema100']}</td>
-      {rule_cells}
-      <td class="ema-cell-score">{score_str}</td>
-      <td class="ema-cell-signal"><span class="chip {signal_cls}">{signal.upper()}</span></td>
+      <td class="ema-cell-score"><span class="chip {score_cls}">{score_str}</span></td>
       <td class="ema-cell-alloc">
         <div class="ema-alloc-bar-wrap">
           <div class="ema-alloc-bar" style="width:{alloc if alloc is not None else 0}%"></div>
@@ -2583,21 +2562,19 @@ def build_ema_allocation_table(results: dict) -> str:
     Model across the tracked indices (Nifty 50, Nifty Midcap Select,
     Nifty Smallcap 100). `results` is the dict returned by
     scanner.ema_allocation.compute_ema_allocation_all().
+
+    Shows only Index / Score / Allocation % — the CMP-vs-EMA breakdown and
+    signal chip are computed internally but not rendered here.
     """
-    rule_headers = "".join(
-        f'<th class="ema-th-pip" title="{html.escape(label)}">{html.escape(label)}</th>'
-        for _, label in _EMA_ALLOC_RULE_LABELS
-    )
     rows_html = "".join(_ema_alloc_row(row) for row in results.values())
 
     return f"""
 <div class="ema-alloc-section" id="ema-alloc-section">
   <div class="ema-alloc-titlebar">
     <div class="ema-eyebrow"><span class="ema-dot"></span>EMA-BASED ALLOCATION MODEL</div>
-    <h2 class="ema-heading">Index Trend Scorecard</h2>
-    <p class="ema-sub">CMP compared against EMA21 / EMA50 / EMA100 across six pairwise rules
-      (each ±1). Scores are summed into a -6..+6 trend-strength reading and mapped to a
-      suggested allocation %.</p>
+    <h2 class="ema-heading">Index Allocation Scorecard</h2>
+    <p class="ema-sub">Trend-strength score (-6..+6) from CMP vs EMA21/50/100, mapped to a
+      suggested capital allocation %.</p>
   </div>
 
   <div class="ema-alloc-card">
@@ -2606,13 +2583,7 @@ def build_ema_allocation_table(results: dict) -> str:
         <thead>
           <tr>
             <th class="ema-th-name">Index</th>
-            <th class="ema-th-num">CMP</th>
-            <th class="ema-th-num">EMA21</th>
-            <th class="ema-th-num">EMA50</th>
-            <th class="ema-th-num">EMA100</th>
-            {rule_headers}
             <th class="ema-th-num">Score</th>
-            <th class="ema-th-name">Signal</th>
             <th class="ema-th-name">Allocation</th>
           </tr>
         </thead>
@@ -2622,11 +2593,9 @@ def build_ema_allocation_table(results: dict) -> str:
       </table>
     </div>
     <div class="ema-alloc-legend">
-      <span class="ema-pip ema-pip-pos">▲</span>&nbsp;bullish rule&nbsp;&nbsp;
-      <span class="ema-pip ema-pip-neg">▼</span>&nbsp;bearish rule&nbsp;&nbsp;
-      · Allocation % thresholds are a configurable default (see
-      <code>SCORE_ALLOCATION_TABLE</code> in <code>scanner/ema_allocation.py</code>), not
-      part of the original slide.
+      Score range -6..+6 from six EMA21/50/100 pairwise rules · Allocation % thresholds are a
+      configurable default (see <code>SCORE_ALLOCATION_TABLE</code> in
+      <code>scanner/ema_allocation.py</code>), not part of the original slide.
     </div>
   </div>
 </div>
@@ -2645,41 +2614,32 @@ _EMA_ALLOC_STYLE = """
 .ema-sub{font-size:.85rem;color:var(--muted);margin:0;max-width:760px;line-height:1.5;}
 
 .ema-alloc-card{border-radius:14px;border:1px solid var(--border);background:var(--surface);
-                box-shadow:var(--shadow-sm);overflow:hidden;}
+                box-shadow:var(--shadow-sm);overflow:hidden;max-width:560px;}
 .ema-alloc-scroll{overflow-x:auto;}
-.ema-alloc-table{width:100%;border-collapse:collapse;font-size:.82rem;white-space:nowrap;}
+.ema-alloc-table{width:100%;border-collapse:collapse;font-size:.85rem;}
 .ema-alloc-table thead th{text-align:center;font-size:.66rem;font-weight:700;letter-spacing:.04em;
-              text-transform:uppercase;color:var(--muted);padding:.7rem .6rem;
+              text-transform:uppercase;color:var(--muted);padding:.7rem .8rem;
               border-bottom:1px solid var(--border);background:var(--indigo-lt);}
 .ema-th-name{text-align:left !important;}
 .ema-row{border-bottom:1px solid var(--border);}
 .ema-row:last-child{border-bottom:none;}
 .ema-row:hover{background:var(--indigo-lt);}
-.ema-cell-name{padding:.75rem .8rem;text-align:left;}
+.ema-cell-name{padding:.85rem .9rem;text-align:left;}
 .ema-name{font-weight:700;color:var(--text);}
 .ema-asof{font-size:.68rem;color:var(--muted);margin-top:.1rem;}
-.ema-cell-num{padding:.75rem .5rem;text-align:center;font-family:var(--mono);color:var(--text);}
-.ema-cell-pip{padding:.75rem .4rem;text-align:center;}
-.ema-cell-score{padding:.75rem .5rem;text-align:center;font-family:var(--mono);font-weight:700;color:var(--text);}
-.ema-cell-signal{padding:.75rem .6rem;text-align:center;}
-.ema-cell-alloc{padding:.75rem .8rem;min-width:120px;}
-.ema-cell-na{padding:.75rem .8rem;text-align:center;color:var(--muted);font-style:italic;}
+.ema-cell-score{padding:.85rem .8rem;text-align:center;}
+.ema-cell-alloc{padding:.85rem .9rem;min-width:130px;}
+.ema-cell-na{padding:.85rem .9rem;text-align:center;color:var(--muted);font-style:italic;}
 
-.ema-pip{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;
-        border-radius:6px;font-size:.7rem;font-weight:700;}
-.ema-pip-pos{background:var(--emerald-lt);color:var(--emerald);}
-.ema-pip-neg{background:#fee2e2;color:#dc2626;}
-.ema-pip-na{background:var(--indigo-lt);color:var(--muted);}
-
-.chip{display:inline-block;padding:.25rem .6rem;border-radius:999px;font-size:.68rem;font-weight:700;
-      letter-spacing:.03em;}
+.chip{display:inline-block;padding:.3rem .7rem;border-radius:999px;font-size:.78rem;font-weight:700;
+      font-family:var(--mono);letter-spacing:.02em;}
 .chip.emerald{background:var(--emerald-lt);color:var(--emerald);border:1px solid var(--emerald-mid);}
 .chip.rose{background:#fee2e2;color:#dc2626;border:1px solid #fecaca;}
 .chip.slate{background:var(--indigo-lt);color:var(--muted);border:1px solid var(--border);}
 
-.ema-alloc-bar-wrap{width:96px;height:6px;border-radius:999px;background:var(--indigo-lt);overflow:hidden;margin-bottom:.3rem;}
+.ema-alloc-bar-wrap{width:100px;height:6px;border-radius:999px;background:var(--indigo-lt);overflow:hidden;margin-bottom:.3rem;}
 .ema-alloc-bar{height:100%;border-radius:999px;background:linear-gradient(90deg,var(--indigo),var(--emerald));}
-.ema-alloc-pct{font-family:var(--mono);font-size:.72rem;font-weight:700;color:var(--text);}
+.ema-alloc-pct{font-family:var(--mono);font-size:.78rem;font-weight:700;color:var(--text);}
 
 .ema-alloc-legend{padding:.65rem .9rem;font-size:.7rem;color:var(--muted);border-top:1px solid var(--border);
                   background:var(--indigo-lt);}
