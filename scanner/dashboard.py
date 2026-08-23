@@ -2549,10 +2549,10 @@ def _ema_alloc_row(row: dict) -> str:
 
     if not row.get("available"):
         return f"""
-        <tr class="ema-row ema-row-na">
-          <td class="ema-cell-name">{name}</td>
-          <td class="ema-cell-na" colspan="2">Data unavailable</td>
-        </tr>"""
+        <div class="ema-row ema-row-na">
+          <div class="ema-col ema-col-name">{name}</div>
+          <div class="ema-col ema-col-na">Data unavailable</div>
+        </div>"""
 
     score = row["score"]
     score_str = f"{score:+d}" if score is not None else "–"
@@ -2563,29 +2563,27 @@ def _ema_alloc_row(row: dict) -> str:
     alloc_str = f"{alloc}%" if alloc is not None else "–"
 
     main_row = f"""
-    <tr class="ema-row">
-      <td class="ema-cell-name">
+    <div class="ema-row">
+      <div class="ema-col ema-col-name">
         <div class="ema-name">{name}</div>
         <div class="ema-asof">as of {html.escape(row.get('as_of') or '–')}</div>
-      </td>
-      <td class="ema-cell-score"><span class="chip {score_cls}">{score_str}</span></td>
-      <td class="ema-cell-alloc">
+      </div>
+      <div class="ema-col ema-col-score">
+        <span class="chip {score_cls}">{score_str}</span>
+      </div>
+      <div class="ema-col ema-col-alloc">
         <div class="ema-alloc-bar-wrap">
           <div class="ema-alloc-bar" style="width:{alloc if alloc is not None else 0}%"></div>
         </div>
         <div class="ema-alloc-pct">{alloc_str}</div>
-      </td>
-    </tr>"""
+      </div>
+    </div>"""
 
     history_row = f"""
-    <tr class="ema-row-hist">
-      <td colspan="3" class="ema-hist-cell">
-        <details class="ema-hist-details">
-          <summary>Past {len(row.get('history', []))} trading days</summary>
-          {_ema_alloc_history_rows(row.get('history', []))}
-        </details>
-      </td>
-    </tr>"""
+    <details class="ema-hist-details">
+      <summary>Past {len(row.get('history', []))} trading days</summary>
+      {_ema_alloc_history_rows(row.get('history', []))}
+    </details>"""
 
     return main_row + history_row
 
@@ -2597,10 +2595,10 @@ def build_ema_allocation_table(results: dict) -> str:
     Nifty Smallcap 100). `results` is the dict returned by
     scanner.ema_allocation.compute_ema_allocation_all().
 
-    Shows Index / Score / Allocation % as the main row, plus a collapsible
-    "Past N trading days" history sub-table (date / score / allocation %) per
-    index. The CMP-vs-EMA breakdown and signal chip are computed internally
-    but not rendered in the main row.
+    Rendered as flex/grid rows (not a <table>) for the main Index / Score /
+    Allocation % line, so the layout can't be overridden by this site's
+    global `table {{ width/min-width/white-space }}` rules used elsewhere.
+    Expand a row for the past 20 trading days (date / score / allocation %).
     """
     rows_html = "".join(_ema_alloc_row(row) for row in results.values())
 
@@ -2614,25 +2612,12 @@ def build_ema_allocation_table(results: dict) -> str:
   </div>
 
   <div class="ema-alloc-card">
-    <div class="ema-alloc-scroll">
-      <table class="ema-alloc-table">
-        <colgroup>
-          <col class="ema-col-name">
-          <col class="ema-col-score">
-          <col class="ema-col-alloc">
-        </colgroup>
-        <thead>
-          <tr>
-            <th class="ema-th-name">Index</th>
-            <th class="ema-th-num">Score</th>
-            <th class="ema-th-num">Allocation</th>
-          </tr>
-        </thead>
-        <tbody>
-          {rows_html}
-        </tbody>
-      </table>
+    <div class="ema-alloc-head">
+      <div class="ema-col ema-col-name">Index</div>
+      <div class="ema-col ema-col-score">Score</div>
+      <div class="ema-col ema-col-alloc">Allocation</div>
     </div>
+    {rows_html}
     <div class="ema-alloc-legend">
       Score range -6..+6 from six EMA21/50/100 pairwise rules · Allocation % thresholds are a
       configurable default (see <code>SCORE_ALLOCATION_TABLE</code> in
@@ -2646,38 +2631,42 @@ def build_ema_allocation_table(results: dict) -> str:
 
 _EMA_ALLOC_STYLE = """
 <style>
-.ema-alloc-section{max-width:1120px;margin:0 auto 2.2rem;padding:0 1.5rem;}
+.ema-alloc-section{max-width:640px;margin:0 auto 2.2rem;padding:0 1.5rem;}
 .ema-alloc-titlebar{margin-bottom:1rem;}
 .ema-eyebrow{display:flex;align-items:center;gap:.45rem;font-family:var(--mono);font-size:.62rem;
               font-weight:700;letter-spacing:.14em;color:var(--indigo);margin-bottom:.4rem;}
 .ema-dot{width:6px;height:6px;border-radius:50%;background:var(--emerald);box-shadow:0 0 0 3px var(--emerald-lt);}
 .ema-heading{font-size:1.35rem;font-weight:700;margin:0 0 .3rem;color:var(--text);}
-.ema-sub{font-size:.85rem;color:var(--muted);margin:0;max-width:760px;line-height:1.5;}
+.ema-sub{font-size:.85rem;color:var(--muted);margin:0;line-height:1.5;}
 
 .ema-alloc-card{border-radius:14px;border:1px solid var(--border);background:var(--surface);
-                box-shadow:var(--shadow-sm);overflow:hidden;max-width:640px;}
-.ema-alloc-scroll{overflow-x:auto;}
-.ema-alloc-table{width:100%;table-layout:fixed;border-collapse:collapse;font-size:.85rem;}
-.ema-col-name{width:52%;}
-.ema-col-score{width:20%;}
-.ema-col-alloc{width:28%;}
-.ema-alloc-table thead th{text-align:center;font-size:.66rem;font-weight:700;letter-spacing:.04em;
-              text-transform:uppercase;color:var(--muted);padding:.7rem .8rem;
-              border-bottom:1px solid var(--border);background:var(--indigo-lt);}
-.ema-th-name{text-align:left !important;}
-.ema-row{border-bottom:1px solid var(--border);}
-.ema-row-hist{border-bottom:1px solid var(--border);}
-.ema-row-hist:last-child, .ema-row:last-child{border-bottom:none;}
+                box-shadow:var(--shadow-sm);overflow:hidden;}
+
+/* Column layout shared by header + every row — flex, not <table>, so global
+   `table {{ width/min-width/white-space }}` rules elsewhere on the site can't
+   touch it. */
+.ema-alloc-head, .ema-row{
+  display:flex;align-items:center;gap:.5rem;
+  border-bottom:1px solid var(--border);
+}
+.ema-alloc-head{
+  background:var(--indigo-lt);padding:.7rem .9rem;
+  font-size:.66rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);
+}
+.ema-row{padding:.85rem .9rem;}
 .ema-row:hover{background:var(--indigo-lt);}
-.ema-cell-name{padding:.85rem .9rem;text-align:left;vertical-align:middle;}
-.ema-name{font-weight:700;color:var(--text);}
+
+.ema-col{box-sizing:border-box;}
+.ema-col-name{flex:1 1 52%;min-width:0;text-align:left;}
+.ema-col-score{flex:0 0 20%;text-align:center;}
+.ema-col-alloc{flex:0 0 28%;text-align:center;}
+.ema-col-na{flex:1;text-align:center;color:var(--muted);font-style:italic;}
+
+.ema-name{font-weight:700;color:var(--text);font-size:.9rem;}
 .ema-asof{font-size:.68rem;color:var(--muted);margin-top:.1rem;}
-.ema-cell-score{padding:.85rem .8rem;text-align:center;vertical-align:middle;}
-.ema-cell-alloc{padding:.85rem .9rem;text-align:center;vertical-align:middle;}
-.ema-cell-na{padding:.85rem .9rem;text-align:center;color:var(--muted);font-style:italic;}
 
 .chip{display:inline-block;padding:.3rem .7rem;border-radius:999px;font-size:.78rem;font-weight:700;
-      font-family:var(--mono);letter-spacing:.02em;}
+      font-family:var(--mono);letter-spacing:.02em;white-space:nowrap;}
 .chip.sm{padding:.15rem .5rem;font-size:.68rem;}
 .chip.emerald{background:var(--emerald-lt);color:var(--emerald);border:1px solid var(--emerald-mid);}
 .chip.rose{background:#fee2e2;color:#dc2626;border:1px solid #fecaca;}
@@ -2688,14 +2677,19 @@ _EMA_ALLOC_STYLE = """
 .ema-alloc-bar{height:100%;border-radius:999px;background:linear-gradient(90deg,var(--indigo),var(--emerald));}
 .ema-alloc-pct{font-family:var(--mono);font-size:.78rem;font-weight:700;color:var(--text);text-align:center;}
 
-.ema-hist-cell{padding:0;background:var(--indigo-lt);}
-.ema-hist-details{padding:.15rem 0;}
+.ema-hist-details{border-bottom:1px solid var(--border);background:var(--indigo-lt);}
 .ema-hist-details summary{cursor:pointer;list-style:none;padding:.5rem .9rem;font-size:.72rem;
               font-weight:700;color:var(--indigo);user-select:none;}
 .ema-hist-details summary::-webkit-details-marker{display:none;}
 .ema-hist-details summary::before{content:"▸ ";display:inline-block;transition:transform .15s ease;}
 .ema-hist-details[open] summary::before{transform:rotate(90deg);}
-.ema-hist-table{width:100%;border-collapse:collapse;font-size:.76rem;background:var(--surface);}
+
+/* Hardened against the site's global bare `table` selector (width:100%,
+   min-width:640px, white-space:nowrap) bleeding into this small sub-table. */
+.ema-alloc-card table.ema-hist-table{
+  width:100% !important; min-width:0 !important; white-space:normal !important;
+  border-collapse:collapse;font-size:.76rem;background:var(--surface);table-layout:fixed;
+}
 .ema-hist-table thead th{text-align:center;font-size:.62rem;font-weight:700;letter-spacing:.03em;
               text-transform:uppercase;color:var(--muted);padding:.4rem .8rem;
               border-top:1px solid var(--border);border-bottom:1px solid var(--border);}
@@ -2706,14 +2700,16 @@ _EMA_ALLOC_STYLE = """
 
 .ema-hist-empty{padding:.6rem .9rem;font-size:.75rem;color:var(--muted);font-style:italic;}
 
-.ema-alloc-legend{padding:.65rem .9rem;font-size:.7rem;color:var(--muted);border-top:1px solid var(--border);
-                  background:var(--indigo-lt);}
-.ema-alloc-legend code{font-family:var(--mono);font-size:.68rem;background:var(--surface);
+.ema-alloc-legend{padding:.65rem .9rem;font-size:.7rem;color:var(--muted);}
+.ema-alloc-legend code{font-family:var(--mono);font-size:.68rem;background:var(--indigo-lt);
                   padding:.05rem .3rem;border-radius:4px;border:1px solid var(--border);}
 
 @media (max-width:768px){
   .ema-alloc-section{padding:0 1rem;}
   .ema-heading{font-size:1.1rem;}
+  .ema-col-name{flex-basis:44%;}
+  .ema-col-score{flex-basis:24%;}
+  .ema-col-alloc{flex-basis:32%;}
 }
 </style>
 """
