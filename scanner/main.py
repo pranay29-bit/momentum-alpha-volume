@@ -23,7 +23,8 @@ import pandas as pd
 from .config     import DOCS_DIR
 from .data_loader import download_all, load_symbols
 from .nse_client  import enrich_with_market_caps, overlay_price_band_from_cache
-from .dashboard   import build_passing_dashboard, build_passing_ema10_dashboard, build_volume_action_dashboard, build_rocket_dashboard, build_industry_drilldown, build_new_rs_high_dashboard, build_stage4_dashboard, build_chartink_embed
+from .dashboard   import build_passing_dashboard, build_passing_ema10_dashboard, build_volume_action_dashboard, build_rocket_dashboard, build_industry_drilldown, build_new_rs_high_dashboard, build_stage4_dashboard, build_chartink_embed, build_ema_allocation_table
+from .ema_allocation import compute_ema_allocation_all
 from .result_calendar import get_result_date
 from .indicators  import get_market_sentiment
 from . import net_new_highs as nnh
@@ -455,6 +456,15 @@ def _update_index(
         logger.warning("Could not build Chartink embed widget: %s", exc)
         chartink_html = ""
 
+    # ── Build the EMA-Based Allocation Model scorecard (Nifty 50 / Midcap
+    #    Select / Smallcap 100) ─────────────────────────────────────────────
+    try:
+        ema_alloc_results = compute_ema_allocation_all()
+        ema_alloc_html = build_ema_allocation_table(ema_alloc_results)
+    except Exception as exc:
+        logger.warning("Could not build EMA allocation widget: %s", exc)
+        ema_alloc_html = ""
+
     # ── Build the "Dashboards" hub — every scanner + tool, arranged as cards ───
     if dated_dirs:
         _elite_link  = f"{today_date_display}/elite_dashboard_{today_slug}.html"
@@ -820,6 +830,8 @@ def _update_index(
 {tools_html}
 
 {chartink_html}
+
+{ema_alloc_html}
 
 {industry_html}
 
