@@ -32,6 +32,7 @@ from __future__ import annotations
 import datetime as dt
 import logging
 
+import numpy as np
 import pandas as pd
 
 logger = logging.getLogger(__name__)
@@ -134,12 +135,14 @@ def _fetch_index_close_series(nse_symbol: str, yf_candidates: list[str]) -> pd.S
     return close_series
 
 
-def compute_ema_allocation_for_index(key: str) -> dict:
+def compute_ema_allocation_for_index(key: str, history_days: int = 20) -> dict:
     """
     Fetch data and compute the EMA-based allocation score for a single index.
     Returns a dict with close/EMA values, per-rule scores, total score,
-    signal label, and suggested allocation %. Gracefully degrades to an
-    "unavailable" dict if data can't be fetched.
+    signal label, suggested allocation %, and a `history` list containing the
+    same (date, score, allocation_pct) for each of the last `history_days`
+    trading days. Gracefully degrades to an "unavailable" dict if data can't
+    be fetched.
     """
     meta = INDEX_DEFINITIONS[key]
     result: dict = {
@@ -153,6 +156,7 @@ def compute_ema_allocation_for_index(key: str) -> dict:
         "signal": "unavailable",
         "allocation_pct": None,
         "as_of": None,
+        "history": [],
     }
 
     close_series = _fetch_index_close_series(meta["nse_symbol"], meta["yf_candidates"])
@@ -164,21 +168,27 @@ def compute_ema_allocation_for_index(key: str) -> dict:
     ema50  = close_series.ewm(span=EMA_SPANS["EMA50"],  adjust=False).mean()
     ema100 = close_series.ewm(span=EMA_SPANS["EMA100"], adjust=False).mean()
 
+    # Vectorized per-day scores across the whole series, so we can slice the
+    # last N days for history without recomputing EMAs per-day.
+    rules_df = pd.DataFrame({
+        "price_above_ema21":  np.where(close_series > ema21,  1, -1),
+        "price_above_ema50":  np.where(close_series > ema50,  1, -1),
+        "price_above_ema100": np.where(close_series > ema100, 1, -1),
+        "ema21_above_ema100": np.where(ema21 > ema100, 1, -1),
+        "ema21_above_ema50":  np.where(ema21 > ema50,  1, -1),
+        "ema50_above_ema100": np.where(ema50 > ema100, 1, -1),
+    }, index=close_series.index)
+    daily_score = rules_df.sum(axis=1)
+    daily_alloc = daily_score.apply(_score_to_allocation)
+
     price   = float(close_series.iloc[-1])
     e21     = float(ema21.iloc[-1])
     e50     = float(ema50.iloc[-1])
     e100    = float(ema100.iloc[-1])
     as_of   = close_series.index[-1]
 
-    rules = {
-        "price_above_ema21":  (1 if price > e21  else -1),
-        "price_above_ema50":  (1 if price > e50  else -1),
-        "price_above_ema100": (1 if price > e100 else -1),
-        "ema21_above_ema100": (1 if e21   > e100 else -1),
-        "ema21_above_ema50":  (1 if e21   > e50  else -1),
-        "ema50_above_ema100": (1 if e50   > e100 else -1),
-    }
-    score = sum(rules.values())
+    rules = {col: int(rules_df[col].iloc[-1]) for col in rules_df.columns}
+    score = int(daily_score.iloc[-1])
 
     if score > 0:
         signal = "bullish"
@@ -186,6 +196,15 @@ def compute_ema_allocation_for_index(key: str) -> dict:
         signal = "bearish"
     else:
         signal = "neutral"
+
+    history = [
+        {
+            "date": idx.strftime("%Y-%m-%d") if hasattr(idx, "strftime") else str(idx),
+            "score": int(daily_score.loc[idx]),
+            "allocation_pct": int(daily_alloc.loc[idx]),
+        }
+        for idx in close_series.index[-history_days:]
+    ]
 
     result.update({
         "available": True,
@@ -198,10 +217,11 @@ def compute_ema_allocation_for_index(key: str) -> dict:
         "signal": signal,
         "allocation_pct": _score_to_allocation(score),
         "as_of": as_of.strftime("%Y-%m-%d") if hasattr(as_of, "strftime") else str(as_of),
+        "history": history,
     })
     return result
 
 
-def compute_ema_allocation_all() -> dict[str, dict]:
-    """Compute the EMA-based allocation result for every index in INDEX_DEFINITIONS."""
-    return {key: compute_ema_allocation_for_index(key) for key in INDEX_DEFINITIONS}
+def compute_ema_allocation_all(history_days: int = 20) -> dict[str, dict]:
+    """Compute the EMA-based allocation result (with history) for every index in INDEX_DEFINITIONS."""
+    return {key: compute_ema_allocation_for_index(key, history_days=history_days) for key in INDEX_DEFINITIONS}
