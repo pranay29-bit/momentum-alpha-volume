@@ -18,6 +18,16 @@ CSV_PATH     = os.getenv("NSE_CSV_PATH", str(DATA_DIR / "NSE_Stocks.csv"))
 SYMBOL_COLUMN = "Symbol"
 EXCHANGE_SUFFIX = ".NS"
 
+# ── SME universe (NSE Emerge + BSE SME) ────────────────────────────────────────
+# SME_Stocks.csv (Name, Symbols, ISIN Code, Industry Group, Industry) mixes two
+# symbol formats: alpha tickers (NSE Emerge, e.g. "JALAN") and bare numeric BSE
+# scrip codes (BSE SME, e.g. "542155"). load_sme_symbols() in data_loader.py
+# suffixes alpha symbols with .NS and numeric symbols with .BO accordingly.
+SME_CSV_PATH   = os.getenv("SME_CSV_PATH", str(DATA_DIR / "SME_Stocks.csv"))
+SME_SYMBOL_COLUMN = "Symbols"
+SME_NSE_SUFFIX = ".NS"
+SME_BSE_SUFFIX = ".BO"
+
 # ── Download ──────────────────────────────────────────────────────────────────
 PERIOD    = "400d"
 INTERVAL  = "1d"
