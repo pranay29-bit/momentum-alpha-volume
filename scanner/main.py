@@ -32,6 +32,7 @@ from . import minervini_rank as mrank
 from . import new_rs_high
 from . import stage4_breakdown
 from . import holidays as nse_holidays
+from . import sme_scan
 
 # ── Logging ───────────────────────────────────────────────────────────────────
 logging.basicConfig(
@@ -297,6 +298,21 @@ def run() -> None:
             known_symbols=known_symbols,
         )
 
+    # ── 9c. SME Momentum + SME Elite (NSE Emerge / BSE SME universe) ──────────
+    # Runs as a fully separate pipeline against data/SME_Stocks.csv — any
+    # failure here is caught and logged inside run_sme_scan() itself, so a
+    # bad SME data day never breaks the mainboard scan above.
+    logger.info("Running SME Momentum + SME Elite scan…")
+    try:
+        sme_results = sme_scan.run_sme_scan(
+            out_dir,
+            today_str,
+            known_symbols=known_symbols,
+        )
+    except Exception as exc:
+        logger.warning("SME scan failed entirely (non-fatal): %s", exc)
+        sme_results = {"sme_momentum": pd.DataFrame(), "sme_elite": pd.DataFrame()}
+
     # ── 9b. Market Sentiment (NIFTY SMALLCAP 250 index) ──────────────────────
     logger.info("Fetching market sentiment (NIFTY SMALLCAP 250)…")
     sentiment = get_market_sentiment()
@@ -472,8 +488,11 @@ def _update_index(
         _rocket_link = f"{today_date_display}/rocket_dashboard_{today_slug}.html"
         _newrshigh_link = f"{today_date_display}/newrshigh_dashboard_{today_slug}.html"
         _stage4_link = f"{today_date_display}/stage4_dashboard_{today_slug}.html"
+        _sme_momentum_link = f"{today_date_display}/sme_momentum_dashboard_{today_slug}.html"
+        _sme_elite_link    = f"{today_date_display}/sme_elite_dashboard_{today_slug}.html"
     else:
         _elite_link = _volume_link = _rocket_link = _newrshigh_link = _stage4_link = today_dashboard_link
+        _sme_momentum_link = _sme_elite_link = today_dashboard_link
 
     hub_cards = [
         dict(icon="📊", accent="indigo", accent2="blue", title="Momentum Dashboard",
@@ -494,6 +513,12 @@ def _update_index(
         dict(icon="📉", accent="red", accent2="navy", title="Stage 4 Breakdown",
              desc="Large-caps (≥ ₹50,000 Cr) currently trading below their 50-day MA — a risk radar, not a buy list.",
              link=_stage4_link),
+        dict(icon="🏷️", accent="violet", accent2="blue", title="SME Momentum Scan",
+             desc="The same 8 Minervini trend-template conditions, applied to the NSE Emerge + BSE SME universe.",
+             link=_sme_momentum_link),
+        dict(icon="🏷️", accent="violet", accent2="emerald", title="SME Elite Scan",
+             desc="SME Momentum passes also trading above EMA10 — the highest-conviction SME setups.",
+             link=_sme_elite_link),
     ]
 
     hub_cards_html = ""
@@ -567,6 +592,8 @@ def _update_index(
   <a href="{_rocket_link}" class="btn-link amber">🚀 Rocket</a>
   <a href="{_newrshigh_link}" class="btn-link rose">🔥 New RS High</a>
   <a href="{_stage4_link}" class="btn-link red">📉 Stage 4</a>
+  <a href="{_sme_momentum_link}" class="btn-link violet">🏷️ SME Momentum</a>
+  <a href="{_sme_elite_link}" class="btn-link violet">🏷️ SME Elite</a>
   <a href="position-size.html" class="btn-link violet">📐 Position Size</a>
   <a href="position-tracker.html" class="btn-link navy">📈 Position Tracker</a>
 </nav>"""
