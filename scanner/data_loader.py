@@ -18,6 +18,7 @@ import yfinance as yf
 
 from .config import (
     CSV_PATH, SYMBOL_COLUMN, EXCHANGE_SUFFIX,
+    SME_CSV_PATH, SME_SYMBOL_COLUMN, SME_NSE_SUFFIX, SME_BSE_SUFFIX,
     PERIOD, INTERVAL, BATCH_SIZE,
 )
 from .indicators import add_indicators, evaluate_trend_template, compute_12m_return, compute_volume_action, is_inside_candle
@@ -49,6 +50,47 @@ def load_symbol_metadata(csv_path: str = CSV_PATH, symbol_col: str = SYMBOL_COLU
     df["symbol_ns"] = df[symbol_col].apply(
         lambda s: s if "." in s else s + EXCHANGE_SUFFIX
     )
+
+    meta_cols = {"symbol_ns": "symbol_ns"}
+    if "Industry Group" in df.columns:
+        meta_cols["Industry Group"] = "industry_group"
+    if "Industry" in df.columns:
+        meta_cols["Industry"] = "industry"
+
+    meta = df[[c for c in meta_cols]].rename(columns=meta_cols)
+    return meta.drop_duplicates(subset=["symbol_ns"]).set_index("symbol_ns")
+
+
+# ── SME symbol list & metadata (NSE Emerge + BSE SME) ──────────────────────────
+#
+# SME_Stocks.csv mixes two symbol formats in its "Symbols" column:
+#   - alpha tickers, e.g. "JALAN"   → NSE Emerge listing → suffix .NS
+#   - bare numeric codes, e.g. "542155" → BSE SME listing → suffix .BO
+# yfinance has patchy coverage of SME/micro-cap tickers on either exchange, so
+# expect a meaningfully lower fetch-success rate here than the mainboard scan.
+
+def _sme_to_yahoo_symbol(raw: str) -> str:
+    raw = raw.strip()
+    if "." in raw:
+        return raw  # already suffixed
+    return raw + SME_BSE_SUFFIX if raw.isdigit() else raw + SME_NSE_SUFFIX
+
+
+def load_sme_symbols(csv_path: str = SME_CSV_PATH, symbol_col: str = SME_SYMBOL_COLUMN) -> list[str]:
+    df  = pd.read_csv(csv_path)
+    raw = df[symbol_col].dropna().astype(str).str.strip().unique().tolist()
+    return [_sme_to_yahoo_symbol(s) for s in raw]
+
+
+def load_sme_symbol_metadata(csv_path: str = SME_CSV_PATH, symbol_col: str = SME_SYMBOL_COLUMN) -> pd.DataFrame:
+    """
+    Return a DataFrame indexed by the Yahoo-suffixed SME symbol with
+    'industry_group' and 'industry' columns (sourced from SME_Stocks.csv).
+    """
+    df = pd.read_csv(csv_path)
+    df[symbol_col] = df[symbol_col].dropna().astype(str).str.strip()
+    df = df[df[symbol_col].str.len() > 0].copy()
+    df["symbol_ns"] = df[symbol_col].apply(_sme_to_yahoo_symbol)
 
     meta_cols = {"symbol_ns": "symbol_ns"}
     if "Industry Group" in df.columns:
@@ -174,21 +216,27 @@ def _retry_with_bse(failed_symbols: list[str], meta: pd.DataFrame) -> list[dict]
     return recovered
 
 
-def download_all(symbols: list[str]) -> pd.DataFrame:
+def download_all(symbols: list[str], meta: pd.DataFrame | None = None) -> pd.DataFrame:
     """
     Download price history for all *symbols* in batches and return a
     consolidated DataFrame with indicators + trend-template flags,
-    enriched with Industry Group and Industry from NSE_Stocks.csv.
+    enriched with Industry Group and Industry metadata.
+
+    If *meta* is not supplied, Industry metadata is loaded from the default
+    NSE_Stocks.csv (original behavior). Pass a pre-loaded metadata frame
+    (e.g. from load_sme_symbol_metadata()) to enrich a different universe,
+    such as the SME scan.
 
     Any symbol that fails to fetch on NSE (.NS) is automatically retried
     on BSE (.BO) before being dropped — see _retry_with_bse().
     """
     # Load industry metadata once
-    try:
-        meta = load_symbol_metadata()
-    except Exception as exc:
-        logger.warning("Could not load symbol metadata: %s", exc)
-        meta = pd.DataFrame()
+    if meta is None:
+        try:
+            meta = load_symbol_metadata()
+        except Exception as exc:
+            logger.warning("Could not load symbol metadata: %s", exc)
+            meta = pd.DataFrame()
 
     all_rows: list[dict] = []
     failed_symbols: list[str] = []
