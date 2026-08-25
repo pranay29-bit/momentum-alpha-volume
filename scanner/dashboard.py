@@ -777,7 +777,7 @@ def _site_nav(active: str, date_str: str) -> str:
     to Home or any other dashboard from wherever they land.
 
     `active` is one of: "momentum", "elite", "volume", "rocket", "newrshigh",
-    "stage4".
+    "stage4", "sme_momentum", "sme_elite".
     `date_str` is the scan date in YYYYMMDD form (dashboards for the same
     date live side-by-side in the same folder, so links are relative).
     """
@@ -792,6 +792,8 @@ def _site_nav(active: str, date_str: str) -> str:
         _link("rocket",    f"rocket_dashboard_{date_str}.html",    "amber",   "🚀 Rocket"),
         _link("newrshigh", f"newrshigh_dashboard_{date_str}.html", "rose",    "🔥 New RS High"),
         _link("stage4",    f"stage4_dashboard_{date_str}.html",    "red",     "📉 Stage 4"),
+        _link("sme_momentum", f"sme_momentum_dashboard_{date_str}.html", "violet", "🏷️ SME Momentum"),
+        _link("sme_elite",    f"sme_elite_dashboard_{date_str}.html",    "violet", "🏷️ SME Elite"),
     ])
     return f"""
 <nav class="site-nav">
@@ -829,10 +831,10 @@ def _new_star(is_new: bool) -> str:
     return ' <span class="sym-new-star">✦ NEW</span>'
 
 
-def _csv_bar_passing(date_str: str) -> str:
+def _csv_bar_passing(date_str: str, csv_filename: str | None = None, full_csv_filename: str | None = None) -> str:
     sd = datetime.strptime(date_str, "%Y%m%d").strftime("%Y-%m-%d")
-    pf = f"passing_stocks_{date_str}.csv"
-    ff = f"full_results_{date_str}.csv"
+    pf = csv_filename or f"passing_stocks_{date_str}.csv"
+    ff = full_csv_filename or f"full_results_{date_str}.csv"
     return f"""
 <div class="csv-bar">
   <a class="csv-btn csv-primary" href="{pf}" download="{pf}">⬇ Download Passing CSV</a>
@@ -841,9 +843,9 @@ def _csv_bar_passing(date_str: str) -> str:
 </div>"""
 
 
-def _csv_bar_elite(date_str: str) -> str:
+def _csv_bar_elite(date_str: str, csv_filename: str | None = None) -> str:
     sd = datetime.strptime(date_str, "%Y%m%d").strftime("%Y-%m-%d")
-    ef = f"passing_ema10_{date_str}.csv"
+    ef = csv_filename or f"passing_ema10_{date_str}.csv"
     return f"""
 <div class="csv-bar">
   <a class="csv-btn csv-primary" href="{ef}" download="{ef}">⬇ Download Elite CSV</a>
@@ -860,6 +862,14 @@ def build_passing_dashboard(
     out_path: Path,
     date_str: str,
     known_symbols: set[str] | None = None,
+    page_title: str = "Alpha Momentum — Passing Stocks",
+    brand_name: str = "Alpha Momentum · NSE Scanner",
+    heading: str = "Minervini Trend Template",
+    subheading: str = "All 8 Minervini conditions passing · NSE India",
+    nav_active: str = "momentum",
+    csv_filename: str | None = None,
+    full_csv_filename: str | None = None,
+    tv_export_filename: str | None = None,
 ) -> None:
     date_display = datetime.strptime(date_str, "%Y%m%d").strftime("%d %b %Y")
     known = known_symbols or set()
@@ -933,19 +943,19 @@ def build_passing_dashboard(
     n_new = sum(1 for _, r in passing.iterrows()
                 if str(r.get("symbol","")).replace(".NS","") not in known)
 
-    html  = _html_head(f"Alpha Momentum — Passing Stocks — {date_display}",
-                       "var(--indigo)", "var(--blue)", active="momentum", date_str=date_str)
-    html += _csv_bar_passing(date_str)
-    html += _tv_export_bar(f"tradingview_passing_{date_str}.txt")
+    html  = _html_head(f"{page_title} — {date_display}",
+                       "var(--indigo)", "var(--blue)", active=nav_active, date_str=date_str)
+    html += _csv_bar_passing(date_str, csv_filename=csv_filename, full_csv_filename=full_csv_filename)
+    html += _tv_export_bar(tv_export_filename or f"tradingview_passing_{date_str}.txt")
     html += f"""
 <header>
   <div class="hdr-left">
     <div class="brand">
       <div class="brand-dot" style="background:var(--indigo)"></div>
-      <span class="brand-name">Alpha Momentum · NSE Scanner</span>
+      <span class="brand-name">{brand_name}</span>
     </div>
-    <h1>Minervini Trend Template</h1>
-    <p class="hdr-sub">All 8 Minervini conditions passing · NSE India · {date_display}</p>
+    <h1>{heading}</h1>
+    <p class="hdr-sub">{subheading} · {date_display}</p>
     <div class="badge-row">
       <span class="hdr-badge" style="background:var(--indigo-lt);border-color:var(--indigo-mid);color:var(--indigo)">✓ All 8 Conditions</span>
       {"<a href='#newStocksSection' onclick='scrollToNewStocks(event)' class='hdr-badge' style='cursor:pointer;text-decoration:none;background:var(--new-bg);border-color:var(--new-border);color:var(--new-text)'>✦ " + str(n_new) + " New Stocks &rarr;</a>" if n_new else ""}
@@ -1085,6 +1095,13 @@ def build_passing_ema10_dashboard(
     date_str: str,
     history: list[dict] | None = None,
     known_symbols: set[str] | None = None,
+    page_title: str = "Alpha Momentum — Elite Stocks",
+    brand_name: str = "Alpha Momentum · Elite Filter",
+    heading: str = "Passing Stocks Above EMA10",
+    subheading: str = "All 8 Minervini conditions + Close &gt; 10-period EMA · NSE India",
+    nav_active: str = "elite",
+    csv_filename: str | None = None,
+    tv_export_filename: str | None = None,
 ) -> None:
     date_display = datetime.strptime(date_str, "%Y%m%d").strftime("%d %b %Y")
     known = known_symbols or set()
@@ -1179,19 +1196,19 @@ def build_passing_ema10_dashboard(
     n_new = sum(1 for _, r in df.iterrows()
                 if str(r.get("symbol","")).replace(".NS","") not in known)
 
-    html  = _html_head(f"Alpha Momentum — Elite Stocks — {date_display}",
-                       "var(--emerald)", "var(--blue)", active="elite", date_str=date_str)
-    html += _csv_bar_elite(date_str)
-    html += _tv_export_bar(f"tradingview_elite_{date_str}.txt")
+    html  = _html_head(f"{page_title} — {date_display}",
+                       "var(--emerald)", "var(--blue)", active=nav_active, date_str=date_str)
+    html += _csv_bar_elite(date_str, csv_filename=csv_filename)
+    html += _tv_export_bar(tv_export_filename or f"tradingview_elite_{date_str}.txt")
     html += f"""
 <header>
   <div class="hdr-left">
     <div class="brand">
       <div class="brand-dot" style="background:var(--emerald)"></div>
-      <span class="brand-name">Alpha Momentum · Elite Filter</span>
+      <span class="brand-name">{brand_name}</span>
     </div>
-    <h1>Passing Stocks Above EMA10</h1>
-    <p class="hdr-sub">All 8 Minervini conditions + Close &gt; 10-period EMA · NSE India · {date_display}</p>
+    <h1>{heading}</h1>
+    <p class="hdr-sub">{subheading} · {date_display}</p>
     <div class="badge-row">
       <span class="hdr-badge" style="background:var(--emerald-lt);border-color:var(--emerald-mid);color:var(--emerald)">✓ 8 Minervini Conditions</span>
       <span class="hdr-badge" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)">✓ Close &gt; EMA10</span>
