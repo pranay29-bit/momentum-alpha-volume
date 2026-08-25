@@ -50,8 +50,43 @@ def _r(v, n=2):
         return "null"
 
 
+def _strip_symbol(symbol_ns: str) -> str:
+    """Strip the .NS or .BO Yahoo-suffix from a symbol, leaving the raw code."""
+    s = str(symbol_ns).strip()
+    if s.endswith(".NS"):
+        return s[: -len(".NS")]
+    if s.endswith(".BO"):
+        return s[: -len(".BO")]
+    return s
+
+
+def _display_symbol(symbol_ns: str, name: str | None = None) -> str:
+    """
+    Human-readable label for a stock row. NSE-style alpha tickers (e.g.
+    "JALAN") are shown as-is. Bare-numeric BSE scrip codes (e.g. "543286",
+    used by many BSE SME listings that have no alpha ticker) are not
+    meaningful to read, so fall back to the company name when one is
+    available (from SME_Stocks.csv's "Name" column, merged in as `name`).
+    """
+    raw = _strip_symbol(symbol_ns)
+    if raw.isdigit() and name and str(name).strip() and str(name).strip().lower() != "nan":
+        return str(name).strip()
+    return raw
+
+
 def _tv_link(symbol_ns: str) -> str:
-    sym = symbol_ns.replace(".NS", "").strip()
+    """
+    Build a TradingView chart link for a symbol. NSE-suffixed (.NS) symbols
+    link to NSE:<SYM>; BSE-suffixed (.BO) symbols — used for BSE SME
+    listings, which are commonly bare numeric scrip codes — link to
+    BSE:<CODE> instead, since TradingView doesn't recognize BSE codes under
+    the NSE: prefix.
+    """
+    s = str(symbol_ns).strip()
+    if s.endswith(".BO"):
+        sym = s[: -len(".BO")]
+        return f"https://www.tradingview.com/chart/?symbol=BSE%3A{sym}"
+    sym = s.replace(".NS", "").strip()
     return f"https://www.tradingview.com/chart/?symbol=NSE%3A{sym}"
 
 
@@ -887,7 +922,7 @@ def build_passing_dashboard(
 
     sort_col = "rs_percentile" if "rs_percentile" in passing.columns else "close"
     for _, row in passing.sort_values(sort_col, ascending=False).iterrows():
-        sym        = str(row.get("symbol", "")).replace(".NS", "")
+        sym = _display_symbol(row.get("symbol", ""), row.get("name"))
         link       = _tv_link(row.get("symbol", sym))
         is_new     = sym not in known
         new_cls    = " is-new" if is_new else ""
@@ -941,7 +976,7 @@ def build_passing_dashboard(
         chart_total.append(_r(tmc))
 
     n_new = sum(1 for _, r in passing.iterrows()
-                if str(r.get("symbol","")).replace(".NS","") not in known)
+                if _strip_symbol(r.get("symbol", "")) not in known)
 
     html  = _html_head(f"{page_title} — {date_display}",
                        "var(--indigo)", "var(--blue)", active=nav_active, date_str=date_str)
@@ -1114,7 +1149,7 @@ def build_passing_ema10_dashboard(
 
     rows_html = ""
     for _, row in df.iterrows():
-        sym      = str(row.get("symbol", "")).replace(".NS", "")
+        sym = _display_symbol(row.get("symbol", ""), row.get("name"))
         link     = _tv_link(row.get("symbol", sym))
         is_new   = sym not in known
         new_cls  = " is-new" if is_new else ""
@@ -1194,7 +1229,7 @@ def build_passing_ema10_dashboard(
     htv_js = ",".join(str(round(float(h.get("traded_value_cr",0)),2)) for h in hist)
 
     n_new = sum(1 for _, r in df.iterrows()
-                if str(r.get("symbol","")).replace(".NS","") not in known)
+                if _strip_symbol(r.get("symbol", "")) not in known)
 
     html  = _html_head(f"{page_title} — {date_display}",
                        "var(--emerald)", "var(--blue)", active=nav_active, date_str=date_str)
@@ -1382,7 +1417,7 @@ def build_volume_action_dashboard(
 
     rows_html = ""
     for _, row in sorted_df.iterrows():
-        sym       = str(row.get("symbol", "")).replace(".NS", "")
+        sym = _display_symbol(row.get("symbol", ""), row.get("name"))
         link      = _tv_link(row.get("symbol", sym))
         is_new    = sym not in known
         new_cls   = " is-new" if is_new else ""
@@ -1433,7 +1468,7 @@ def build_volume_action_dashboard(
         </tr>"""
 
     n_new = sum(1 for _, r in sorted_df.iterrows()
-                if str(r.get("symbol","")).replace(".NS","") not in known)
+                if _strip_symbol(r.get("symbol", "")) not in known)
 
     html  = _html_head(f"Alpha Momentum — Volume Action — {date_display}",
                        "var(--blue)", "var(--indigo)", active="volume", date_str=date_str)
@@ -1551,7 +1586,7 @@ def build_rocket_dashboard(
     else:
         rows_html = ""
         for _, row in rocket.sort_values("rs_percentile", ascending=False).iterrows():
-            sym      = str(row.get("symbol", "")).replace(".NS", "")
+            sym = _display_symbol(row.get("symbol", ""), row.get("name"))
             link     = _tv_link(row.get("symbol", sym))
             is_new   = sym not in known
             new_cls  = " is-new" if is_new else ""
@@ -1600,7 +1635,7 @@ def build_rocket_dashboard(
             </tr>"""
 
     n_new = sum(1 for _, r in rocket.iterrows()
-                if str(r.get("symbol","")).replace(".NS","") not in known) if n_rocket > 0 else 0
+                if _strip_symbol(r.get("symbol", "")) not in known) if n_rocket > 0 else 0
     hit_rate = f"{100*n_rocket/n_passing:.1f}%" if n_passing > 0 else "N/A"
 
     html  = _html_head(f"Alpha Momentum — Rocket Stocks — {date_display}",
@@ -1729,7 +1764,7 @@ def build_new_rs_high_dashboard(
     else:
         rows_html = ""
         for _, row in new_rs_df.iterrows():
-            sym       = str(row.get("symbol", "")).replace(".NS", "")
+            sym = _display_symbol(row.get("symbol", ""), row.get("name"))
             link      = _tv_link(row.get("symbol", sym))
             is_new    = sym not in known
             new_cls   = " is-new" if is_new else ""
@@ -1768,7 +1803,7 @@ def build_new_rs_high_dashboard(
             </tr>"""
 
     n_new = sum(1 for _, r in new_rs_df.iterrows()
-                if str(r.get("symbol", "")).replace(".NS", "") not in known) if n_new_rs > 0 else 0
+                if _strip_symbol(r.get("symbol", "")) not in known) if n_new_rs > 0 else 0
     n_also_momentum = int(new_rs_df["all_conditions_met"].sum()) if n_new_rs > 0 and "all_conditions_met" in new_rs_df.columns else 0
     hit_rate = f"{100*n_new_rs/universe_size:.2f}%" if universe_size > 0 else "N/A"
 
@@ -1892,7 +1927,7 @@ def build_stage4_dashboard(
     else:
         rows_html = ""
         for _, row in stage4_df.iterrows():
-            sym       = str(row.get("symbol", "")).replace(".NS", "")
+            sym = _display_symbol(row.get("symbol", ""), row.get("name"))
             link      = _tv_link(row.get("symbol", sym))
             is_new    = sym not in known
             new_cls   = " is-new" if is_new else ""
@@ -1926,7 +1961,7 @@ def build_stage4_dashboard(
             </tr>"""
 
     n_new = sum(1 for _, r in stage4_df.iterrows()
-                if str(r.get("symbol", "")).replace(".NS", "") not in known) if n_stage4 > 0 else 0
+                if _strip_symbol(r.get("symbol", "")) not in known) if n_stage4 > 0 else 0
     hit_rate = f"{100*n_stage4/universe_size:.2f}%" if universe_size > 0 else "N/A"
 
     html  = _html_head(f"Alpha Momentum — Stage 4 Breakdown — {date_display}",
@@ -2168,7 +2203,7 @@ def build_industry_drilldown(
     records: list[dict] = []
     if passing is not None and not passing.empty:
         for _, row in passing.iterrows():
-            sym = str(row.get("symbol", "")).replace(".NS", "").strip()
+            sym = _display_symbol(row.get("symbol", ""), row.get("name"))
             if not sym:
                 continue
             grp   = str(row.get("industry_group") or "").strip() or "Unclassified"
