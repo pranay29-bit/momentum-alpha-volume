@@ -85,7 +85,10 @@ def load_sme_symbols(csv_path: str = SME_CSV_PATH, symbol_col: str = SME_SYMBOL_
 def load_sme_symbol_metadata(csv_path: str = SME_CSV_PATH, symbol_col: str = SME_SYMBOL_COLUMN) -> pd.DataFrame:
     """
     Return a DataFrame indexed by the Yahoo-suffixed SME symbol with
-    'industry_group' and 'industry' columns (sourced from SME_Stocks.csv).
+    'name', 'industry_group', and 'industry' columns (sourced from
+    SME_Stocks.csv). 'name' is included specifically so dashboards can fall
+    back to the company name for BSE SME listings, which are commonly bare
+    numeric scrip codes rather than readable alpha tickers.
     """
     df = pd.read_csv(csv_path)
     df[symbol_col] = df[symbol_col].dropna().astype(str).str.strip()
@@ -93,6 +96,8 @@ def load_sme_symbol_metadata(csv_path: str = SME_CSV_PATH, symbol_col: str = SME
     df["symbol_ns"] = df[symbol_col].apply(_sme_to_yahoo_symbol)
 
     meta_cols = {"symbol_ns": "symbol_ns"}
+    if "Name" in df.columns:
+        meta_cols["Name"] = "name"
     if "Industry Group" in df.columns:
         meta_cols["Industry Group"] = "industry_group"
     if "Industry" in df.columns:
