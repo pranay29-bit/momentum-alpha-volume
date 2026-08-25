@@ -223,13 +223,15 @@ def run() -> None:
             if (today_date - dir_date).days <= 10:
                 for csv_name in [f"passing_stocks_{dir_slug}.csv",
                                  f"passing_ema10_{dir_slug}.csv",
-                                 f"volume_action_{dir_slug}.csv"]:
+                                 f"volume_action_{dir_slug}.csv",
+                                 f"sme_momentum_stocks_{dir_slug}.csv",
+                                 f"sme_elite_stocks_{dir_slug}.csv"]:
                     csv_p = dated_dir / csv_name
                     if csv_p.exists():
                         hist_df2 = pd.read_csv(csv_p)
                         if "symbol" in hist_df2.columns:
                             known_symbols.update(
-                                str(s).replace(".NS", "")
+                                str(s).removesuffix(".NS").removesuffix(".BO")
                                 for s in hist_df2["symbol"].dropna()
                             )
         except Exception as exc:
