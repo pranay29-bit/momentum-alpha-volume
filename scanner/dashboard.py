@@ -825,6 +825,7 @@ def _site_nav(active: str, date_str: str) -> str:
         _link("elite",     f"elite_dashboard_{date_str}.html",     "green",   "⚡ Elite"),
         _link("volume",    f"volume_dashboard_{date_str}.html",    "blue",    "🔵 Volume"),
         _link("rocket",    f"rocket_dashboard_{date_str}.html",    "amber",   "🚀 Rocket"),
+        _link("rocket_weekly", f"rocket_weekly_dashboard_{date_str}.html", "amber", "🚀 Rocket Weekly"),
         _link("newrshigh", f"newrshigh_dashboard_{date_str}.html", "rose",    "🔥 New RS High"),
         _link("stage4",    f"stage4_dashboard_{date_str}.html",    "red",     "📉 Stage 4"),
         _link("sme_momentum", f"sme_momentum_dashboard_{date_str}.html", "violet", "🏷️ SME Momentum"),
@@ -1731,6 +1732,184 @@ def build_rocket_dashboard(
 
     out_path.write_text(html, encoding="utf-8")
     logger.info("Rocket dashboard → %s  (%d stocks)", out_path, n_rocket)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  ROCKET WEEKLY DASHBOARD
+# ─────────────────────────────────────────────────────────────────────────────
+
+def build_rocket_weekly_dashboard(
+    passing: pd.DataFrame,
+    out_path: Path,
+    date_str: str,
+    known_symbols: set[str] | None = None,
+) -> None:
+    """
+    Same idea as the (daily) Rocket dashboard, but flags stocks whose most
+    recently CLOSED trading week is an inside week relative to the week
+    before it (this week's high < last week's high AND this week's low >
+    last week's low) — a higher-timeframe compression setup, computed in
+    scanner.indicators.is_weekly_inside_candle().
+    """
+    date_display = datetime.strptime(date_str, "%Y%m%d").strftime("%d %b %Y")
+    known = known_symbols or set()
+
+    rocket    = passing[passing["weekly_inside_bar"] == True].copy() \
+                if "weekly_inside_bar" in passing.columns else pd.DataFrame()
+    n_rocket  = len(rocket)
+    n_passing = len(passing)
+
+    if n_rocket == 0:
+        rows_html = f'<tr><td colspan="10" class="no-data">No Rocket Weekly Stocks today — no weekly inside bars among {n_passing} passing stocks.</td></tr>'
+    else:
+        rows_html = ""
+        for _, row in rocket.sort_values("rs_percentile", ascending=False).iterrows():
+            sym = _display_symbol(row.get("symbol", ""), row.get("name"))
+            link     = _tv_link(row.get("symbol", sym))
+            is_new   = sym not in known
+            new_cls  = " is-new" if is_new else ""
+            close    = row.get("close",  np.nan)
+            ema10    = row.get("EMA10",  np.nan)
+            rs       = row.get("rs_percentile", np.nan)
+            tmc      = row.get("total_market_cap_cr", np.nan)
+            tv       = row.get("traded_value_cr", np.nan)
+            hi52_pct = row.get("pct_from_52w_high", np.nan)
+            lo52_pct = row.get("pct_above_52w_low", np.nan)
+            ind_grp  = str(row.get("industry_group", "")) or "—"
+            price_band = str(row.get("price_band", "—"))
+
+            close_s = f"₹{float(close):,.2f}" if _safe(close) else "N/A"
+            ema10_s = f"₹{float(ema10):,.2f}" if _safe(ema10) else "N/A"
+            rs_s    = f"{float(rs):.1f}"       if _safe(rs)    else "N/A"
+            tmc_s   = fmt_cr(tmc)
+            tv_s    = fmt_cr(tv)
+
+            if not _safe(hi52_pct) and _safe(close) and _safe(row.get("52w_high")):
+                hi52_pct = (float(close) / float(row["52w_high"]) - 1) * 100
+            if not _safe(lo52_pct) and _safe(close) and _safe(row.get("52w_low")):
+                lo52_pct = (float(close) / float(row["52w_low"]) - 1) * 100
+
+            hi52_s = f"{float(hi52_pct):+.1f}%" if _safe(hi52_pct) else "N/A"
+            lo52_s = f"{float(lo52_pct):+.1f}%" if _safe(lo52_pct) else "N/A"
+
+            rows_html += f"""
+            <tr class="srow{new_cls}"
+              data-sym="{sym}" data-band="{price_band}" data-close="{_r(close)}" data-rs="{_r(rs)}"
+              data-ema10="{_r(ema10)}" data-tmc="{_r(tmc)}" data-tv="{_r(tv)}"
+              data-indgrp="{ind_grp}" data-ind="">
+              <td>
+                <a class="sym-tag" style="background:var(--amber-lt);border-color:var(--amber-mid);color:var(--amber)"
+                   href="{link}" target="_blank" rel="noopener">{sym}<span class="ib-badge">WIB</span>{_new_star(is_new)}</a>
+              </td>
+              <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem" title="Circuit price band">{price_band}</td>
+              <td class="r" style="font-family:var(--mono)">{close_s}</td>
+              <td class="r"><span class="pill pill-green">{ema10_s}</span></td>
+              <td class="r"><span class="pill pill-amber">{rs_s}</span></td>
+              <td class="r" style="font-family:var(--mono);color:var(--emerald);font-weight:600">{lo52_s}</td>
+              <td class="r" style="font-family:var(--mono);color:var(--amber);font-weight:600">{hi52_s}</td>
+              <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.77rem">{tmc_s}</td>
+              <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.77rem">{tv_s}</td>
+              <td style="color:var(--muted);font-size:.78rem">{ind_grp}</td>
+            </tr>"""
+
+    n_new = sum(1 for _, r in rocket.iterrows()
+                if _strip_symbol(r.get("symbol", "")) not in known) if n_rocket > 0 else 0
+    hit_rate = f"{100*n_rocket/n_passing:.1f}%" if n_passing > 0 else "N/A"
+
+    html  = _html_head(f"Alpha Momentum — Rocket Weekly — {date_display}",
+                       "var(--amber)", "var(--navy)", active="rocket_weekly", date_str=date_str)
+    html += _tv_export_bar(f"tradingview_rocket_weekly_{date_str}.txt")
+    html += f"""
+<header>
+  <div class="hdr-left">
+    <div class="brand">
+      <div class="brand-dot" style="background:var(--amber)"></div>
+      <span class="brand-name">Alpha Momentum · Rocket Weekly</span>
+    </div>
+    <h1>Rocket Weekly</h1>
+    <p class="hdr-sub">All 8 Minervini conditions + Weekly Inside Bar coiling setup · NSE India · {date_display}</p>
+    <div class="badge-row">
+      <span class="hdr-badge" style="background:var(--amber-lt);border-color:var(--amber-mid);color:var(--amber)">✓ 8 Minervini Conditions</span>
+      <span class="hdr-badge" style="background:var(--amber-lt);border-color:var(--amber-mid);color:var(--amber)">✓ Weekly Inside Bar</span>
+      {"<a href='#newStocksSection' onclick='scrollToNewStocks(event)' class='hdr-badge' style='cursor:pointer;text-decoration:none;background:var(--new-bg);border-color:var(--new-border);color:var(--new-text)'>✦ " + str(n_new) + " New Stocks &rarr;</a>" if n_new else ""}
+    </div>
+  </div>
+  <div class="date-pill" style="background:var(--amber-lt);border-color:var(--amber-mid);color:var(--amber)">{date_display}</div>
+</header>
+
+<div class="kpi-strip">
+  <div class="kpi" style="--accent:var(--amber)">
+    <div class="kpi-lbl">Rocket Weekly Stocks</div>
+    <div class="kpi-val">{n_rocket}</div>
+    <div class="kpi-hint">weekly inside bar coiling</div>
+  </div>
+  <div class="kpi" style="--accent:var(--indigo)">
+    <div class="kpi-lbl">Total Passing</div>
+    <div class="kpi-val">{n_passing}</div>
+    <div class="kpi-hint">all 8 conditions</div>
+  </div>
+  <div class="kpi" style="--accent:var(--emerald)">
+    <div class="kpi-lbl">WIB Hit Rate</div>
+    <div class="kpi-val">{hit_rate}</div>
+    <div class="kpi-hint">weekly inside bar frequency</div>
+  </div>
+  {"<a href='#newStocksSection' onclick='scrollToNewStocks(event)' class='kpi' style='--accent:var(--new-text);cursor:pointer;text-decoration:none;display:block'><div class='kpi-lbl'>New Appearances</div><div class='kpi-val'>" + str(n_new) + "</div><div class='kpi-hint'>first time in 10 days</div></a>" if n_new else ""}
+</div>
+
+<div class="callout">
+  <strong style="color:var(--amber)">Weekly Inside Bar:</strong>
+  This week's high &lt; last week's high <strong>AND</strong> this week's low &gt; last week's low
+  (measured on fully-closed trading weeks) — price compression on the weekly chart within a
+  strong uptrend. Typically a slower, higher-conviction coiling setup than the daily inside bar.
+</div>
+
+<div class="table-sec" style="padding-top:1.1rem">
+  <div class="tbl-head">
+    <div>
+      <span class="tbl-title">Rocket Weekly Stocks</span>
+      <span class="tbl-count tbl-title">[{n_rocket}]</span>
+    </div>
+    <div class="controls">
+      <div class="legend-row">
+        <div class="leg"><div class="leg-dot" style="background:var(--new-border)"></div>✦ New (10-day)</div>
+      </div>
+      <input class="search" id="searchInput" type="text"
+             placeholder="Search symbol / industry…" oninput="filterRows()"/>
+    </div>
+  </div>
+  <div class="tbl-outer">
+    <table id="mainTable">
+      <thead><tr>
+        <th data-col="sym"  data-type="str">Symbol<i class="si"></i></th>
+        <th class="c" data-col="band" data-type="str" title="Circuit price band — the max % a stock can move from previous close">Band<i class="si"></i></th>
+        <th class="r" data-col="close" data-type="num">Close ₹<i class="si"></i></th>
+        <th class="r" data-col="ema10" data-type="num">EMA10 ₹<i class="si"></i></th>
+        <th class="r" data-col="rs"    data-type="num">RS %ile<i class="si"></i></th>
+        <th class="r">% above 52W Low</th>
+        <th class="r">% from 52W High</th>
+        <th class="r" data-col="tmc"   data-type="num">Mkt Cap<i class="si"></i></th>
+        <th class="r" data-col="tv"    data-type="num">Traded Val<i class="si"></i></th>
+        <th data-col="indgrp" data-type="str">Industry Group<i class="si"></i></th>
+      </tr></thead>
+      <tbody id="tableBody">{rows_html}</tbody>
+    </table>
+  </div>
+</div>
+
+{_NEW_STOCKS_SECTION_HTML}
+
+<footer>Data: NSE India &amp; Yahoo Finance · Generated {date_display} · For informational purposes only · Not financial advice</footer>
+
+<script>
+{_FILTER_JS}
+{_TABLE_SORT_JS}
+{_NEW_STOCKS_JS}
+{_TV_EXPORT_JS}
+</script>
+</body></html>"""
+
+    out_path.write_text(html, encoding="utf-8")
+    logger.info("Rocket Weekly dashboard → %s  (%d stocks)", out_path, n_rocket)
 
 
 # ─────────────────────────────────────────────────────────────────────────────
