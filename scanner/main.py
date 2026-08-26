@@ -23,7 +23,7 @@ import pandas as pd
 from .config     import DOCS_DIR
 from .data_loader import download_all, load_symbols
 from .nse_client  import enrich_with_market_caps, overlay_price_band_from_cache
-from .dashboard   import build_passing_dashboard, build_passing_ema10_dashboard, build_volume_action_dashboard, build_rocket_dashboard, build_industry_drilldown, build_new_rs_high_dashboard, build_stage4_dashboard, build_chartink_embed, build_ema_allocation_table
+from .dashboard   import build_passing_dashboard, build_passing_ema10_dashboard, build_volume_action_dashboard, build_rocket_dashboard, build_rocket_weekly_dashboard, build_industry_drilldown, build_new_rs_high_dashboard, build_stage4_dashboard, build_chartink_embed, build_ema_allocation_table
 from .ema_allocation import compute_ema_allocation_all
 from .result_calendar import get_result_date
 from .indicators  import get_market_sentiment
@@ -174,6 +174,15 @@ def run() -> None:
     rocket.to_csv(rocket_path, index=False)
     logger.info("Rocket stocks (%d) → %s", len(rocket), rocket_path)
 
+    # ── 8c. Rocket Weekly (passing + weekly inside bar) ────────────────────────
+    if "weekly_inside_bar" in passing.columns:
+        rocket_weekly = passing[passing["weekly_inside_bar"] == True].copy()
+    else:
+        rocket_weekly = pd.DataFrame()
+    rocket_weekly_path = out_dir / f"rocket_weekly_stocks_{today_str}.csv"
+    rocket_weekly.to_csv(rocket_weekly_path, index=False)
+    logger.info("Rocket Weekly stocks (%d) → %s", len(rocket_weekly), rocket_weekly_path)
+
   
 
     # ── 9. HTML Dashboards ────────────────────────────────────────────────────
@@ -249,6 +258,12 @@ def run() -> None:
         build_rocket_dashboard(
             passing,
             out_dir / f"rocket_dashboard_{today_str}.html",
+            today_str,
+            known_symbols=known_symbols,
+        )
+        build_rocket_weekly_dashboard(
+            passing,
+            out_dir / f"rocket_weekly_dashboard_{today_str}.html",
             today_str,
             known_symbols=known_symbols,
         )
@@ -365,6 +380,8 @@ def run() -> None:
     logger.info("  Passing + EMA10 : %d", len(passing_ema10))
     logger.info("  Fresh crossovers: %d", len(fresh))
     logger.info("  Volume action   : %d", len(volume_action))
+    logger.info("  Rocket (daily IB): %d", len(rocket))
+    logger.info("  Rocket Weekly   : %d", len(rocket_weekly))
 
 # ── Landing-page updater ──────────────────────────────────────────────────────
 
@@ -423,6 +440,7 @@ def _update_index(
           <td><a href="{elite_link}"   class="btn-link green">⚡ Elite</a></td>
           <td><a href="{d.name}/volume_dashboard_{slug}.html" class="btn-link blue">🔵 Volume</a></td>
           <td><a href="{d.name}/rocket_dashboard_{slug}.html" class="btn-link amber">🚀 Rocket</a></td>
+          <td><a href="{d.name}/rocket_weekly_dashboard_{slug}.html" class="btn-link amber">🚀 Rocket Weekly</a></td>
         </tr>"""
 
         month_groups_html += f"""
@@ -442,6 +460,7 @@ def _update_index(
             <th>Above EMA10 (Elite)</th>
             <th>Volume Action</th>
             <th>Rocket Stocks</th>
+            <th>Rocket Weekly</th>
           </tr>
         </thead>
         <tbody>{table_rows}</tbody>
@@ -488,12 +507,13 @@ def _update_index(
         _elite_link  = f"{today_date_display}/elite_dashboard_{today_slug}.html"
         _volume_link = f"{today_date_display}/volume_dashboard_{today_slug}.html"
         _rocket_link = f"{today_date_display}/rocket_dashboard_{today_slug}.html"
+        _rocket_weekly_link = f"{today_date_display}/rocket_weekly_dashboard_{today_slug}.html"
         _newrshigh_link = f"{today_date_display}/newrshigh_dashboard_{today_slug}.html"
         _stage4_link = f"{today_date_display}/stage4_dashboard_{today_slug}.html"
         _sme_momentum_link = f"{today_date_display}/sme_momentum_dashboard_{today_slug}.html"
         _sme_elite_link    = f"{today_date_display}/sme_elite_dashboard_{today_slug}.html"
     else:
-        _elite_link = _volume_link = _rocket_link = _newrshigh_link = _stage4_link = today_dashboard_link
+        _elite_link = _volume_link = _rocket_link = _rocket_weekly_link = _newrshigh_link = _stage4_link = today_dashboard_link
         _sme_momentum_link = _sme_elite_link = today_dashboard_link
 
     hub_cards = [
@@ -509,6 +529,9 @@ def _update_index(
         dict(icon="🚀", accent="amber", accent2="red", title="Rocket Stocks",
              desc="Momentum passes coiling inside a tight daily inside-bar, ready to fire.",
              link=_rocket_link),
+        dict(icon="🚀", accent="amber", accent2="navy", title="Rocket Weekly",
+             desc="Momentum passes coiling inside a tight WEEKLY inside-bar — a higher-timeframe compression setup.",
+             link=_rocket_weekly_link),
         dict(icon="🔥", accent="rose", accent2="amber", title="New RS High",
              desc="Relative Strength hitting a fresh multi-month high across the full NSE universe — leadership emerging, even before price confirms it.",
              link=_newrshigh_link),
@@ -592,6 +615,7 @@ def _update_index(
   <a href="{_elite_link}" class="btn-link green">⚡ Elite</a>
   <a href="{_volume_link}" class="btn-link blue">🔵 Volume</a>
   <a href="{_rocket_link}" class="btn-link amber">🚀 Rocket</a>
+  <a href="{_rocket_weekly_link}" class="btn-link amber">🚀 Rocket Weekly</a>
   <a href="{_newrshigh_link}" class="btn-link rose">🔥 New RS High</a>
   <a href="{_stage4_link}" class="btn-link red">📉 Stage 4</a>
   <a href="{_sme_momentum_link}" class="btn-link violet">🏷️ SME Momentum</a>
