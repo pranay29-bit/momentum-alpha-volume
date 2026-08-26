@@ -192,6 +192,38 @@ def is_inside_candle(df: pd.DataFrame) -> bool:
     return bool((curr["High"] < prev["High"]) and (curr["Low"] > prev["Low"]))
 
 
+def is_weekly_inside_candle(df: pd.DataFrame) -> bool:
+    """
+    Returns True if the most recently COMPLETED trading week is an inside
+    week relative to the week before it — i.e. this week's high is below
+    last week's high AND this week's low is above last week's low.
+
+    `df` is a daily OHLC DataFrame (DatetimeIndex). Daily bars are resampled
+    into NSE-style Mon–Fri trading weeks (week label = Friday) before the
+    comparison. The current, still-forming week is dropped so a partial
+    week never falsely qualifies (or disqualifies) a setup — the pattern is
+    only judged once a week has fully closed.
+    """
+    if df is None or len(df) < 10:
+        return False
+
+    weekly = df.resample("W-FRI").agg({"High": "max", "Low": "min", "Close": "last"}).dropna()
+
+    # Drop the current in-progress week (its Friday hasn't happened yet /
+    # today isn't the last trading day of that week), so we only compare
+    # fully-closed weeks.
+    last_bar_date = df.index[-1]
+    if weekly.index[-1] > pd.Timestamp(last_bar_date):
+        weekly = weekly.iloc[:-1]
+
+    if len(weekly) < 2:
+        return False
+
+    curr = weekly.iloc[-1]
+    prev = weekly.iloc[-2]
+    return bool((curr["High"] < prev["High"]) and (curr["Low"] > prev["Low"]))
+
+
 # ── Minervini Trend Template ──────────────────────────────────────────────────
 
 _TEMPLATE_DEFAULTS = {
