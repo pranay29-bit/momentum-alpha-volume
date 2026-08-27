@@ -21,7 +21,7 @@ from .config import (
     SME_CSV_PATH, SME_SYMBOL_COLUMN, SME_NSE_SUFFIX, SME_BSE_SUFFIX,
     PERIOD, INTERVAL, BATCH_SIZE,
 )
-from .indicators import add_indicators, evaluate_trend_template, compute_12m_return, compute_volume_action, is_inside_candle, is_weekly_inside_candle
+from .indicators import add_indicators, evaluate_trend_template, compute_12m_return, compute_volume_action, is_inside_candle
 
 logger = logging.getLogger(__name__)
 
@@ -130,8 +130,7 @@ def _process_symbol(sym: str, data: pd.DataFrame, is_multi: bool) -> dict | None
         tpl      = evaluate_trend_template(df_sym)
         rs_ret   = compute_12m_return(df_sym)
         vol_data = compute_volume_action(df_sym)
-        inside_bar = is_inside_candle(df_sym)
-        weekly_inside_bar = is_weekly_inside_candle(df_sym)
+        inside_bar = is_inside_candle(df_sym)  
 
         # ── Close-based 52-week high/low flags (for Net New Highs breadth) ───
         # Standard market-breadth "new high/new low" counts use the closing
@@ -168,7 +167,6 @@ def _process_symbol(sym: str, data: pd.DataFrame, is_multi: bool) -> dict | None
             "relative_volume": vol_data["relative_volume"],
             "bull_snort":     vol_data["bull_snort"],
             "inside_bar":     inside_bar,
-            "weekly_inside_bar": weekly_inside_bar,
             "is_52w_high":    is_52w_high_close,
             "is_52w_low":     is_52w_low_close,
         }
