@@ -1,11 +1,16 @@
 import { db, auth, login, logout, onAuthStateChanged } from "./firebase.js";
+import {
+  ensureDefaultAccount,
+  subscribeAccounts,
+  resolveActiveAccountId,
+  renderAccountSwitcher,
+  saveAccountSettings,
+  getAccountSettings
+} from "./accounts.js";
 
 import {
   collection,
   addDoc,
-  doc,
-  getDoc,
-  setDoc,
   serverTimestamp
 } from "https://www.gstatic.com/firebasejs/11.9.0/firebase-firestore.js";
 
@@ -13,6 +18,7 @@ const loginBtn = document.getElementById("loginBtn");
 const addBtn = document.getElementById("addBtn");
 const addStatus = document.getElementById("addStatus");
 const settingsStatus = document.getElementById("settingsStatus");
+const accountSwitcher = document.getElementById("accountSwitcher");
 
 const portfolioSizeInput = document.getElementById("portfolioSize");
 const riskTypeSelect = document.getElementById("riskType");
@@ -51,6 +57,9 @@ capNote.style.cssText =
 previewBox.insertAdjacentElement("afterend", capNote);
 
 let settingsSaveTimer = null;
+let unsubAccounts = null;
+let activeAccountId = null;
+let accountsCache = [];
 
 loginBtn.onclick = async () => {
   if (auth.currentUser) {
@@ -66,45 +75,76 @@ loginBtn.onclick = async () => {
 };
 
 onAuthStateChanged(auth, async (user) => {
+  if (unsubAccounts) { unsubAccounts(); unsubAccounts = null; }
+
   if (user) {
     loginBtn.textContent = `Logout (${user.displayName || user.email})`;
-    await loadSettings(user.uid);
+    await ensureDefaultAccount(user.uid);
+    unsubAccounts = subscribeAccounts(user.uid, (accounts) => {
+      accountsCache = accounts;
+      activeAccountId = resolveActiveAccountId(user.uid, accounts);
+      renderAccountSwitcher(
+        accountSwitcher,
+        user.uid,
+        accounts,
+        activeAccountId,
+        (newId) => { activeAccountId = newId; loadSettings(user.uid, newId); },
+        (newId) => { activeAccountId = newId; loadSettings(user.uid, newId); }
+      );
+      loadSettings(user.uid, activeAccountId);
+    });
   } else {
     loginBtn.textContent = "Login with Google";
+    accountSwitcher.innerHTML = "";
+    activeAccountId = null;
+    accountsCache = [];
+    portfolioSizeInput.value = "";
+    riskTypeSelect.value = "percent";
+    riskValueInput.value = "";
+    settingsStatus.textContent = "These stay fixed until you change them — saved to your account and shown on the Position Tracker page too.";
+    previewBox.style.display = "none";
+    capNote.style.display = "none";
   }
 });
 
 // ── Persistent settings: portfolio size & risk type/value stay fixed
-// until you explicitly change them — saved to Firestore so they also
-// show up on the Position Tracker page and persist across sessions. ─────
-async function loadSettings(uid) {
+// per account until you explicitly change them — saved to Firestore so
+// they also show up on the Position Tracker page and persist across
+// sessions. Switching accounts reloads a completely separate set. ──────
+async function loadSettings(uid, accountId) {
+  if (!accountId) return;
   try {
-    const snap = await getDoc(doc(db, "users", uid));
-    if (snap.exists()) {
-      const data = snap.data();
-      if (data.portfolioSize) portfolioSizeInput.value = data.portfolioSize;
-      if (data.riskType) riskTypeSelect.value = data.riskType;
-      if (data.riskValue) riskValueInput.value = data.riskValue;
-      settingsStatus.textContent = "Loaded your saved portfolio settings.";
-      calculate();
+    const data = await getAccountSettings(uid, accountId);
+    if (data) {
+      portfolioSizeInput.value = data.portfolioSize || "";
+      riskTypeSelect.value = data.riskType || "percent";
+      riskValueInput.value = data.riskValue || "";
+      settingsStatus.textContent = "Loaded saved portfolio settings for this account.";
+    } else {
+      portfolioSizeInput.value = "";
+      riskTypeSelect.value = "percent";
+      riskValueInput.value = "";
+      settingsStatus.textContent = "No saved settings yet for this account.";
     }
+    calculate();
   } catch (err) {
     console.error(err);
   }
 }
 
 function saveSettingsDebounced() {
-  if (!auth.currentUser) return;
+  if (!auth.currentUser || !activeAccountId) return;
   clearTimeout(settingsSaveTimer);
   settingsStatus.textContent = "Saving…";
+  const uid = auth.currentUser.uid;
+  const accountId = activeAccountId;
   settingsSaveTimer = setTimeout(async () => {
     try {
-      await setDoc(doc(db, "users", auth.currentUser.uid), {
+      await saveAccountSettings(uid, accountId, {
         portfolioSize: Number(portfolioSizeInput.value) || 0,
         riskType: riskTypeSelect.value,
-        riskValue: Number(riskValueInput.value) || 0,
-        updatedAt: serverTimestamp()
-      }, { merge: true });
+        riskValue: Number(riskValueInput.value) || 0
+      });
       settingsStatus.textContent = "Saved — this stays fixed until you change it again.";
     } catch (err) {
       console.error(err);
@@ -183,6 +223,10 @@ addBtn.onclick = async () => {
     alert("Login first");
     return;
   }
+  if (!activeAccountId) {
+    alert("No account selected — please add or select an account first.");
+    return;
+  }
 
   const symbol = symbolInput.value.trim().toUpperCase();
   if (!symbol) {
@@ -213,6 +257,7 @@ addBtn.onclick = async () => {
     const positionsRef = collection(db, "users", auth.currentUser.uid, "positions");
 
     await addDoc(positionsRef, {
+      accountId: activeAccountId,
       symbol,
       dateBought,
       entry: Number(entryInput.value),
@@ -228,7 +273,8 @@ addBtn.onclick = async () => {
       createdAt: serverTimestamp()
     });
 
-    addStatus.textContent = `Added ${symbol} · Qty ${result.qty}. View it on the Position Tracker page.`;
+    const accName = accountsCache.find((a) => a.id === activeAccountId)?.name || "this account";
+    addStatus.textContent = `Added ${symbol} · Qty ${result.qty} to ${accName}. View it on the Position Tracker page.`;
     symbolInput.value = "";
     entryInput.value = "";
     stopInput.value = "";
