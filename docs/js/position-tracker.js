@@ -46,6 +46,10 @@ const accountSwitcher = document.getElementById("accountSwitcher");
 // oldest (the one ensureDefaultAccount creates / migrates settings into),
 // so nobody's existing data silently disappears from every view.
 function matchesActiveAccount(p) {
+  // Fail open: if accounts haven't loaded (or failed to load — e.g. a
+  // Firestore rules issue), show every position rather than hiding
+  // everything. Only filter once we actually know the active account.
+  if (!activeAccountId) return true;
   const fallbackId = accountsCache[0]?.id;
   const owner = p.accountId || fallbackId;
   return owner === activeAccountId;
@@ -108,25 +112,37 @@ onAuthStateChanged(auth, async (user) => {
   if (user) {
     loginBtn.textContent = `Logout (${user.displayName || user.email})`;
     accountPanel.style.display = "";
-    await ensureDefaultAccount(user.uid);
-    unsubAccounts = subscribeAccounts(user.uid, (accounts) => {
-      accountsCache = accounts;
-      activeAccountId = resolveActiveAccountId(user.uid, accounts);
-      renderAccountSwitcher(
-        accountSwitcher,
-        user.uid,
-        accounts,
-        activeAccountId,
-        (newId) => { activeAccountId = newId; onAccountSwitched(user.uid); },
-        (newId) => { activeAccountId = newId; onAccountSwitched(user.uid); }
-      );
-      loadSettings(user.uid, activeAccountId);
-      applyAccountFilter();
-      renderAll();
-      renderBooked();
-    });
+
+    // Positions/booked trades load immediately and independently of the
+    // accounts feature below — so if the accounts subcollection can't be
+    // read (e.g. Firestore rules haven't been updated to allow it yet),
+    // your existing data still shows up instead of the page going blank.
     subscribeToPositions(user.uid);
     subscribeToBooked(user.uid);
+
+    try {
+      await ensureDefaultAccount(user.uid);
+      unsubAccounts = subscribeAccounts(user.uid, (accounts) => {
+        accountsCache = accounts;
+        activeAccountId = resolveActiveAccountId(user.uid, accounts);
+        renderAccountSwitcher(
+          accountSwitcher,
+          user.uid,
+          accounts,
+          activeAccountId,
+          (newId) => { activeAccountId = newId; onAccountSwitched(user.uid); },
+          (newId) => { activeAccountId = newId; onAccountSwitched(user.uid); }
+        );
+        loadSettings(user.uid, activeAccountId);
+        applyAccountFilter();
+        renderAll();
+        renderBooked();
+      });
+    } catch (err) {
+      console.error(err);
+      accountSwitcher.innerHTML =
+        `<p class="login-status">Could not load accounts (check Firestore rules for users/{uid}/accounts). Showing all positions for now.</p>`;
+    }
   } else {
     loginBtn.textContent = "Login with Google";
     accountPanel.style.display = "none";
