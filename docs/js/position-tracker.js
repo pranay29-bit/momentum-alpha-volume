@@ -1,4 +1,11 @@
 import { db, auth, login, logout, onAuthStateChanged } from "./firebase.js";
+import {
+  ensureDefaultAccount,
+  subscribeAccounts,
+  resolveActiveAccountId,
+  renderAccountSwitcher,
+  getAccountSettings
+} from "./accounts.js";
 
 import {
   collection,
@@ -13,12 +20,41 @@ import {
   serverTimestamp
 } from "https://www.gstatic.com/firebasejs/11.9.0/firebase-firestore.js";
 
+// `allPositions` / `allBookedPositions` hold every position across every
+// account for this user (that's how Firestore gives them to us). `positions`
+// / `bookedPositions` are the filtered-to-the-active-account view that the
+// rest of this file (rendering, summaries, Kelly, heatmap, etc.) reads —
+// keeping that split means none of the existing render logic below needs
+// to know accounts exist at all.
+let allPositions = [];
+let allBookedPositions = [];
 let positions = [];
 let bookedPositions = [];
 let portfolioSize = 0;
 let unsubOpen = null;
 let unsubBooked = null;
+let unsubAccounts = null;
+let activeAccountId = null;
+let accountsCache = [];
 let activeTab = "open"; // "open" | "booked"
+
+const accountPanel = document.getElementById("accountPanel");
+const accountSwitcher = document.getElementById("accountSwitcher");
+
+// A position/booked-trade created before multi-account support has no
+// accountId stored — treat those as belonging to whichever account is
+// oldest (the one ensureDefaultAccount creates / migrates settings into),
+// so nobody's existing data silently disappears from every view.
+function matchesActiveAccount(p) {
+  const fallbackId = accountsCache[0]?.id;
+  const owner = p.accountId || fallbackId;
+  return owner === activeAccountId;
+}
+
+function applyAccountFilter() {
+  positions = allPositions.filter(matchesActiveAccount);
+  bookedPositions = allBookedPositions.filter(matchesActiveAccount);
+}
 
 // Column sorting state for the Open Positions / Booked Positions tables.
 // dir: 1 = ascending, -1 = descending. key: null = original (insertion) order.
@@ -67,16 +103,40 @@ loginBtn.onclick = async () => {
 onAuthStateChanged(auth, async (user) => {
   if (unsubOpen) { unsubOpen(); unsubOpen = null; }
   if (unsubBooked) { unsubBooked(); unsubBooked = null; }
+  if (unsubAccounts) { unsubAccounts(); unsubAccounts = null; }
 
   if (user) {
     loginBtn.textContent = `Logout (${user.displayName || user.email})`;
-    await loadSettings(user.uid);
+    accountPanel.style.display = "";
+    await ensureDefaultAccount(user.uid);
+    unsubAccounts = subscribeAccounts(user.uid, (accounts) => {
+      accountsCache = accounts;
+      activeAccountId = resolveActiveAccountId(user.uid, accounts);
+      renderAccountSwitcher(
+        accountSwitcher,
+        user.uid,
+        accounts,
+        activeAccountId,
+        (newId) => { activeAccountId = newId; onAccountSwitched(user.uid); },
+        (newId) => { activeAccountId = newId; onAccountSwitched(user.uid); }
+      );
+      loadSettings(user.uid, activeAccountId);
+      applyAccountFilter();
+      renderAll();
+      renderBooked();
+    });
     subscribeToPositions(user.uid);
     subscribeToBooked(user.uid);
   } else {
     loginBtn.textContent = "Login with Google";
+    accountPanel.style.display = "none";
+    accountSwitcher.innerHTML = "";
+    allPositions = [];
+    allBookedPositions = [];
     positions = [];
     bookedPositions = [];
+    accountsCache = [];
+    activeAccountId = null;
     portfolioSize = 0;
     settingsDisplay.textContent = "Login to see your saved portfolio size & risk settings.";
     renderAll();
@@ -84,11 +144,18 @@ onAuthStateChanged(auth, async (user) => {
   }
 });
 
-async function loadSettings(uid) {
+function onAccountSwitched(uid) {
+  loadSettings(uid, activeAccountId);
+  applyAccountFilter();
+  renderAll();
+  renderBooked();
+}
+
+async function loadSettings(uid, accountId) {
+  if (!accountId) return;
   try {
-    const snap = await getDoc(doc(db, "users", uid));
-    if (snap.exists()) {
-      const data = snap.data();
+    const data = await getAccountSettings(uid, accountId);
+    if (data) {
       portfolioSize = Number(data.portfolioSize) || 0;
       const riskLabel = data.riskType === "percent"
         ? `${data.riskValue}% of portfolio`
@@ -97,8 +164,10 @@ async function loadSettings(uid) {
         `Portfolio Size: ₹${portfolioSize.toLocaleString("en-IN")} · Risk per trade: ${riskLabel} ` +
         `— set on the Position Size Calculator page.`;
     } else {
+      portfolioSize = 0;
       settingsDisplay.textContent = "No saved settings yet — set your portfolio size & risk on the Position Size Calculator page.";
     }
+    renderAll();
   } catch (err) {
     console.error(err);
   }
@@ -114,7 +183,8 @@ function subscribeToPositions(uid) {
   unsubOpen = onSnapshot(
     positionsQuery,
     (snap) => {
-      positions = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+      allPositions = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+      applyAccountFilter();
       renderAll();
     },
     (err) => {
@@ -134,7 +204,8 @@ function subscribeToBooked(uid) {
   unsubBooked = onSnapshot(
     bookedQuery,
     (snap) => {
-      bookedPositions = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+      allBookedPositions = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+      applyAccountFilter();
       renderBooked();
     },
     (err) => {
@@ -419,6 +490,7 @@ async function bookPosition(p, exitPrice, dateSold) {
   const { pnlPct, rMultiple, impactAbs, impactPct } = metrics(entry, riskPerShare, qty, exitPrice);
 
   const bookedDoc = {
+    accountId: p.accountId || accountsCache[0]?.id || activeAccountId,
     symbol: p.symbol,
     entry: p.entry,
     stop: p.stop,
