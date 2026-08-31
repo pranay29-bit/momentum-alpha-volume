@@ -79,20 +79,26 @@ onAuthStateChanged(auth, async (user) => {
 
   if (user) {
     loginBtn.textContent = `Logout (${user.displayName || user.email})`;
-    await ensureDefaultAccount(user.uid);
-    unsubAccounts = subscribeAccounts(user.uid, (accounts) => {
-      accountsCache = accounts;
-      activeAccountId = resolveActiveAccountId(user.uid, accounts);
-      renderAccountSwitcher(
-        accountSwitcher,
-        user.uid,
-        accounts,
-        activeAccountId,
-        (newId) => { activeAccountId = newId; loadSettings(user.uid, newId); },
-        (newId) => { activeAccountId = newId; loadSettings(user.uid, newId); }
-      );
-      loadSettings(user.uid, activeAccountId);
-    });
+    try {
+      await ensureDefaultAccount(user.uid);
+      unsubAccounts = subscribeAccounts(user.uid, (accounts) => {
+        accountsCache = accounts;
+        activeAccountId = resolveActiveAccountId(user.uid, accounts);
+        renderAccountSwitcher(
+          accountSwitcher,
+          user.uid,
+          accounts,
+          activeAccountId,
+          (newId) => { activeAccountId = newId; loadSettings(user.uid, newId); },
+          (newId) => { activeAccountId = newId; loadSettings(user.uid, newId); }
+        );
+        loadSettings(user.uid, activeAccountId);
+      });
+    } catch (err) {
+      console.error(err);
+      accountSwitcher.innerHTML =
+        `<p class="login-status">Could not load accounts (check Firestore rules for users/{uid}/accounts).</p>`;
+    }
   } else {
     loginBtn.textContent = "Login with Google";
     accountSwitcher.innerHTML = "";
