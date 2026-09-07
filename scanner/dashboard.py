@@ -2574,26 +2574,97 @@ _EMA_ALLOC_RULE_LABELS = [
 ]
 
 
-def _ema_alloc_history_rows(history: list[dict]) -> str:
-    """Render the last-N-days history as a compact sub-table, newest first."""
+def _ema_alloc_history_chart(history: list[dict]) -> str:
+    """
+    Render the last-N-days history as an inline SVG line chart: allocation %
+    (0..100, filled area, indigo→emerald line) with the daily score plotted
+    as a secondary dotted line + colored dots (emerald/rose/slate for
+    bullish/bearish/neutral), oldest → newest left to right. No JS chart
+    library needed — this is a self-contained <svg> so it renders anywhere
+    this HTML fragment is dropped in.
+    """
     if not history:
         return '<div class="ema-hist-empty">No history available.</div>'
 
-    rows = "".join(
-        f"""<tr>
-          <td class="ema-hist-date">{html.escape(day['date'])}</td>
-          <td class="ema-hist-score"><span class="chip sm {'emerald' if day['score'] > 0 else 'rose' if day['score'] < 0 else 'slate'}">{day['score']:+d}</span></td>
-          <td class="ema-hist-alloc">{day['allocation_pct']}%</td>
-        </tr>"""
-        for day in reversed(history)
+    days = history  # oldest → newest, as returned by compute_ema_allocation_for_index
+    n = len(days)
+
+    # ── Layout ──
+    W, H = 560, 200
+    pad_l, pad_r, pad_t, pad_b = 34, 34, 16, 26
+    plot_w = W - pad_l - pad_r
+    plot_h = H - pad_t - pad_b
+
+    def x_at(i: int) -> float:
+        return pad_l + (i / (n - 1) * plot_w if n > 1 else plot_w / 2)
+
+    # Allocation % → y (0..100 domain, fixed, since it's already a %)
+    def y_alloc(pct: float) -> float:
+        return pad_t + plot_h * (1 - pct / 100)
+
+    # Score → y (-6..+6 domain, fixed by the model's own scoring range)
+    def y_score(score: float) -> float:
+        return pad_t + plot_h * (1 - (score + 6) / 12)
+
+    alloc_pts = [(x_at(i), y_alloc(d["allocation_pct"])) for i, d in enumerate(days)]
+    score_pts = [(x_at(i), y_score(d["score"])) for i, d in enumerate(days)]
+
+    alloc_path = "M" + " L".join(f"{x:.1f},{y:.1f}" for x, y in alloc_pts)
+    alloc_area = (
+        alloc_path
+        + f" L{alloc_pts[-1][0]:.1f},{pad_t + plot_h:.1f}"
+        + f" L{alloc_pts[0][0]:.1f},{pad_t + plot_h:.1f} Z"
     )
+    score_path = "M" + " L".join(f"{x:.1f},{y:.1f}" for x, y in score_pts)
+
+    def score_color(score: int) -> str:
+        return "#10b981" if score > 0 else "#dc2626" if score < 0 else "#94a3b8"
+
+    score_dots = "".join(
+        f'<circle cx="{x:.1f}" cy="{y:.1f}" r="2.6" fill="{score_color(days[i]["score"])}" />'
+        for i, (x, y) in enumerate(score_pts)
+    )
+
+    # Gridlines + labels for the 0/50/100 allocation axis
+    grid = "".join(
+        f'<line x1="{pad_l}" y1="{y_alloc(v):.1f}" x2="{W - pad_r}" y2="{y_alloc(v):.1f}" class="ema-chart-grid" />'
+        f'<text x="{pad_l - 8}" y="{y_alloc(v) + 3:.1f}" class="ema-chart-axis" text-anchor="end">{v}%</text>'
+        for v in (0, 50, 100)
+    )
+
+    # X-axis: first / mid / last date labels only, to avoid crowding
+    label_idxs = sorted({0, n // 2, n - 1})
+    x_labels = "".join(
+        f'<text x="{x_at(i):.1f}" y="{H - 6}" class="ema-chart-axis" text-anchor="middle">'
+        f'{html.escape(days[i]["date"][5:])}</text>'
+        for i in label_idxs
+    )
+
+    latest = days[-1]
+
     return f"""
-    <table class="ema-hist-table">
-      <thead>
-        <tr><th>Date</th><th>Score</th><th>Allocation</th></tr>
-      </thead>
-      <tbody>{rows}</tbody>
-    </table>"""
+    <div class="ema-hist-chart-wrap">
+      <div class="ema-hist-chart-legend">
+        <span><i class="ema-swatch ema-swatch-alloc"></i>Allocation %</span>
+        <span><i class="ema-swatch ema-swatch-score"></i>Score (-6..+6)</span>
+        <span class="ema-hist-chart-latest">Latest: {latest['allocation_pct']}% · score {latest['score']:+d} ({html.escape(latest['date'])})</span>
+      </div>
+      <svg viewBox="0 0 {W} {H}" class="ema-hist-chart" role="img"
+           aria-label="Allocation % and score over the past {n} trading days">
+        <defs>
+          <linearGradient id="emaAllocFill" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#6366f1" stop-opacity="0.28" />
+            <stop offset="100%" stop-color="#10b981" stop-opacity="0.03" />
+          </linearGradient>
+        </defs>
+        {grid}
+        <path d="{alloc_area}" fill="url(#emaAllocFill)" stroke="none" />
+        <path d="{alloc_path}" class="ema-chart-line-alloc" />
+        <path d="{score_path}" class="ema-chart-line-score" />
+        {score_dots}
+        {x_labels}
+      </svg>
+    </div>"""
 
 
 def _ema_alloc_row(row: dict) -> str:
@@ -2634,7 +2705,7 @@ def _ema_alloc_row(row: dict) -> str:
     history_row = f"""
     <details class="ema-hist-details">
       <summary>Past {len(row.get('history', []))} trading days</summary>
-      {_ema_alloc_history_rows(row.get('history', []))}
+      {_ema_alloc_history_chart(row.get('history', []))}
     </details>"""
 
     return main_row + history_row
@@ -2660,7 +2731,7 @@ def build_ema_allocation_table(results: dict) -> str:
     <div class="ema-eyebrow"><span class="ema-dot"></span>EMA-BASED ALLOCATION MODEL</div>
     <h2 class="ema-heading">Index Allocation Scorecard</h2>
     <p class="ema-sub">Trend-strength score (-6..+6) from CMP vs EMA21/50/100, mapped to a
-      suggested capital allocation %. Expand a row for the past 20 trading days.</p>
+      suggested capital allocation %. Expand a row for a chart of the past 20 trading days.</p>
   </div>
 
   <div class="ema-alloc-card">
@@ -2736,19 +2807,26 @@ _EMA_ALLOC_STYLE = """
 .ema-hist-details summary::before{content:"▸ ";display:inline-block;transition:transform .15s ease;}
 .ema-hist-details[open] summary::before{transform:rotate(90deg);}
 
-/* Hardened against the site's global bare `table` selector (width:100%,
-   min-width:640px, white-space:nowrap) bleeding into this small sub-table. */
-.ema-alloc-card table.ema-hist-table{
-  width:100% !important; min-width:0 !important; white-space:normal !important;
-  border-collapse:collapse;font-size:.76rem;background:var(--surface);table-layout:fixed;
+.ema-hist-chart-wrap{background:var(--surface);padding:.7rem .9rem .5rem;}
+.ema-hist-chart-legend{display:flex;flex-wrap:wrap;gap:.9rem;align-items:center;
+              font-size:.68rem;color:var(--muted);margin-bottom:.3rem;}
+.ema-hist-chart-legend span{display:flex;align-items:center;gap:.35rem;}
+.ema-swatch{width:10px;height:3px;border-radius:2px;display:inline-block;}
+.ema-swatch-alloc{background:linear-gradient(90deg,#6366f1,#10b981);}
+.ema-swatch-score{background:#94a3b8;}
+.ema-hist-chart-latest{margin-left:auto;font-family:var(--mono);font-weight:700;color:var(--text);}
+
+.ema-hist-chart{width:100%;height:auto;display:block;}
+.ema-chart-grid{stroke:var(--border);stroke-width:1;stroke-dasharray:2 3;}
+.ema-chart-axis{font-family:var(--mono);font-size:8px;fill:var(--muted);}
+.ema-chart-line-alloc{fill:none;stroke:url(#emaAllocFill);stroke:#6366f1;stroke-width:2.2;
+              stroke-linejoin:round;stroke-linecap:round;}
+.ema-chart-line-score{fill:none;stroke:#94a3b8;stroke-width:1.4;stroke-dasharray:3 2;
+              stroke-linejoin:round;stroke-linecap:round;}
+
+@media (max-width:768px){
+  .ema-hist-chart-latest{margin-left:0;width:100%;}
 }
-.ema-hist-table thead th{text-align:center;font-size:.62rem;font-weight:700;letter-spacing:.03em;
-              text-transform:uppercase;color:var(--muted);padding:.4rem .8rem;
-              border-top:1px solid var(--border);border-bottom:1px solid var(--border);}
-.ema-hist-table thead th:first-child{text-align:left;}
-.ema-hist-table td{padding:.4rem .8rem;text-align:center;border-bottom:1px solid var(--border);}
-.ema-hist-date{text-align:left !important;font-family:var(--mono);color:var(--muted);}
-.ema-hist-table tbody tr:last-child td{border-bottom:none;}
 
 .ema-hist-empty{padding:.6rem .9rem;font-size:.75rem;color:var(--muted);font-style:italic;}
 
