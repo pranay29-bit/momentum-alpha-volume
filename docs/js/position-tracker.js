@@ -759,11 +759,25 @@ async function deleteBooked(id, rowEl) {
 function updateSummary() {
   document.getElementById("openCount").textContent = positions.length;
 
+  // Total Capital always reflects the saved Portfolio Size, even with 0 open positions.
+  const totalCapitalEl = document.getElementById("totalCapital");
+  if (totalCapitalEl) totalCapitalEl.textContent = formatINR(portfolioSize);
+
   if (positions.length === 0) {
     document.getElementById("avgR").textContent = "0R";
     document.getElementById("winLoss").textContent = "0 / 0";
     document.getElementById("totalImpact").textContent = "₹0";
     document.getElementById("totalImpactPct").textContent = "0%";
+
+    const costEl = document.getElementById("totalInvestedCost");
+    if (costEl) costEl.textContent = "₹0";
+    const curEl = document.getElementById("totalInvestedCurrent");
+    if (curEl) curEl.textContent = "₹0";
+    const cashEl = document.getElementById("totalCash");
+    if (cashEl) {
+      cashEl.textContent = formatINR(portfolioSize);
+      cashEl.className = pnlClass(portfolioSize);
+    }
     return;
   }
 
@@ -771,13 +785,19 @@ function updateSummary() {
   let winners = 0;
   let losers = 0;
   let totalImpactAbs = 0;
+  let totalCostBasis = 0;
+  let totalCurrentValue = 0;
 
   positions.forEach((p) => {
-    const { rMultiple, impactAbs } = positionMetrics(p);
+    const { rMultiple, impactAbs, currentPrice } = positionMetrics(p);
+    const entry = Number(p.entry) || 0;
+    const qty = Number(p.qty) || 0;
     totalR += rMultiple;
     totalImpactAbs += impactAbs;
     if (rMultiple > 0.001) winners++;
     else if (rMultiple < -0.001) losers++;
+    totalCostBasis += entry * qty;
+    totalCurrentValue += currentPrice * qty;
   });
 
   const totalImpactPct = portfolioSize > 0 ? (totalImpactAbs / portfolioSize) * 100 : 0;
@@ -792,6 +812,23 @@ function updateSummary() {
   const totalImpactPctEl = document.getElementById("totalImpactPct");
   totalImpactPctEl.textContent = totalImpactPct.toFixed(2) + "%";
   totalImpactPctEl.className = pnlClass(totalImpactPct);
+
+  // Total Invested — shown both ways: cost basis (capital actually deployed
+  // at entry) and current market value (what those shares are worth today).
+  const costEl = document.getElementById("totalInvestedCost");
+  if (costEl) costEl.textContent = formatINR(totalCostBasis);
+
+  const curEl = document.getElementById("totalInvestedCurrent");
+  if (curEl) curEl.textContent = formatINR(totalCurrentValue);
+
+  // Total Cash = Portfolio Size minus capital actually deployed (cost basis),
+  // i.e. what's still sitting uninvested / available for new trades.
+  const totalCash = portfolioSize - totalCostBasis;
+  const cashEl = document.getElementById("totalCash");
+  if (cashEl) {
+    cashEl.textContent = formatINR(totalCash);
+    cashEl.className = pnlClass(totalCash);
+  }
 }
 
 function updateBookedSummary() {
