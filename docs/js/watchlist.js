@@ -42,6 +42,9 @@ function loadLocalItems() {
   return symbols.map((symbol) => ({
     symbol,
     currentPrice: meta[symbol]?.currentPrice ?? null,
+    previousClose: meta[symbol]?.previousClose ?? null,
+    change: meta[symbol]?.change ?? null,
+    changePercent: meta[symbol]?.changePercent ?? null,
     industryGroup: meta[symbol]?.industryGroup ?? "—",
     industry: meta[symbol]?.industry ?? "—"
   }));
@@ -64,11 +67,27 @@ function fmtPrice(p) {
   return Number.isFinite(n) && n > 0 ? `₹${n.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : "—";
 }
 
+function pnlClass(value) {
+  if (value > 0.001) return "pnl-pos";
+  if (value < -0.001) return "pnl-neg";
+  return "pnl-flat";
+}
+
+function fmtChange(change, changePercent) {
+  if (!Number.isFinite(Number(change)) || !Number.isFinite(Number(changePercent))) {
+    return `<span class="pnl-flat">—</span>`;
+  }
+  const c = Number(change);
+  const pct = Number(changePercent);
+  const sign = c > 0 ? "+" : "";
+  return `<span class="${pnlClass(c)}">${sign}${c.toFixed(2)} (${sign}${pct.toFixed(2)}%)</span>`;
+}
+
 function render() {
   countBadgeNum.textContent = items.length;
 
   if (!items.length) {
-    tableBody.innerHTML = `<tr class="wl-empty-row"><td colspan="6">No stocks in your watchlist yet — click the ☆ next to any symbol on a dashboard to add it here.</td></tr>`;
+    tableBody.innerHTML = `<tr class="wl-empty-row"><td colspan="7">No stocks in your watchlist yet — click the ☆ next to any symbol on a dashboard to add it here.</td></tr>`;
     return;
   }
 
@@ -81,6 +100,7 @@ function render() {
         <td>★</td>
         <td style="font-family:var(--mono);font-weight:600">${it.symbol}</td>
         <td>${fmtPrice(it.currentPrice)}</td>
+        <td>${fmtChange(it.change, it.changePercent)}</td>
         <td>${it.industryGroup || "—"}</td>
         <td>${it.industry || "—"}</td>
         <td><button class="wl-remove-btn" data-sym="${it.symbol}">✕ Remove</button></td>
@@ -110,7 +130,7 @@ async function removeSymbol(symbol) {
 function subscribeToWatchlist(uid) {
   const ref = collection(db, "users", uid, "watchlist");
   const q = query(ref, orderBy("symbol"));
-  tableBody.innerHTML = `<tr class="wl-empty-row"><td colspan="6">Loading…</td></tr>`;
+  tableBody.innerHTML = `<tr class="wl-empty-row"><td colspan="7">Loading…</td></tr>`;
 
   unsubWatchlist = onSnapshot(
     q,
@@ -120,6 +140,9 @@ function subscribeToWatchlist(uid) {
         return {
           symbol: data.symbol || d.id,
           currentPrice: data.currentPrice ?? null,
+          previousClose: data.previousClose ?? null,
+          change: data.change ?? null,
+          changePercent: data.changePercent ?? null,
           industryGroup: data.industryGroup || "—",
           industry: data.industry || "—"
         };
@@ -128,7 +151,7 @@ function subscribeToWatchlist(uid) {
     },
     (err) => {
       console.error(err);
-      tableBody.innerHTML = `<tr class="wl-empty-row"><td colspan="6">Could not load watchlist (check Firestore rules for users/{uid}/watchlist).</td></tr>`;
+      tableBody.innerHTML = `<tr class="wl-empty-row"><td colspan="7">Could not load watchlist (check Firestore rules for users/{uid}/watchlist).</td></tr>`;
     }
   );
 }
