@@ -12,6 +12,8 @@
 // .github/workflows/update-prices.yml
 
 const admin = require("firebase-admin");
+const fs = require("fs");
+const path = require("path");
 
 // The service account JSON is provided as a GitHub Actions secret and
 // written to this env var as a string (see the workflow file). For local
@@ -47,6 +49,53 @@ let cachedCookie = null;
 function toYahooSymbol(symbol) {
   const s = symbol.trim().toUpperCase();
   return /\.(NS|BO)$/.test(s) ? s : `${s}.NS`;
+}
+
+// ── Industry / Industry Group lookup ──────────────────────────────────────
+// The watchlist stores plain display symbols (whatever _display_symbol()
+// rendered on the dashboard — e.g. "RELIANCE", or a company name for bare
+// numeric BSE SME codes). Industry classification for those already lives
+// in data/NSE_Stocks.csv and data/SME_Stocks.csv, so rather than duplicate
+// it we just look it up here at update time.
+function parseCsv(text) {
+  const lines = text.split(/\r?\n/).filter((l) => l.trim() !== "");
+  if (!lines.length) return [];
+  const headers = lines[0].split(",").map((h) => h.trim());
+  return lines.slice(1).map((line) => {
+    const cells = line.split(",");
+    const row = {};
+    headers.forEach((h, i) => { row[h] = (cells[i] || "").trim(); });
+    return row;
+  });
+}
+
+function loadIndustryLookup() {
+  const lookup = new Map(); // uppercased symbol OR name -> {industryGroup, industry}
+  const files = [
+    { file: "data/NSE_Stocks.csv", keyCols: ["Symbol", "Name"] },
+    { file: "data/SME_Stocks.csv", keyCols: ["Symbols", "Name"] }
+  ];
+
+  for (const { file, keyCols } of files) {
+    const fullPath = path.join(__dirname, "..", file);
+    if (!fs.existsSync(fullPath)) continue;
+    const rows = parseCsv(fs.readFileSync(fullPath, "utf-8"));
+    for (const row of rows) {
+      const info = {
+        industryGroup: row["Industry Group"] || "",
+        industry: row["Industry"] || ""
+      };
+      for (const col of keyCols) {
+        const key = (row[col] || "").trim().toUpperCase();
+        if (key) lookup.set(key, info);
+      }
+    }
+  }
+  return lookup;
+}
+
+function lookupIndustry(lookup, symbol) {
+  return lookup.get(symbol.trim().toUpperCase()) || { industryGroup: "", industry: "" };
 }
 
 async function getCrumbAndCookie() {
@@ -93,6 +142,64 @@ async function fetchLivePrice(symbol) {
   }
 
   return price;
+}
+
+async function updateAllWatchlistPrices() {
+  // Same collectionGroup approach as updateAllPrices() — watchlist docs
+  // live under users/{uid}/watchlist and there's no guaranteed parent doc.
+  const watchlistSnap = await db.collectionGroup("watchlist").get();
+
+  if (watchlistSnap.empty) {
+    console.log("No watchlist stocks — nothing to update.");
+    return;
+  }
+
+  const lookup = loadIndustryLookup();
+  const bySymbol = new Map(); // symbol -> [{uid, docId, hasIndustry}]
+
+  watchlistSnap.forEach((wlDoc) => {
+    const uid = wlDoc.ref.parent.parent?.id;
+    if (!uid) {
+      console.warn(`Skipping ${wlDoc.ref.path} — not under users/{uid}/watchlist`);
+      return;
+    }
+    const data = wlDoc.data();
+    const symbol = data.symbol || wlDoc.id;
+    const hasIndustry = Boolean(data.industryGroup && data.industry);
+    if (!bySymbol.has(symbol)) bySymbol.set(symbol, []);
+    bySymbol.get(symbol).push({ uid, docId: wlDoc.id, hasIndustry });
+  });
+
+  let updated = 0;
+  let failed = 0;
+  const batch = db.batch();
+
+  for (const [symbol, refs] of bySymbol.entries()) {
+    const { industryGroup, industry } = lookupIndustry(lookup, symbol);
+
+    try {
+      const price = await fetchLivePrice(symbol);
+      refs.forEach(({ uid, docId, hasIndustry }) => {
+        const ref = db.collection("users").doc(uid).collection("watchlist").doc(docId);
+        const update = { currentPrice: price };
+        // Only fill in industry fields if they're missing/blank — never
+        // clobber a value the front-end already wrote at star-click time.
+        if (!hasIndustry) {
+          update.industryGroup = industryGroup || "";
+          update.industry = industry || "";
+        }
+        batch.update(ref, update);
+      });
+      updated += refs.length;
+      console.log(`✓ [watchlist] ${symbol}: ${price}`);
+    } catch (err) {
+      console.warn(`✗ [watchlist] ${symbol}: ${err.message}`);
+      failed += refs.length;
+    }
+  }
+
+  await batch.commit();
+  console.log(`Watchlist done. updated=${updated} failed=${failed}`);
 }
 
 async function updateAllPrices() {
@@ -152,6 +259,7 @@ async function updateAllPrices() {
 }
 
 updateAllPrices()
+  .then(() => updateAllWatchlistPrices())
   .then(() => process.exit(0))
   .catch((err) => {
     console.error("Fatal error:", err);
