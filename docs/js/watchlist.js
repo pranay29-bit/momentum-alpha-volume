@@ -11,6 +11,7 @@ import { db, auth, login, logout, onAuthStateChanged } from "./firebase.js";
 import {
   collection,
   doc,
+  setDoc,
   deleteDoc,
   onSnapshot,
   query,
@@ -24,6 +25,9 @@ const loginBtn      = document.getElementById("loginBtn");
 const loginStatus    = document.getElementById("loginStatus");
 const tableBody      = document.getElementById("wlTableBody");
 const countBadgeNum  = document.querySelector("#wlCountBadge .n");
+const addSymbolInput = document.getElementById("addSymbolInput");
+const addSymbolBtn   = document.getElementById("addSymbolBtn");
+const addSymbolMsg   = document.getElementById("addSymbolMsg");
 
 let currentUid = null;
 let unsubWatchlist = null;
@@ -32,6 +36,11 @@ let items = []; // [{symbol, currentPrice, industryGroup, industry}]
 function loadLocalMeta() {
   try { return JSON.parse(localStorage.getItem(LOCAL_META_KEY) || "{}"); }
   catch { return {}; }
+}
+
+function loadLocal() {
+  try { return new Set(JSON.parse(localStorage.getItem(LOCAL_KEY) || "[]")); }
+  catch { return new Set(); }
 }
 
 function loadLocalItems() {
@@ -56,6 +65,19 @@ function removeLocal(symbol) {
     localStorage.setItem(LOCAL_KEY, JSON.stringify(symbols));
     const meta = loadLocalMeta();
     delete meta[symbol];
+    localStorage.setItem(LOCAL_META_KEY, JSON.stringify(meta));
+  } catch {
+    /* ignore */
+  }
+}
+
+function addLocal(symbol) {
+  try {
+    const symbols = new Set(JSON.parse(localStorage.getItem(LOCAL_KEY) || "[]"));
+    symbols.add(symbol);
+    localStorage.setItem(LOCAL_KEY, JSON.stringify(Array.from(symbols)));
+    const meta = loadLocalMeta();
+    if (!meta[symbol]) meta[symbol] = { currentPrice: null, industryGroup: "", industry: "" };
     localStorage.setItem(LOCAL_META_KEY, JSON.stringify(meta));
   } catch {
     /* ignore */
@@ -126,6 +148,58 @@ async function removeSymbol(symbol) {
     render();
   }
 }
+
+function showAddMsg(text, isError) {
+  addSymbolMsg.textContent = text;
+  addSymbolMsg.style.color = isError ? "var(--red)" : "var(--subtle)";
+  if (text) setTimeout(() => { if (addSymbolMsg.textContent === text) addSymbolMsg.textContent = ""; }, 3000);
+}
+
+async function addSymbol() {
+  const raw = (addSymbolInput.value || "").trim().toUpperCase();
+  if (!raw) return;
+  // Strip a trailing .NS/.BO if someone pastes the full Yahoo ticker —
+  // the watchlist stores the same plain display symbol dashboards use.
+  const symbol = raw.replace(/\.(NS|BO)$/, "");
+
+  const alreadyIn = currentUid
+    ? items.some((it) => it.symbol === symbol)
+    : loadLocal().has(symbol);
+  if (alreadyIn) {
+    showAddMsg(`${symbol} is already in your watchlist.`, true);
+    return;
+  }
+
+  addSymbolBtn.disabled = true;
+  try {
+    if (currentUid) {
+      await setDoc(doc(db, "users", currentUid, "watchlist", symbol), {
+        symbol,
+        industryGroup: "",
+        industry: "",
+        currentPrice: null,
+        addedAt: Date.now()
+      }, { merge: true });
+      // onSnapshot will pick this up and re-render automatically.
+    } else {
+      addLocal(symbol);
+      items = loadLocalItems();
+      render();
+    }
+    addSymbolInput.value = "";
+    showAddMsg(`Added ${symbol}. Price and industry fill in on the next scheduled refresh.`, false);
+  } catch (err) {
+    console.error(err);
+    showAddMsg(`Could not add ${symbol}.`, true);
+  } finally {
+    addSymbolBtn.disabled = false;
+  }
+}
+
+addSymbolBtn.addEventListener("click", addSymbol);
+addSymbolInput.addEventListener("keydown", (e) => {
+  if (e.key === "Enter") addSymbol();
+});
 
 function subscribeToWatchlist(uid) {
   const ref = collection(db, "users", uid, "watchlist");
