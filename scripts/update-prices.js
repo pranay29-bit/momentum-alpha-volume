@@ -135,13 +135,15 @@ async function fetchLivePrice(symbol) {
   if (!res.ok) throw new Error(`Yahoo returned HTTP ${res.status} for ${yahooSymbol}`);
 
   const data = await res.json();
-  const price = data?.chart?.result?.[0]?.meta?.regularMarketPrice;
+  const meta = data?.chart?.result?.[0]?.meta;
+  const price = meta?.regularMarketPrice;
+  const previousClose = meta?.chartPreviousClose ?? meta?.previousClose ?? null;
 
   if (typeof price !== "number" || price <= 0) {
     throw new Error(`No valid price in response for ${yahooSymbol}`);
   }
 
-  return price;
+  return { price, previousClose: typeof previousClose === "number" ? previousClose : null };
 }
 
 async function updateAllWatchlistPrices() {
@@ -178,10 +180,18 @@ async function updateAllWatchlistPrices() {
     const { industryGroup, industry } = lookupIndustry(lookup, symbol);
 
     try {
-      const price = await fetchLivePrice(symbol);
+      const { price, previousClose } = await fetchLivePrice(symbol);
+      const change = typeof previousClose === "number" && previousClose > 0 ? price - previousClose : null;
+      const changePercent = change !== null ? (change / previousClose) * 100 : null;
+
       refs.forEach(({ uid, docId, hasIndustry }) => {
         const ref = db.collection("users").doc(uid).collection("watchlist").doc(docId);
-        const update = { currentPrice: price };
+        const update = {
+          currentPrice: price,
+          previousClose: previousClose,
+          change: change,
+          changePercent: changePercent
+        };
         // Only fill in industry fields if they're missing/blank — never
         // clobber a value the front-end already wrote at star-click time.
         if (!hasIndustry) {
@@ -241,7 +251,7 @@ async function updateAllPrices() {
 
   for (const [symbol, refs] of bySymbol.entries()) {
     try {
-      const price = await fetchLivePrice(symbol);
+      const { price } = await fetchLivePrice(symbol);
       refs.forEach(({ uid, docId }) => {
         const ref = db.collection("users").doc(uid).collection("positions").doc(docId);
         batch.update(ref, { currentPrice: price });
