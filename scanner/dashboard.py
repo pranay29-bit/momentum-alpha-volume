@@ -266,6 +266,8 @@ header h1 {
 .btn-link.rose:hover    { background: #ffe4e6; }
 .btn-link.slate   { background: var(--slate-lt);   border-color: var(--slate-mid);   color: var(--slate); }
 .btn-link.slate:hover   { background: #e2e8f0; }
+.btn-link.gold    { background: #fff8e1; border-color: #f5d76e; color: #9a7500; }
+.btn-link.gold:hover    { background: #fef0c2; }
 .btn-link.is-active { box-shadow: 0 0 0 1px currentColor inset; font-weight: 700; }
 .hdr-badge {
   font-size: .64rem;
@@ -481,6 +483,22 @@ td.r { text-align: right; } td.c { text-align: center; }
 /* ── NEW-stock highlight row ── */
 .srow.is-new { background: var(--new-row); }
 .srow.is-new:hover { background: #fae8ff; }
+
+/* ── Watchlist star toggle ── */
+.star-th { width: 2rem; padding-left: .9rem !important; padding-right: 0 !important; }
+.star-td { width: 2rem; text-align: center; padding-left: .9rem !important; padding-right: 0 !important; }
+.wl-star {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1.05rem;
+  line-height: 1;
+  padding: 0;
+  color: var(--subtle);
+  transition: color .12s, transform .12s;
+}
+.wl-star:hover { color: #d4a017; transform: scale(1.15); }
+.wl-star.is-active { color: #f5b800; }
 
 /* ── Symbol tags ── */
 .sym-tag {
@@ -829,6 +847,7 @@ def _site_nav(active: str, date_str: str) -> str:
         _link("stage4",    f"stage4_dashboard_{date_str}.html",    "red",     "📉 Stage 4"),
         _link("sme_momentum", f"sme_momentum_dashboard_{date_str}.html", "violet", "🏷️ SME Momentum"),
         _link("sme_elite",    f"sme_elite_dashboard_{date_str}.html",    "violet", "🏷️ SME Elite"),
+        _link("watchlist",    "../watchlist.html",                      "gold",   "⭐ Watchlist"),
     ])
     return f"""
 <nav class="site-nav">
@@ -841,6 +860,14 @@ def _site_nav(active: str, date_str: str) -> str:
 
 def _html_head(title: str, accent1: str, accent2: str, active: str | None = None, date_str: str | None = None) -> str:
     nav_html = _site_nav(active, date_str) if (active and date_str) else ""
+    # The watchlist-star module paints/toggles the ☆/★ buttons added to every
+    # table row below. It's only meaningful on pages that carry the shared
+    # nav (i.e. real per-date dashboards, one folder below docs/), since the
+    # import path is relative to that location.
+    star_script = (
+        '<script type="module" src="../js/watchlist-star.js"></script>'
+        if nav_html else ""
+    )
     return f"""<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -853,6 +880,7 @@ def _html_head(title: str, accent1: str, accent2: str, active: str | None = None
 :root {{ --ACCENT1:{accent1}; --ACCENT2:{accent2}; }}
 {_BASE_CSS}
 </style>
+{star_script}
 </head>
 <body>
 <div class="topbar"></div>
@@ -864,6 +892,16 @@ def _new_star(is_new: bool) -> str:
     if not is_new:
         return ""
     return ' <span class="sym-new-star">✦ NEW</span>'
+
+
+def _star_cell() -> str:
+    """
+    Watchlist star toggle — dropped just before the Symbol cell in every
+    dashboard table. Reads the row's own data-sym/data-close/data-indgrp/
+    data-ind attributes at click time (see watchlist-star.js), so no extra
+    per-button data needs to be threaded through here.
+    """
+    return '<td class="star-td"><button type="button" class="wl-star" onclick="toggleStar(this)" title="Add to Watchlist">☆</button></td>'
 
 
 def _csv_bar_passing(date_str: str, csv_filename: str | None = None, full_csv_filename: str | None = None) -> str:
@@ -956,6 +994,7 @@ def build_passing_dashboard(
           data-ema10="{_r(ema10)}" data-tmc="{_r(tmc)}"
           data-tv="{_r(tv)}" data-tvpct="{_r(tvpct,6)}"
           data-indgrp="{ind_grp}" data-ind="{industry}">
+          {_star_cell()}
           <td>
             <a class="sym-tag" style="background:var(--indigo-lt);border-color:var(--indigo-mid);color:var(--indigo)"
                href="{link}" target="_blank" rel="noopener">{sym}{_new_star(is_new)}</a>
@@ -969,7 +1008,6 @@ def build_passing_dashboard(
           <td class="r" style="font-family:var(--mono);color:var(--subtle);font-size:.73rem">{tvpct_s}</td>
           <td style="color:var(--muted);font-size:.78rem;max-width:150px;overflow:hidden;text-overflow:ellipsis">{ind_grp}</td>
           <td style="color:var(--subtle);font-size:.74rem;max-width:130px;overflow:hidden;text-overflow:ellipsis">{industry}</td>
-          <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">{result_date}</td>
         </tr>"""
 
         chart_labels.append(f'"{sym}"')
@@ -1059,6 +1097,7 @@ def build_passing_dashboard(
   <div class="tbl-outer">
     <table id="mainTable">
       <thead><tr>
+        <th class="star-th" title="Watchlist"></th>
         <th data-col="sym"    data-type="str">Symbol<i class="si"></i></th>
         <th class="c" data-col="band" data-type="str" title="Circuit price band — the max % a stock can move from previous close">Band<i class="si"></i></th>
         <th class="r" data-col="close"  data-type="num">Close ₹<i class="si"></i></th>
@@ -1069,7 +1108,6 @@ def build_passing_dashboard(
         <th class="r" data-col="tvpct"  data-type="num">TV % MC<i class="si"></i></th>
         <th          data-col="indgrp" data-type="str">Industry Group<i class="si"></i></th>
         <th          data-col="ind"    data-type="str">Industry<i class="si"></i></th>
-        <th class="r">Result Date</th>
       </tr></thead>
       <tbody id="tableBody">{rows_html}</tbody>
     </table>
@@ -1184,6 +1222,7 @@ def build_passing_ema10_dashboard(
           data-gap="{_r(gap_pct,4)}" data-rs="{_r(rs)}" data-tmc="{_r(tmc)}"
           data-tv="{_r(tv)}" data-tvpct="{_r(tvpct,6)}"
           data-indgrp="{ind_grp}" data-ind="{industry}">
+          {_star_cell()}
           <td>
             <a class="sym-tag" style="background:var(--emerald-lt);border-color:var(--emerald-mid);color:var(--emerald)"
                href="{link}" target="_blank" rel="noopener">{sym}{_new_star(is_new)}</a>
@@ -1198,7 +1237,6 @@ def build_passing_ema10_dashboard(
           <td class="r" style="font-family:var(--mono);color:var(--subtle);font-size:.73rem">{tvpct_s}</td>
           <td style="color:var(--muted);font-size:.78rem;max-width:150px;overflow:hidden;text-overflow:ellipsis">{ind_grp}</td>
           <td style="color:var(--subtle);font-size:.74rem;max-width:130px;overflow:hidden;text-overflow:ellipsis">{industry}</td>
-          <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">{result_date}</td>
         </tr>"""
 
     # History charts — filter out any weekend entries (NSE closed Sat/Sun)
@@ -1311,6 +1349,7 @@ def build_passing_ema10_dashboard(
   <div class="tbl-outer">
     <table id="mainTable">
       <thead><tr>
+        <th class="star-th" title="Watchlist"></th>
         <th data-col="sym"   data-type="str">Symbol<i class="si"></i></th>
         <th class="c" data-col="band" data-type="str" title="Circuit price band — the max % a stock can move from previous close">Band<i class="si"></i></th>
         <th class="r" data-col="close"  data-type="num">Close ₹<i class="si"></i></th>
@@ -1322,7 +1361,6 @@ def build_passing_ema10_dashboard(
         <th class="r" data-col="tvpct"  data-type="num">TV % MC<i class="si"></i></th>
         <th          data-col="indgrp" data-type="str">Industry Group<i class="si"></i></th>
         <th          data-col="ind"    data-type="str">Industry<i class="si"></i></th>
-        <th class="r">Result Date</th>
       </tr></thead>
       <tbody id="tableBody">{rows_html}</tbody>
     </table>
@@ -1448,7 +1486,8 @@ def build_volume_action_dashboard(
         rows_html += f"""
         <tr class="srow{new_cls}"
           data-sym="{sym}" data-band="{price_band}" data-close="{_r(close)}" data-relvol="{_r(relvol)}"
-          data-snort="{snort_flag}" data-rs="{_r(rs)}" data-result="{result_date}">
+          data-snort="{snort_flag}" data-rs="{_r(rs)}">
+          {_star_cell()}
           <td>
             <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
                href="{link}" target="_blank" rel="noopener">{sym}{_new_star(is_new)}</a>
@@ -1464,7 +1503,6 @@ def build_volume_action_dashboard(
           <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
           <td class="c">{snort_html}</td>
           <td class="r"><span class="pill pill-amber">{rs_s}</span></td>
-          <td class="r" style="font-family:var(--mono);color:var(--muted);font-size:.74rem">{result_date}</td>
         </tr>"""
 
     n_new = sum(1 for _, r in sorted_df.iterrows()
@@ -1534,6 +1572,7 @@ def build_volume_action_dashboard(
   <div class="tbl-outer">
     <table id="mainTable">
       <thead><tr>
+        <th class="star-th" title="Watchlist"></th>
         <th data-col="sym"    data-type="str">Symbol<i class="si"></i></th>
         <th class="c" data-col="band" data-type="str" title="Circuit price band — the max % a stock can move from previous close">Band<i class="si"></i></th>
         <th class="r" data-col="close"  data-type="num">Close ₹<i class="si"></i></th>
@@ -1541,7 +1580,6 @@ def build_volume_action_dashboard(
         <th class="c">Signal</th>
         <th class="c" data-col="snort"  data-type="num">Bull Snort<i class="si"></i></th>
         <th class="r" data-col="rs"     data-type="num">RS %ile<i class="si"></i></th>
-        <th class="r" data-col="result" data-type="str">Result Date<i class="si"></i></th>
       </tr></thead>
       <tbody id="tableBody">{rows_html}</tbody>
     </table>
@@ -1582,7 +1620,7 @@ def build_rocket_dashboard(
     n_passing = len(passing)
 
     if n_rocket == 0:
-        rows_html = f'<tr><td colspan="10" class="no-data">No Rocket Stocks today — no inside bars among {n_passing} passing stocks.</td></tr>'
+        rows_html = f'<tr><td colspan="11" class="no-data">No Rocket Stocks today — no inside bars among {n_passing} passing stocks.</td></tr>'
     else:
         rows_html = ""
         for _, row in rocket.sort_values("rs_percentile", ascending=False).iterrows():
@@ -1619,6 +1657,7 @@ def build_rocket_dashboard(
               data-sym="{sym}" data-band="{price_band}" data-close="{_r(close)}" data-rs="{_r(rs)}"
               data-ema10="{_r(ema10)}" data-tmc="{_r(tmc)}" data-tv="{_r(tv)}"
               data-indgrp="{ind_grp}" data-ind="">
+              {_star_cell()}
               <td>
                 <a class="sym-tag" style="background:var(--amber-lt);border-color:var(--amber-mid);color:var(--amber)"
                    href="{link}" target="_blank" rel="noopener">{sym}<span class="ib-badge">IB</span>{_new_star(is_new)}</a>
@@ -1701,6 +1740,7 @@ def build_rocket_dashboard(
   <div class="tbl-outer">
     <table id="mainTable">
       <thead><tr>
+        <th class="star-th" title="Watchlist"></th>
         <th data-col="sym"  data-type="str">Symbol<i class="si"></i></th>
         <th class="c" data-col="band" data-type="str" title="Circuit price band — the max % a stock can move from previous close">Band<i class="si"></i></th>
         <th class="r" data-col="close" data-type="num">Close ₹<i class="si"></i></th>
@@ -1760,7 +1800,7 @@ def build_new_rs_high_dashboard(
     n_new_rs = len(new_rs_df) if new_rs_df is not None else 0
 
     if n_new_rs == 0:
-        rows_html = f'<tr><td colspan="7" class="no-data">No stocks made a fresh {lookback_days}-day RS high today.</td></tr>'
+        rows_html = f'<tr><td colspan="8" class="no-data">No stocks made a fresh {lookback_days}-day RS high today.</td></tr>'
     else:
         rows_html = ""
         for _, row in new_rs_df.iterrows():
@@ -1790,6 +1830,7 @@ def build_new_rs_high_dashboard(
             <tr class="srow{new_cls}"
               data-sym="{sym}" data-close="{_r(close)}" data-rs="{_r(rs)}"
               data-indgrp="{ind_grp}" data-ind="">
+              {_star_cell()}
               <td>
                 <a class="sym-tag" style="background:var(--rose-lt);border-color:var(--rose-mid);color:var(--rose)"
                    href="{link}" target="_blank" rel="noopener">{sym}<span class="ib-badge">RS+</span>{_new_star(is_new)}</a>
@@ -1872,6 +1913,7 @@ def build_new_rs_high_dashboard(
   <div class="tbl-outer">
     <table id="mainTable">
       <thead><tr>
+        <th class="star-th" title="Watchlist"></th>
         <th data-col="sym"  data-type="str">Symbol<i class="si"></i></th>
         <th class="r" data-col="close" data-type="num">Close ₹<i class="si"></i></th>
         <th class="r" data-col="rs"    data-type="num">RS %ile Today<i class="si"></i></th>
@@ -1923,7 +1965,7 @@ def build_stage4_dashboard(
     n_stage4 = len(stage4_df) if stage4_df is not None else 0
 
     if n_stage4 == 0:
-        rows_html = f'<tr><td colspan="7" class="no-data">No large-caps (≥ ₹{min_market_cap_cr:,.0f} Cr) are currently below their 50-day MA.</td></tr>'
+        rows_html = f'<tr><td colspan="8" class="no-data">No large-caps (≥ ₹{min_market_cap_cr:,.0f} Cr) are currently below their 50-day MA.</td></tr>'
     else:
         rows_html = ""
         for _, row in stage4_df.iterrows():
@@ -1948,6 +1990,7 @@ def build_stage4_dashboard(
             <tr class="srow{new_cls}"
               data-sym="{sym}" data-close="{_r(close)}" data-rs="{_r(rs)}"
               data-tmc="{_r(tmc)}" data-indgrp="{ind_grp}" data-ind="">
+              {_star_cell()}
               <td>
                 <a class="sym-tag" style="background:var(--red-lt);border-color:var(--red-mid);color:var(--red)"
                    href="{link}" target="_blank" rel="noopener">{sym}<span class="ib-badge">S4</span>{_new_star(is_new)}</a>
@@ -2027,6 +2070,7 @@ def build_stage4_dashboard(
   <div class="tbl-outer">
     <table id="mainTable">
       <thead><tr>
+        <th class="star-th" title="Watchlist"></th>
         <th data-col="sym"  data-type="str">Symbol<i class="si"></i></th>
         <th class="r" data-col="close" data-type="num">Close ₹<i class="si"></i></th>
         <th class="r">MA50 ₹</th>
