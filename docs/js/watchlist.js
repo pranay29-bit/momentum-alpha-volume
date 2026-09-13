@@ -28,10 +28,12 @@ const countBadgeNum  = document.querySelector("#wlCountBadge .n");
 const addSymbolInput = document.getElementById("addSymbolInput");
 const addSymbolBtn   = document.getElementById("addSymbolBtn");
 const addSymbolMsg   = document.getElementById("addSymbolMsg");
+const changeHeader   = document.getElementById("changeHeader");
 
 let currentUid = null;
 let unsubWatchlist = null;
 let items = []; // [{symbol, currentPrice, industryGroup, industry}]
+let changeSortDir = null; // null = default (by symbol), "asc" | "desc" = by changePercent
 
 function loadLocalMeta() {
   try { return JSON.parse(localStorage.getItem(LOCAL_META_KEY) || "{}"); }
@@ -113,9 +115,20 @@ function render() {
     return;
   }
 
-  tableBody.innerHTML = items
-    .slice()
-    .sort((a, b) => a.symbol.localeCompare(b.symbol))
+  changeHeader.classList.toggle("sort-active", changeSortDir !== null);
+  changeHeader.querySelector(".sort-i").textContent =
+    changeSortDir === "asc" ? "↑" : changeSortDir === "desc" ? "↓" : "⇅";
+
+  const sorted = items.slice().sort((a, b) => {
+    if (changeSortDir === "asc" || changeSortDir === "desc") {
+      const av = Number.isFinite(Number(a.changePercent)) ? Number(a.changePercent) : -Infinity;
+      const bv = Number.isFinite(Number(b.changePercent)) ? Number(b.changePercent) : -Infinity;
+      return changeSortDir === "asc" ? av - bv : bv - av;
+    }
+    return a.symbol.localeCompare(b.symbol);
+  });
+
+  tableBody.innerHTML = sorted
     .map(
       (it) => `
       <tr data-sym="${it.symbol}">
@@ -199,6 +212,11 @@ async function addSymbol() {
 addSymbolBtn.addEventListener("click", addSymbol);
 addSymbolInput.addEventListener("keydown", (e) => {
   if (e.key === "Enter") addSymbol();
+});
+
+changeHeader.addEventListener("click", () => {
+  changeSortDir = changeSortDir === null ? "desc" : changeSortDir === "desc" ? "asc" : null;
+  render();
 });
 
 function subscribeToWatchlist(uid) {
