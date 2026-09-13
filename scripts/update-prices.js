@@ -138,12 +138,21 @@ async function fetchLivePrice(symbol) {
   const meta = data?.chart?.result?.[0]?.meta;
   const price = meta?.regularMarketPrice;
   const previousClose = meta?.chartPreviousClose ?? meta?.previousClose ?? null;
+  // Yahoo's chart endpoint sometimes already includes the change figures
+  // directly on meta — use those when present instead of recomputing.
+  const change = typeof meta?.regularMarketChange === "number" ? meta.regularMarketChange : null;
+  const changePercent = typeof meta?.regularMarketChangePercent === "number" ? meta.regularMarketChangePercent : null;
 
   if (typeof price !== "number" || price <= 0) {
     throw new Error(`No valid price in response for ${yahooSymbol}`);
   }
 
-  return { price, previousClose: typeof previousClose === "number" ? previousClose : null };
+  return {
+    price,
+    previousClose: typeof previousClose === "number" ? previousClose : null,
+    change,
+    changePercent
+  };
 }
 
 async function updateAllWatchlistPrices() {
@@ -180,9 +189,14 @@ async function updateAllWatchlistPrices() {
     const { industryGroup, industry } = lookupIndustry(lookup, symbol);
 
     try {
-      const { price, previousClose } = await fetchLivePrice(symbol);
-      const change = typeof previousClose === "number" && previousClose > 0 ? price - previousClose : null;
-      const changePercent = change !== null ? (change / previousClose) * 100 : null;
+      const live = await fetchLivePrice(symbol);
+      const { price, previousClose } = live;
+      const change = live.change !== null
+        ? live.change
+        : (typeof previousClose === "number" && previousClose > 0 ? price - previousClose : null);
+      const changePercent = live.changePercent !== null
+        ? live.changePercent
+        : (change !== null && previousClose > 0 ? (change / previousClose) * 100 : null);
 
       refs.forEach(({ uid, docId, hasIndustry }) => {
         const ref = db.collection("users").doc(uid).collection("watchlist").doc(docId);
