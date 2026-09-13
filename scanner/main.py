@@ -521,6 +521,9 @@ def _update_index(
         dict(icon="🏷️", accent="violet", accent2="emerald", title="SME Elite Scan",
              desc="SME Momentum passes also trading above EMA10 — the highest-conviction SME setups.",
              link=_sme_elite_link),
+        dict(icon="⭐", accent="amber", accent2="emerald", title="Watchlist",
+             desc="Stocks you've starred across every dashboard, with live current price, day change, and industry data.",
+             link="watchlist.html"),
     ]
 
     hub_cards_html = ""
@@ -596,6 +599,7 @@ def _update_index(
   <a href="{_stage4_link}" class="btn-link red">📉 Stage 4</a>
   <a href="{_sme_momentum_link}" class="btn-link violet">🏷️ SME Momentum</a>
   <a href="{_sme_elite_link}" class="btn-link violet">🏷️ SME Elite</a>
+  <a href="watchlist.html" class="btn-link gold">⭐ Watchlist</a>
   <a href="position-size.html" class="btn-link violet">📐 Position Size</a>
   <a href="position-tracker.html" class="btn-link navy">📈 Position Tracker</a>
 </nav>"""
@@ -762,6 +766,8 @@ def _update_index(
   .btn-link.rose:hover{{background:#ffe4e6;}}
   .btn-link.slate{{background:var(--slate-lt);border-color:var(--slate-mid);color:var(--slate);}}
   .btn-link.slate:hover{{background:#e2e8f0;}}
+  .btn-link.gold{{background:#fff8e1;border-color:#f5d76e;color:#9a7500;}}
+  .btn-link.gold:hover{{background:#fef0c2;}}
   .btn-link.is-active{{box-shadow:0 0 0 1px currentColor inset;font-weight:700;}}
   /* Shared cross-page nav bar — identical component on every generated page */
   .site-nav{{display:flex;flex-wrap:wrap;gap:.5rem;align-items:center;padding:.75rem 2.5rem;
