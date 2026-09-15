@@ -29,6 +29,14 @@ const addSymbolInput = document.getElementById("addSymbolInput");
 const addSymbolBtn   = document.getElementById("addSymbolBtn");
 const addSymbolMsg   = document.getElementById("addSymbolMsg");
 const changeHeader   = document.getElementById("changeHeader");
+const breadthAdvN    = document.getElementById("breadthAdvN");
+const breadthDecN    = document.getElementById("breadthDecN");
+const breadthFlatN   = document.getElementById("breadthFlatN");
+const breadthNoDataN = document.getElementById("breadthNoDataN");
+const breadthBarAdv  = document.getElementById("breadthBarAdv");
+const breadthBarDec  = document.getElementById("breadthBarDec");
+const breadthBarFlat = document.getElementById("breadthBarFlat");
+const breadthVerdict = document.getElementById("breadthVerdict");
 
 let currentUid = null;
 let unsubWatchlist = null;
@@ -107,8 +115,72 @@ function fmtChange(change, changePercent) {
   return `<span class="${pnlClass(c)}">${sign}${c.toFixed(2)} (${sign}${pct.toFixed(2)}%)</span>`;
 }
 
+function computeBreadth(list) {
+  const EPS = 0.05; // % — treat tiny wiggles as unchanged, not a real advance/decline
+  let adv = 0, dec = 0, flat = 0, noData = 0;
+  list.forEach((it) => {
+    const cp = Number(it.changePercent);
+    if (!Number.isFinite(cp)) { noData++; return; }
+    if (cp > EPS) adv++;
+    else if (cp < -EPS) dec++;
+    else flat++;
+  });
+  return { adv, dec, flat, noData, tracked: adv + dec + flat };
+}
+
+function renderBreadth() {
+  const { adv, dec, flat, noData, tracked } = computeBreadth(items);
+
+  breadthAdvN.textContent = adv;
+  breadthDecN.textContent = dec;
+  breadthFlatN.textContent = flat;
+  breadthNoDataN.textContent = noData;
+
+  const total = adv + dec + flat + noData;
+  if (total === 0) {
+    breadthBarAdv.style.width = "0%";
+    breadthBarDec.style.width = "0%";
+    breadthBarFlat.style.width = "100%";
+    breadthVerdict.innerHTML = `<span class="tag mixed">No data</span>Your watchlist is empty — star some stocks to see breadth here.`;
+    return;
+  }
+
+  breadthBarAdv.style.width = `${(adv / total) * 100}%`;
+  breadthBarDec.style.width = `${(dec / total) * 100}%`;
+  breadthBarFlat.style.width = `${((flat + noData) / total) * 100}%`;
+
+  if (tracked === 0) {
+    breadthVerdict.innerHTML = `<span class="tag mixed">No data</span>Waiting for the next scheduled price refresh — breadth will fill in once prices update.`;
+    return;
+  }
+
+  // Net breadth: -1 (everything down) to +1 (everything up), ignoring
+  // names still waiting on a price refresh.
+  const score = (adv - dec) / tracked;
+  const advPct = Math.round((adv / tracked) * 100);
+  const staleNote = noData > 0 ? ` (${noData} still waiting on a price refresh)` : "";
+
+  let tagClass, tagText, verdict;
+  if (score >= 0.4) {
+    tagClass = "bullish";
+    tagText = "Bullish tape";
+    verdict = `${adv} of ${tracked} watchlist names (${advPct}%) are trading higher today, with only ${dec} down${staleNote}. Breadth is broadly positive — the tape is supportive of taking fresh long setups, though this only reflects your own watchlist, not the full market.`;
+  } else if (score <= -0.4) {
+    tagClass = "bearish";
+    tagText = "Bearish tape";
+    verdict = `${dec} of ${tracked} watchlist names are trading lower today against just ${adv} advancing${staleNote}. Breadth is broadly negative — this is usually a day to be defensive: tighten stops on existing longs and hold off on fresh breakout entries until breadth improves.`;
+  } else {
+    tagClass = "mixed";
+    tagText = "Mixed tape";
+    verdict = `${adv} up vs ${dec} down out of ${tracked} tracked names${staleNote} — advances and declines are roughly balanced. No clear edge from breadth alone; be selective, favor your strongest setups, and size down on new entries.`;
+  }
+
+  breadthVerdict.innerHTML = `<span class="tag ${tagClass}">${tagText}</span>${verdict}`;
+}
+
 function render() {
   countBadgeNum.textContent = items.length;
+  renderBreadth();
 
   if (!items.length) {
     tableBody.innerHTML = `<tr class="wl-empty-row"><td colspan="7">No stocks in your watchlist yet — click the ☆ next to any symbol on a dashboard to add it here.</td></tr>`;
