@@ -364,7 +364,10 @@ function renderRow(p) {
       ${p.entry}
       <input type="number" class="price-input entry-input" placeholder="override" data-id="${p.id}"/>
     </td>
-    <td class="sl-value">${p.stop}</td>
+    <td class="sl-value">
+      ${p.stop}
+      <input type="number" class="price-input stop-input" placeholder="override" data-id="${p.id}"/>
+    </td>
     <td>${riskPctDisplay}</td>
     <td>
       ${p.qty}
@@ -385,6 +388,11 @@ function renderRow(p) {
   const entryInput = tr.querySelector(".entry-input");
   entryInput.addEventListener("change", (e) =>
   updateEntry(p.id, e.target.value)
+  );
+
+  const stopInput = tr.querySelector(".stop-input");
+  stopInput.addEventListener("change", (e) =>
+  updateStop(p.id, e.target.value)
   );
 
   const qtyInput = tr.querySelector(".qty-input");
@@ -427,6 +435,21 @@ async function updateCurrentPrice(id, value) {
   } catch (err) {
     console.error(err);
     alert("Could not update price. Please try again.");
+  }
+}
+
+async function updateStop(id, value) {
+  const stop = Number(value);
+  if (!(stop > 0) || !Number.isFinite(stop) || !auth.currentUser) {
+    alert("Please enter a valid stop-loss price.");
+    return;
+  }
+
+  try {
+    await updateDoc(doc(db, "users", auth.currentUser.uid, "positions", id), { stop });
+  } catch (err) {
+    console.error(err);
+    alert("Could not update stop-loss. Please try again.");
   }
 }
 
@@ -770,12 +793,13 @@ function updateSummary() {
     document.getElementById("totalImpactPct").textContent = "0%";
 
     const costEl = document.getElementById("totalInvestedCost");
-    if (costEl) costEl.textContent = "₹0";
+    if (costEl) costEl.textContent = "₹0 (0.00%)";
     const curEl = document.getElementById("totalInvestedCurrent");
-    if (curEl) curEl.textContent = "₹0";
+    if (curEl) curEl.textContent = "₹0 (0.00%)";
     const cashEl = document.getElementById("totalCash");
     if (cashEl) {
-      cashEl.textContent = formatINR(portfolioSize);
+      const pct = portfolioSize > 0 ? "100.00" : "0.00";
+      cashEl.textContent = `${formatINR(portfolioSize)} (${pct}%)`;
       cashEl.className = pnlClass(portfolioSize);
     }
     return;
@@ -815,18 +839,23 @@ function updateSummary() {
 
   // Total Invested — shown both ways: cost basis (capital actually deployed
   // at entry) and current market value (what those shares are worth today).
+  // Each figure is also expressed as a % of total portfolio size.
+  const costPct = portfolioSize > 0 ? (totalCostBasis / portfolioSize) * 100 : 0;
+  const curPct  = portfolioSize > 0 ? (totalCurrentValue / portfolioSize) * 100 : 0;
+
   const costEl = document.getElementById("totalInvestedCost");
-  if (costEl) costEl.textContent = formatINR(totalCostBasis);
+  if (costEl) costEl.textContent = `${formatINR(totalCostBasis)} (${costPct.toFixed(2)}%)`;
 
   const curEl = document.getElementById("totalInvestedCurrent");
-  if (curEl) curEl.textContent = formatINR(totalCurrentValue);
+  if (curEl) curEl.textContent = `${formatINR(totalCurrentValue)} (${curPct.toFixed(2)}%)`;
 
   // Total Cash = Portfolio Size minus capital actually deployed (cost basis),
   // i.e. what's still sitting uninvested / available for new trades.
   const totalCash = portfolioSize - totalCostBasis;
+  const totalCashPct = portfolioSize > 0 ? (totalCash / portfolioSize) * 100 : 0;
   const cashEl = document.getElementById("totalCash");
   if (cashEl) {
-    cashEl.textContent = formatINR(totalCash);
+    cashEl.textContent = `${formatINR(totalCash)} (${totalCashPct.toFixed(2)}%)`;
     cashEl.className = pnlClass(totalCash);
   }
 }
