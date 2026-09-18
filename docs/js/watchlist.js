@@ -1,25 +1,33 @@
 // docs/js/watchlist.js
 //
-// Powers watchlist.html. Mirrors the pattern used by position-tracker.js:
+// Powers watchlist.html — now with support for MULTIPLE watchlists.
 //   • Logged out  -> read/write localStorage only, no live price refresh.
-//   • Logged in   -> subscribe to users/{uid}/watchlist via onSnapshot, so
-//                    the table re-renders the instant scripts/update-prices.js
-//                    (run on the same schedule as Open Positions) writes a
-//                    new currentPrice into Firestore. No polling needed.
+//   • Logged in   -> subscribe to watchlistDefs + watchlist via Firestore,
+//                    so the table re-renders the instant
+//                    scripts/update-prices.js (run on the same schedule as
+//                    Open Positions) writes a new currentPrice. No polling.
+//
+// See docs/js/watchlist-lists.js for the shared data-access layer.
 
 import { db, auth, login, logout, onAuthStateChanged } from "./firebase.js";
 import {
-  collection,
-  doc,
-  setDoc,
-  deleteDoc,
-  onSnapshot,
-  query,
-  orderBy
-} from "https://www.gstatic.com/firebasejs/11.9.0/firebase-firestore.js";
-
-const LOCAL_KEY = "wl_symbols";
-const LOCAL_META_KEY = "wl_meta"; // symbol -> {currentPrice, industryGroup, industry}
+  DEFAULT_LIST_ID,
+  getLocalListsSorted,
+  createLocalList,
+  renameLocalList,
+  deleteLocalList,
+  removeFromLocalList,
+  addToLocalList,
+  getLocalMeta,
+  fetchRemoteLists,
+  createRemoteList,
+  renameRemoteList,
+  deleteRemoteList,
+  removeFromRemoteList,
+  addToRemoteList,
+  subscribeRemoteListDefs,
+  subscribeRemoteSymbols
+} from "./watchlist-lists.js";
 
 const loginBtn      = document.getElementById("loginBtn");
 const loginStatus    = document.getElementById("loginStatus");
@@ -37,60 +45,136 @@ const breadthBarAdv  = document.getElementById("breadthBarAdv");
 const breadthBarDec  = document.getElementById("breadthBarDec");
 const breadthBarFlat = document.getElementById("breadthBarFlat");
 const breadthVerdict = document.getElementById("breadthVerdict");
+const wlTabs         = document.getElementById("wlTabs");
+const wlNewListBtn   = document.getElementById("wlNewListBtn");
+const wlRenameBtn    = document.getElementById("wlRenameBtn");
+const wlDeleteBtn    = document.getElementById("wlDeleteBtn");
 
 let currentUid = null;
-let unsubWatchlist = null;
-let items = []; // [{symbol, currentPrice, industryGroup, industry}]
-let changeSortDir = null; // null = default (by symbol), "asc" | "desc" = by changePercent
+let unsubDefs = null;
+let unsubSymbols = null;
 
-function loadLocalMeta() {
-  try { return JSON.parse(localStorage.getItem(LOCAL_META_KEY) || "{}"); }
-  catch { return {}; }
+let listDefs = [];          // [{id, name, order}]
+let activeListId = null;
+let allSymbolDocs = [];     // Firestore: raw docs (with .lists array) OR local: flattened
+let items = [];             // rows for the ACTIVE list only
+let changeSortDir = null;   // null = default (by symbol), "asc" | "desc" = by changePercent
+
+// ── tabs ──────────────────────────────────────────────────────────────
+function renderTabs() {
+  wlTabs.innerHTML = listDefs
+    .map((l) => `<button class="wl-tab${l.id === activeListId ? " active" : ""}" data-id="${l.id}">${l.name}</button>`)
+    .join("");
+  wlTabs.querySelectorAll(".wl-tab").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      if (btn.dataset.id === activeListId) return;
+      activeListId = btn.dataset.id;
+      renderTabs();
+      recomputeItems();
+      render();
+    });
+  });
+  wlDeleteBtn.style.display = listDefs.length > 1 ? "" : "none";
 }
 
-function loadLocal() {
-  try { return new Set(JSON.parse(localStorage.getItem(LOCAL_KEY) || "[]")); }
-  catch { return new Set(); }
-}
-
-function loadLocalItems() {
-  let symbols = [];
-  try { symbols = JSON.parse(localStorage.getItem(LOCAL_KEY) || "[]"); }
-  catch { symbols = []; }
-  const meta = loadLocalMeta();
-  return symbols.map((symbol) => ({
-    symbol,
-    currentPrice: meta[symbol]?.currentPrice ?? null,
-    previousClose: meta[symbol]?.previousClose ?? null,
-    change: meta[symbol]?.change ?? null,
-    changePercent: meta[symbol]?.changePercent ?? null,
-    industryGroup: meta[symbol]?.industryGroup ?? "—",
-    industry: meta[symbol]?.industry ?? "—"
-  }));
-}
-
-function removeLocal(symbol) {
-  try {
-    const symbols = JSON.parse(localStorage.getItem(LOCAL_KEY) || "[]").filter((s) => s !== symbol);
-    localStorage.setItem(LOCAL_KEY, JSON.stringify(symbols));
-    const meta = loadLocalMeta();
-    delete meta[symbol];
-    localStorage.setItem(LOCAL_META_KEY, JSON.stringify(meta));
-  } catch {
-    /* ignore */
+async function ensureListsLoaded() {
+  if (currentUid) {
+    listDefs = await fetchRemoteLists(currentUid);
+  } else {
+    listDefs = getLocalListsSorted();
   }
+  if (!listDefs.some((l) => l.id === activeListId)) {
+    activeListId = listDefs[0]?.id || DEFAULT_LIST_ID;
+  }
+  renderTabs();
 }
 
-function addLocal(symbol) {
+wlNewListBtn.addEventListener("click", async () => {
+  const name = prompt("Name this watchlist:", "");
+  if (name === null) return;
+  const clean = name.trim();
+  if (!clean) return;
+  wlNewListBtn.disabled = true;
   try {
-    const symbols = new Set(JSON.parse(localStorage.getItem(LOCAL_KEY) || "[]"));
-    symbols.add(symbol);
-    localStorage.setItem(LOCAL_KEY, JSON.stringify(Array.from(symbols)));
-    const meta = loadLocalMeta();
-    if (!meta[symbol]) meta[symbol] = { currentPrice: null, industryGroup: "", industry: "" };
-    localStorage.setItem(LOCAL_META_KEY, JSON.stringify(meta));
-  } catch {
-    /* ignore */
+    let id;
+    if (currentUid) {
+      id = await createRemoteList(currentUid, clean, (listDefs.at(-1)?.order ?? -1) + 1);
+      listDefs = await fetchRemoteLists(currentUid);
+    } else {
+      id = createLocalList(clean);
+      listDefs = getLocalListsSorted();
+    }
+    activeListId = id;
+    renderTabs();
+    recomputeItems();
+    render();
+  } finally {
+    wlNewListBtn.disabled = false;
+  }
+});
+
+wlRenameBtn.addEventListener("click", async () => {
+  const cur = listDefs.find((l) => l.id === activeListId);
+  if (!cur) return;
+  const name = prompt("Rename this watchlist:", cur.name);
+  if (name === null) return;
+  const clean = name.trim();
+  if (!clean || clean === cur.name) return;
+  if (currentUid) {
+    await renameRemoteList(currentUid, activeListId, clean);
+    listDefs = await fetchRemoteLists(currentUid);
+  } else {
+    renameLocalList(activeListId, clean);
+    listDefs = getLocalListsSorted();
+  }
+  renderTabs();
+});
+
+wlDeleteBtn.addEventListener("click", async () => {
+  const cur = listDefs.find((l) => l.id === activeListId);
+  if (!cur || listDefs.length <= 1) return;
+  if (!confirm(`Delete "${cur.name}"? Stocks that are only in this list will be removed from your watchlists.`)) return;
+  if (currentUid) {
+    await deleteRemoteList(currentUid, activeListId);
+    listDefs = await fetchRemoteLists(currentUid);
+  } else {
+    deleteLocalList(activeListId);
+    listDefs = getLocalListsSorted();
+  }
+  activeListId = listDefs[0]?.id || DEFAULT_LIST_ID;
+  renderTabs();
+  recomputeItems();
+  render();
+});
+
+// ── data → rows for the active list ─────────────────────────────────────
+function recomputeItems() {
+  if (currentUid) {
+    items = allSymbolDocs
+      .filter((d) => (d.lists || []).includes(activeListId))
+      .map((d) => ({
+        symbol: d.symbol || d.id,
+        currentPrice: d.currentPrice ?? null,
+        previousClose: d.previousClose ?? null,
+        change: d.change ?? null,
+        changePercent: d.changePercent ?? null,
+        industryGroup: d.industryGroup || "—",
+        industry: d.industry || "—"
+      }));
+  } else {
+    const lists = getLocalListsSorted();
+    const cur = lists.find((l) => l.id === activeListId);
+    const meta = getLocalMeta();
+    const symbols = cur ? cur.symbols : [];
+    items = symbols.map((symbol) => ({
+      symbol,
+      currentPrice: meta[symbol]?.currentPrice ?? null,
+      previousClose: meta[symbol]?.previousClose ?? null,
+      change: meta[symbol]?.change ?? null,
+      changePercent: meta[symbol]?.changePercent ?? null,
+      industryGroup: meta[symbol]?.industryGroup ?? "—",
+      industry: meta[symbol]?.industry ?? "—"
+    }));
   }
 }
 
@@ -141,7 +225,7 @@ function renderBreadth() {
     breadthBarAdv.style.width = "0%";
     breadthBarDec.style.width = "0%";
     breadthBarFlat.style.width = "100%";
-    breadthVerdict.innerHTML = `<span class="tag mixed">No data</span>Your watchlist is empty — star some stocks to see breadth here.`;
+    breadthVerdict.innerHTML = `<span class="tag mixed">No data</span>This watchlist is empty — star some stocks to see breadth here.`;
     return;
   }
 
@@ -154,8 +238,6 @@ function renderBreadth() {
     return;
   }
 
-  // Net breadth: -1 (everything down) to +1 (everything up), ignoring
-  // names still waiting on a price refresh.
   const score = (adv - dec) / tracked;
   const advPct = Math.round((adv / tracked) * 100);
   const staleNote = noData > 0 ? ` (${noData} still waiting on a price refresh)` : "";
@@ -164,7 +246,7 @@ function renderBreadth() {
   if (score >= 0.4) {
     tagClass = "bullish";
     tagText = "Bullish tape";
-    verdict = `${adv} of ${tracked} watchlist names (${advPct}%) are trading higher today, with only ${dec} down${staleNote}. Breadth is broadly positive — the tape is supportive of taking fresh long setups, though this only reflects your own watchlist, not the full market.`;
+    verdict = `${adv} of ${tracked} watchlist names (${advPct}%) are trading higher today, with only ${dec} down${staleNote}. Breadth is broadly positive — the tape is supportive of taking fresh long setups, though this only reflects this watchlist, not the full market.`;
   } else if (score <= -0.4) {
     tagClass = "bearish";
     tagText = "Bearish tape";
@@ -183,7 +265,7 @@ function render() {
   renderBreadth();
 
   if (!items.length) {
-    tableBody.innerHTML = `<tr class="wl-empty-row"><td colspan="7">No stocks in your watchlist yet — click the ☆ next to any symbol on a dashboard to add it here.</td></tr>`;
+    tableBody.innerHTML = `<tr class="wl-empty-row"><td colspan="7">No stocks in this watchlist yet — click the ☆ next to any symbol on a dashboard and pick this list, or add a symbol above.</td></tr>`;
     return;
   }
 
@@ -221,15 +303,15 @@ function render() {
 }
 
 async function removeSymbol(symbol) {
-  removeLocal(symbol);
   if (currentUid) {
     try {
-      await deleteDoc(doc(db, "users", currentUid, "watchlist", symbol));
+      await removeFromRemoteList(currentUid, activeListId, symbol);
     } catch (err) {
       console.error("Could not remove from Firestore:", err);
     }
   } else {
-    items = items.filter((it) => it.symbol !== symbol);
+    removeFromLocalList(activeListId, symbol);
+    recomputeItems();
     render();
   }
 }
@@ -243,32 +325,21 @@ function showAddMsg(text, isError) {
 async function addSymbol() {
   const raw = (addSymbolInput.value || "").trim().toUpperCase();
   if (!raw) return;
-  // Strip a trailing .NS/.BO if someone pastes the full Yahoo ticker —
-  // the watchlist stores the same plain display symbol dashboards use.
   const symbol = raw.replace(/\.(NS|BO)$/, "");
 
-  const alreadyIn = currentUid
-    ? items.some((it) => it.symbol === symbol)
-    : loadLocal().has(symbol);
+  const alreadyIn = items.some((it) => it.symbol === symbol);
   if (alreadyIn) {
-    showAddMsg(`${symbol} is already in your watchlist.`, true);
+    showAddMsg(`${symbol} is already in this list.`, true);
     return;
   }
 
   addSymbolBtn.disabled = true;
   try {
     if (currentUid) {
-      await setDoc(doc(db, "users", currentUid, "watchlist", symbol), {
-        symbol,
-        industryGroup: "",
-        industry: "",
-        currentPrice: null,
-        addedAt: Date.now()
-      }, { merge: true });
-      // onSnapshot will pick this up and re-render automatically.
+      await addToRemoteList(currentUid, activeListId, symbol, {});
     } else {
-      addLocal(symbol);
-      items = loadLocalItems();
+      addToLocalList(activeListId, symbol, {});
+      recomputeItems();
       render();
     }
     addSymbolInput.value = "";
@@ -291,33 +362,22 @@ changeHeader.addEventListener("click", () => {
   render();
 });
 
-function subscribeToWatchlist(uid) {
-  const ref = collection(db, "users", uid, "watchlist");
-  const q = query(ref, orderBy("symbol"));
+function subscribeToFirestore(uid) {
   tableBody.innerHTML = `<tr class="wl-empty-row"><td colspan="7">Loading…</td></tr>`;
 
-  unsubWatchlist = onSnapshot(
-    q,
-    (snap) => {
-      items = snap.docs.map((d) => {
-        const data = d.data();
-        return {
-          symbol: data.symbol || d.id,
-          currentPrice: data.currentPrice ?? null,
-          previousClose: data.previousClose ?? null,
-          change: data.change ?? null,
-          changePercent: data.changePercent ?? null,
-          industryGroup: data.industryGroup || "—",
-          industry: data.industry || "—"
-        };
-      });
-      render();
-    },
-    (err) => {
-      console.error(err);
-      tableBody.innerHTML = `<tr class="wl-empty-row"><td colspan="7">Could not load watchlist (check Firestore rules for users/{uid}/watchlist).</td></tr>`;
+  unsubDefs = subscribeRemoteListDefs(uid, (defs) => {
+    listDefs = defs;
+    if (!listDefs.some((l) => l.id === activeListId)) {
+      activeListId = listDefs[0]?.id || DEFAULT_LIST_ID;
     }
-  );
+    renderTabs();
+  });
+
+  unsubSymbols = subscribeRemoteSymbols(uid, (docs) => {
+    allSymbolDocs = docs;
+    recomputeItems();
+    render();
+  });
 }
 
 loginBtn.onclick = async () => {
@@ -333,29 +393,30 @@ loginBtn.onclick = async () => {
   }
 };
 
-onAuthStateChanged(auth, (user) => {
-  if (unsubWatchlist) { unsubWatchlist(); unsubWatchlist = null; }
+onAuthStateChanged(auth, async (user) => {
+  if (unsubDefs) { unsubDefs(); unsubDefs = null; }
+  if (unsubSymbols) { unsubSymbols(); unsubSymbols = null; }
 
   if (user) {
     currentUid = user.uid;
     loginBtn.textContent = `Logout (${user.displayName || user.email})`;
     loginStatus.textContent =
-      "Logged in — your watchlist syncs across devices and Current Price refreshes automatically on the scheduled server job.";
-    subscribeToWatchlist(user.uid);
+      "Logged in — your watchlists sync across devices and Current Price refreshes automatically on the scheduled server job.";
+    await ensureListsLoaded();
+    subscribeToFirestore(user.uid);
   } else {
     currentUid = null;
     loginBtn.textContent = "Login with Google";
     loginStatus.textContent =
-      "Login to sync your watchlist across devices and get live current-price refreshes (every scheduled run) like Open Positions. " +
-      "Without login, stars are saved to this browser only and the price shown is the one captured at the moment you starred it.";
-    items = loadLocalItems();
+      "Login to sync your watchlists across devices and get live current-price refreshes (every scheduled run) like Open Positions. " +
+      "Without login, watchlists are saved to this browser only and prices shown are the ones captured at the moment you starred them.";
+    await ensureListsLoaded();
+    recomputeItems();
     render();
   }
 });
 
-// ── TradingView export — same plain "SYMBOL,SYMBOL,…" format used by the
-// _tv_export_bar() on every scan dashboard, so lists exported from either
-// place paste identically into TradingView. ──────────────────────────────
+// ── TradingView export — plain "SYMBOL,SYMBOL,…" of the ACTIVE list ────
 function _tvSymbolList() {
   return items.map((it) => (it.symbol || "").toUpperCase()).filter(Boolean);
 }
@@ -407,5 +468,8 @@ function _tvFallbackCopy(text, done) {
 
 // Initial paint for the logged-out/default case, before onAuthStateChanged
 // fires for the first time.
-items = loadLocalItems();
-render();
+activeListId = DEFAULT_LIST_ID;
+ensureListsLoaded().then(() => {
+  recomputeItems();
+  render();
+});
