@@ -108,6 +108,9 @@ wlNewListBtn.addEventListener("click", async () => {
     renderTabs();
     recomputeItems();
     render();
+  } catch (err) {
+    console.error("Create watchlist failed:", err);
+    alert(`Could not create the watchlist.\n\n${err.code || err.message || err}`);
   } finally {
     wlNewListBtn.disabled = false;
   }
@@ -120,31 +123,47 @@ wlRenameBtn.addEventListener("click", async () => {
   if (name === null) return;
   const clean = name.trim();
   if (!clean || clean === cur.name) return;
-  if (currentUid) {
-    await renameRemoteList(currentUid, activeListId, clean);
-    listDefs = await fetchRemoteLists(currentUid);
-  } else {
-    renameLocalList(activeListId, clean);
-    listDefs = getLocalListsSorted();
+  wlRenameBtn.disabled = true;
+  try {
+    if (currentUid) {
+      await renameRemoteList(currentUid, activeListId, clean);
+      listDefs = await fetchRemoteLists(currentUid);
+    } else {
+      renameLocalList(activeListId, clean);
+      listDefs = getLocalListsSorted();
+    }
+    renderTabs();
+  } catch (err) {
+    console.error("Rename watchlist failed:", err);
+    alert(`Could not rename the watchlist.\n\n${err.code || err.message || err}`);
+  } finally {
+    wlRenameBtn.disabled = false;
   }
-  renderTabs();
 });
 
 wlDeleteBtn.addEventListener("click", async () => {
   const cur = listDefs.find((l) => l.id === activeListId);
   if (!cur || listDefs.length <= 1) return;
   if (!confirm(`Delete "${cur.name}"? Stocks that are only in this list will be removed from your watchlists.`)) return;
-  if (currentUid) {
-    await deleteRemoteList(currentUid, activeListId);
-    listDefs = await fetchRemoteLists(currentUid);
-  } else {
-    deleteLocalList(activeListId);
-    listDefs = getLocalListsSorted();
+  wlDeleteBtn.disabled = true;
+  try {
+    if (currentUid) {
+      await deleteRemoteList(currentUid, activeListId);
+      listDefs = await fetchRemoteLists(currentUid);
+    } else {
+      deleteLocalList(activeListId);
+      listDefs = getLocalListsSorted();
+    }
+    activeListId = listDefs[0]?.id || DEFAULT_LIST_ID;
+    renderTabs();
+    recomputeItems();
+    render();
+  } catch (err) {
+    console.error("Delete watchlist failed:", err);
+    alert(`Could not delete the watchlist.\n\n${err.code || err.message || err}`);
+  } finally {
+    wlDeleteBtn.disabled = false;
   }
-  activeListId = listDefs[0]?.id || DEFAULT_LIST_ID;
-  renderTabs();
-  recomputeItems();
-  render();
 });
 
 // ── data → rows for the active list ─────────────────────────────────────
