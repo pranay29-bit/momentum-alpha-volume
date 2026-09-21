@@ -39,22 +39,80 @@ logger = logging.getLogger(__name__)
 
 
 # ── Indices to track ────────────────────────────────────────────────────────
-# key → (display name, jugaad-data index_raw symbol, [yfinance ticker candidates])
+# key → {
+#   name           : display name
+#   group          : "Broad Market" | "Market Cap"   (informational)
+#   nse_symbol     : jugaad-data index_raw symbol (niftyindices.com), or None
+#                    for indices niftyindices.com doesn't publish (BSE indices)
+#   yf_candidates  : yfinance tickers tried in order if jugaad-data has no data
+# }
+#
+# NOTE: yfinance tickers for the newer NSE indices are not stable — verify them
+# with a quick `yf.download(ticker, period="1y")` and edit here if one returns
+# empty. jugaad-data is tried first for every NSE index, so a stale yfinance
+# ticker only matters when niftyindices.com is unreachable.
 INDEX_DEFINITIONS: dict[str, dict] = {
+    # ── Broad Market ───────────────────────────────────────────────────────
     "nifty50": {
-        "name": "Nifty 50",
+        "name": "Nifty 50", "group": "Broad Market",
         "nse_symbol": "NIFTY 50",
         "yf_candidates": ["^NSEI"],
     },
-    "niftymidcapselect": {
-        "name": "Nifty Midcap Select",
-        "nse_symbol": "NIFTY MIDCAP SELECT",
-        "yf_candidates": ["^NIFTYMIDSELECT", "NIFTY_MIDCAP_SELECT.NS"],
+    "niftynext50": {
+        "name": "Nifty Next 50", "group": "Broad Market",
+        "nse_symbol": "NIFTY NEXT 50",
+        "yf_candidates": ["^NSMIDCP"],
     },
-    "niftysmallcap100": {
-        "name": "Nifty Smallcap 100",
-        "nse_symbol": "NIFTY SMALLCAP 100",
-        "yf_candidates": ["^CNXSC", "NIFTYSMLCAP100.NS"],
+    "nifty100": {
+        "name": "Nifty 100", "group": "Broad Market",
+        "nse_symbol": "NIFTY 100",
+        "yf_candidates": ["^CNX100"],
+    },
+    "nifty200": {
+        "name": "Nifty 200", "group": "Broad Market",
+        "nse_symbol": "NIFTY 200",
+        "yf_candidates": ["^CNX200"],
+    },
+    "nifty500": {
+        "name": "Nifty 500", "group": "Broad Market",
+        "nse_symbol": "NIFTY 500",
+        "yf_candidates": ["^CRSLDX"],
+    },
+    "sensex": {
+        "name": "BSE Sensex", "group": "Broad Market",
+        "nse_symbol": None,                      # BSE index — not on niftyindices.com
+        "yf_candidates": ["^BSESN"],
+    },
+    "bse500": {
+        "name": "BSE 500", "group": "Broad Market",
+        "nse_symbol": None,                      # BSE index — not on niftyindices.com
+        "yf_candidates": ["BSE-500.BO"],
+    },
+    # ── Market-Cap Segments ────────────────────────────────────────────────
+    "niftymidcap150": {
+        "name": "Nifty Midcap 150", "group": "Market Cap",
+        "nse_symbol": "NIFTY MIDCAP 150",
+        "yf_candidates": ["NIFTYMIDCAP150.NS"],
+    },
+    "niftysmallcap250": {
+        "name": "Nifty Smallcap 250", "group": "Market Cap",
+        "nse_symbol": "NIFTY SMALLCAP 250",
+        "yf_candidates": ["NIFTYSMLCAP250.NS", "^NSMIDCP250"],
+    },
+    "niftylargemidcap250": {
+        "name": "Nifty LargeMidcap 250", "group": "Market Cap",
+        "nse_symbol": "NIFTY LARGEMIDCAP 250",
+        "yf_candidates": ["NIFTY_LARGEMID250.NS"],
+    },
+    "niftymidsmallcap400": {
+        "name": "Nifty MidSmallcap 400", "group": "Market Cap",
+        "nse_symbol": "NIFTY MIDSMALLCAP 400",
+        "yf_candidates": ["NIFTYMIDSML400.NS"],
+    },
+    "niftymicrocap250": {
+        "name": "Nifty Microcap 250", "group": "Market Cap",
+        "nse_symbol": "NIFTY MICROCAP 250",
+        "yf_candidates": ["NIFTY_MICROCAP250.NS"],
     },
 }
 
@@ -81,7 +139,7 @@ def _score_to_allocation(score: int) -> int:
     return 0
 
 
-def _fetch_index_close_series(nse_symbol: str, yf_candidates: list[str]) -> pd.Series | None:
+def _fetch_index_close_series(nse_symbol: str | None, yf_candidates: list[str]) -> pd.Series | None:
     """
     Fetch ~260 trading days of daily close prices for an NSE index.
     Tries jugaad-data (niftyindices.com) first, then yfinance candidates.
@@ -89,8 +147,10 @@ def _fetch_index_close_series(nse_symbol: str, yf_candidates: list[str]) -> pd.S
     """
     close_series: pd.Series | None = None
 
-    # ── 1. jugaad-data ──────────────────────────────────────────────────────
+    # ── 1. jugaad-data (skipped for BSE indices: nse_symbol is None) ────────
     try:
+        if not nse_symbol:
+            raise LookupError("no niftyindices.com symbol — going straight to yfinance")
         from jugaad_data.nse import index_raw
         to_date   = dt.date.today()
         from_date = to_date - dt.timedelta(days=260)  # comfortably > 100 EMA warm-up
@@ -107,7 +167,7 @@ def _fetch_index_close_series(nse_symbol: str, yf_candidates: list[str]) -> pd.S
                     close_series = tmp.set_index(date_col)[close_col].astype(float)
                     logger.info("[EMA Allocation] jugaad-data OK for %s — %d rows", nse_symbol, len(close_series))
     except Exception as exc:
-        logger.warning("[EMA Allocation] jugaad-data failed for %s: %s", nse_symbol, exc)
+        logger.info("[EMA Allocation] jugaad-data skipped/failed for %s: %s", nse_symbol, exc)
 
     # ── 2. yfinance fallback ────────────────────────────────────────────────
     if close_series is None:
@@ -148,6 +208,7 @@ def compute_ema_allocation_for_index(key: str, history_days: int = 20) -> dict:
     result: dict = {
         "key": key,
         "name": meta["name"],
+        "group": meta.get("group", ""),
         "available": False,
         "close": None,
         "ema21": None, "ema50": None, "ema100": None,
