@@ -2841,19 +2841,43 @@ def _ema_alloc_row(row: dict) -> str:
     return main_row + history_row
 
 
+_EMA_ALLOC_HEAD = """
+    <div class="ema-alloc-head">
+      <div class="ema-col ema-col-name">Index</div>
+      <div class="ema-col ema-col-score">Score</div>
+      <div class="ema-col ema-col-alloc">Allocation</div>
+    </div>"""
+
+
+def _ema_alloc_column(rows: list) -> str:
+    rows_html = "".join(_ema_alloc_row(row) for row in rows)
+    return f"""
+  <div class="ema-alloc-card">
+    {_EMA_ALLOC_HEAD}
+    {rows_html}
+  </div>"""
+
+
 def build_ema_allocation_table(results: dict) -> str:
     """
     Build a self-contained HTML fragment visualizing the EMA-Based Allocation
-    Model across the tracked indices (Nifty 50, Nifty Midcap Select,
-    Nifty Smallcap 100). `results` is the dict returned by
+    Model across the 12 tracked indices (Broad Market + Market Cap segments).
+    `results` is the dict returned by
     scanner.ema_allocation.compute_ema_allocation_all().
 
-    Rendered as flex/grid rows (not a <table>) for the main Index / Score /
-    Allocation % line, so the layout can't be overridden by this site's
-    global `table {{ width/min-width/white-space }}` rules used elsewhere.
-    Expand a row for the past 20 trading days (date / score / allocation %).
+    Laid out as two side-by-side columns of up to 6 indices each (splitting
+    on the dict's insertion order — i.e. INDEX_DEFINITIONS order — down the
+    middle), rather than one long single-column list. Stacks back to one
+    column on narrow/mobile screens. Rendered as flex/grid rows (not a
+    <table>) so the layout can't be overridden by this site's global
+    `table {{ width/min-width/white-space }}` rules used elsewhere. Expand a
+    row for the past 20 trading days (date / score / allocation %).
     """
-    rows_html = "".join(_ema_alloc_row(row) for row in results.values())
+    all_rows = list(results.values())
+    midpoint = -(-len(all_rows) // 2)  # ceil division without importing math
+    left_rows, right_rows = all_rows[:midpoint], all_rows[midpoint:]
+
+    columns_html = _ema_alloc_column(left_rows) + _ema_alloc_column(right_rows)
 
     return f"""
 <div class="ema-alloc-section" id="ema-alloc-section">
@@ -2864,18 +2888,14 @@ def build_ema_allocation_table(results: dict) -> str:
       suggested capital allocation %. Expand a row for a chart of the past 20 trading days.</p>
   </div>
 
-  <div class="ema-alloc-card">
-    <div class="ema-alloc-head">
-      <div class="ema-col ema-col-name">Index</div>
-      <div class="ema-col ema-col-score">Score</div>
-      <div class="ema-col ema-col-alloc">Allocation</div>
-    </div>
-    {rows_html}
-    <div class="ema-alloc-legend">
-      Score range -6..+6 from six EMA21/50/100 pairwise rules · Allocation % thresholds are a
-      configurable default (see <code>SCORE_ALLOCATION_TABLE</code> in
-      <code>scanner/ema_allocation.py</code>), not part of the original slide.
-    </div>
+  <div class="ema-alloc-columns">
+    {columns_html}
+  </div>
+
+  <div class="ema-alloc-legend">
+    Score range -6..+6 from six EMA21/50/100 pairwise rules · Allocation % thresholds are a
+    configurable default (see <code>SCORE_ALLOCATION_TABLE</code> in
+    <code>scanner/ema_allocation.py</code>), not part of the original slide.
   </div>
 </div>
 {_EMA_ALLOC_STYLE}
@@ -2884,7 +2904,11 @@ def build_ema_allocation_table(results: dict) -> str:
 
 _EMA_ALLOC_STYLE = """
 <style>
-.ema-alloc-section{max-width:640px;margin:0 auto 2.2rem;padding:0 1.5rem;}
+.ema-alloc-section{max-width:1180px;margin:0 auto 2.2rem;padding:0 1.5rem;}
+.ema-alloc-columns{display:grid;grid-template-columns:1fr 1fr;gap:1rem;align-items:start;}
+@media (max-width:860px){
+  .ema-alloc-columns{grid-template-columns:1fr;}
+}
 .ema-alloc-titlebar{margin-bottom:1rem;}
 .ema-eyebrow{display:flex;align-items:center;gap:.45rem;font-family:var(--mono);font-size:.62rem;
               font-weight:700;letter-spacing:.14em;color:var(--indigo);margin-bottom:.4rem;}
@@ -2960,7 +2984,8 @@ _EMA_ALLOC_STYLE = """
 
 .ema-hist-empty{padding:.6rem .9rem;font-size:.75rem;color:var(--muted);font-style:italic;}
 
-.ema-alloc-legend{padding:.65rem .9rem;font-size:.7rem;color:var(--muted);}
+.ema-alloc-legend{margin-top:1rem;padding:.65rem .9rem;font-size:.7rem;color:var(--muted);
+                  border-radius:14px;border:1px solid var(--border);background:var(--surface);}
 .ema-alloc-legend code{font-family:var(--mono);font-size:.68rem;background:var(--indigo-lt);
                   padding:.05rem .3rem;border-radius:4px;border:1px solid var(--border);}
 
