@@ -5,9 +5,10 @@ EMA-Based Allocation Model (per "Implanting the DNA of a Successful Trader",
 slide 47/48 — "EMA-Based Allocation Model" / "Rules for EMA Analysis").
 
 For each index, CMP is compared against EMA21 / EMA50 / EMA100, and the EMAs
-are compared against each other. Each comparison scores +1 or -1; the six
-scores are summed into a single trend-strength score in the range [-6, +6],
-which is then mapped onto a suggested allocation percentage.
+are compared against each other. Each comparison scores +1 or -1; combined
+with the 2-candle rule below, the seven scores are summed into a single
+trend-strength score in the range [-7, +7], which is then mapped onto a
+suggested allocation percentage.
 
 Scoring rules (from the slide):
     1. Price  > EMA21   → +1   else -1
@@ -16,10 +17,20 @@ Scoring rules (from the slide):
     4. EMA21  > EMA100  → +1   else -1
     5. EMA21  > EMA50   → +1   else -1
     6. EMA50  > EMA100  → +1   else -1
+    7. 2-candle rule (see below) → +1 / -1 / 0
 
 NOTE: the slide's bullet list has an apparent typo ("If EMA 50 > 50 EMA")
 for rule 6 — read here as EMA50 vs EMA100, matching the "three EMAs compared
 pairwise" structure described in the slide's own intro paragraph.
+
+2-candle rule (from whiteboard: "Sentiment / Sector / Stocks"), comparing the
+latest daily candle (candle 2: H2/L2/C) against the one before it (candle 1:
+H1/L1):
+    Bullish (+1): H2 > H1  AND  L2 > L1  AND  C  > H1
+    Bearish (-1): L2 < L1  AND  H2 < H1  AND  C  < L1
+    Neither pattern present → 0 (this rule, unlike the six EMA rules above,
+    is not forced to ±1 — most days satisfy neither the bullish nor the
+    bearish 2-candle pattern).
 
 The score → allocation % mapping is NOT specified on the slide itself (it
 only states "positive score = bullish, negative score = bearish"), so a
@@ -78,16 +89,6 @@ INDEX_DEFINITIONS: dict[str, dict] = {
         "nse_symbol": "NIFTY 500",
         "yf_candidates": ["^CRSLDX"],
     },
-    "sensex": {
-        "name": "BSE Sensex", "group": "Broad Market",
-        "nse_symbol": None,                      # BSE index — not on niftyindices.com
-        "yf_candidates": ["^BSESN"],
-    },
-    "bse500": {
-        "name": "BSE 500", "group": "Broad Market",
-        "nse_symbol": None,                      # BSE index — not on niftyindices.com
-        "yf_candidates": ["BSE-500.BO"],
-    },
     # ── Market-Cap Segments ────────────────────────────────────────────────
     "niftymidcap150": {
         "name": "Nifty Midcap 150", "group": "Market Cap",
@@ -98,16 +99,6 @@ INDEX_DEFINITIONS: dict[str, dict] = {
         "name": "Nifty Smallcap 250", "group": "Market Cap",
         "nse_symbol": "NIFTY SMALLCAP 250",
         "yf_candidates": ["NIFTYSMLCAP250.NS", "^NSMIDCP250"],
-    },
-    "niftylargemidcap250": {
-        "name": "Nifty LargeMidcap 250", "group": "Market Cap",
-        "nse_symbol": "NIFTY LARGEMIDCAP 250",
-        "yf_candidates": ["NIFTY_LARGEMID250.NS"],
-    },
-    "niftymidsmallcap400": {
-        "name": "Nifty MidSmallcap 400", "group": "Market Cap",
-        "nse_symbol": "NIFTY MIDSMALLCAP 400",
-        "yf_candidates": ["NIFTYMIDSML400.NS"],
     },
     "niftymicrocap250": {
         "name": "Nifty Microcap 250", "group": "Market Cap",
@@ -139,13 +130,18 @@ def _score_to_allocation(score: int) -> int:
     return 0
 
 
-def _fetch_index_close_series(nse_symbol: str | None, yf_candidates: list[str]) -> pd.Series | None:
+def _fetch_index_ohlc(nse_symbol: str | None, yf_candidates: list[str]) -> pd.DataFrame | None:
     """
-    Fetch ~260 trading days of daily close prices for an NSE index.
-    Tries jugaad-data (niftyindices.com) first, then yfinance candidates.
-    Mirrors the fetch pattern used in indicators.get_market_sentiment().
+    Fetch ~260 trading days of daily OHLC (open/high/low/close) prices for an
+    NSE index. Tries jugaad-data (niftyindices.com) first, then yfinance
+    candidates. Mirrors the fetch pattern used in
+    indicators.get_market_sentiment(). Returns a DataFrame with (at least)
+    "close", "high", "low" columns, date-indexed and ascending, or None.
+
+    High/Low are needed for the 2-candle rule (see module docstring), on top
+    of Close which is all the EMA rules need.
     """
-    close_series: pd.Series | None = None
+    ohlc: pd.DataFrame | None = None
 
     # ── 1. jugaad-data (skipped for BSE indices: nse_symbol is None) ────────
     try:
@@ -159,18 +155,22 @@ def _fetch_index_close_series(nse_symbol: str | None, yf_candidates: list[str]) 
             tmp = pd.DataFrame(records)
             date_col  = next((c for c in tmp.columns if "date" in c.lower()), None)
             close_col = next((c for c in tmp.columns if "close" in c.lower()), None)
-            if date_col and close_col:
-                tmp[date_col]  = pd.to_datetime(tmp[date_col], dayfirst=True, errors="coerce")
-                tmp[close_col] = pd.to_numeric(tmp[close_col].astype(str).str.replace(",", ""), errors="coerce")
-                tmp = tmp.dropna(subset=[date_col, close_col]).sort_values(date_col)
+            high_col  = next((c for c in tmp.columns if "high" in c.lower()), None)
+            low_col   = next((c for c in tmp.columns if c.lower().startswith("low") or c.lower() == "low"), None)
+            if date_col and close_col and high_col and low_col:
+                tmp[date_col] = pd.to_datetime(tmp[date_col], dayfirst=True, errors="coerce")
+                for c in (close_col, high_col, low_col):
+                    tmp[c] = pd.to_numeric(tmp[c].astype(str).str.replace(",", ""), errors="coerce")
+                tmp = tmp.dropna(subset=[date_col, close_col, high_col, low_col]).sort_values(date_col)
                 if len(tmp) >= 101:
-                    close_series = tmp.set_index(date_col)[close_col].astype(float)
-                    logger.info("[EMA Allocation] jugaad-data OK for %s — %d rows", nse_symbol, len(close_series))
+                    ohlc = tmp.set_index(date_col)[[close_col, high_col, low_col]].astype(float)
+                    ohlc.columns = ["close", "high", "low"]
+                    logger.info("[EMA Allocation] jugaad-data OK for %s — %d rows", nse_symbol, len(ohlc))
     except Exception as exc:
         logger.info("[EMA Allocation] jugaad-data skipped/failed for %s: %s", nse_symbol, exc)
 
     # ── 2. yfinance fallback ────────────────────────────────────────────────
-    if close_series is None:
+    if ohlc is None:
         import yfinance as yf
         for ticker in yf_candidates:
             try:
@@ -182,17 +182,16 @@ def _fetch_index_close_series(nse_symbol: str | None, yf_candidates: list[str]) 
                     continue
                 if isinstance(raw.columns, pd.MultiIndex):
                     raw.columns = raw.columns.get_level_values(0)
-                col = raw["Close"].dropna()
-                if isinstance(col, pd.DataFrame):
-                    col = col.iloc[:, 0]
-                if len(col) >= 101:
-                    close_series = col.astype(float)
-                    logger.info("[EMA Allocation] yfinance %s OK — %d rows", ticker, len(col))
+                sub = raw[["Close", "High", "Low"]].dropna()
+                if len(sub) >= 101:
+                    ohlc = sub.astype(float)
+                    ohlc.columns = ["close", "high", "low"]
+                    logger.info("[EMA Allocation] yfinance %s OK — %d rows", ticker, len(sub))
                     break
             except Exception as exc:
                 logger.warning("[EMA Allocation] yfinance %s failed: %s", ticker, exc)
 
-    return close_series
+    return ohlc
 
 
 def compute_ema_allocation_for_index(key: str, history_days: int = 20) -> dict:
@@ -220,10 +219,14 @@ def compute_ema_allocation_for_index(key: str, history_days: int = 20) -> dict:
         "history": [],
     }
 
-    close_series = _fetch_index_close_series(meta["nse_symbol"], meta["yf_candidates"])
-    if close_series is None or len(close_series) < 101:
+    ohlc = _fetch_index_ohlc(meta["nse_symbol"], meta["yf_candidates"])
+    if ohlc is None or len(ohlc) < 101:
         logger.warning("[EMA Allocation] No usable data for %s", meta["name"])
         return result
+
+    close_series = ohlc["close"]
+    high_series  = ohlc["high"]
+    low_series   = ohlc["low"]
 
     ema21  = close_series.ewm(span=EMA_SPANS["EMA21"],  adjust=False).mean()
     ema50  = close_series.ewm(span=EMA_SPANS["EMA50"],  adjust=False).mean()
@@ -231,6 +234,15 @@ def compute_ema_allocation_for_index(key: str, history_days: int = 20) -> dict:
 
     # Vectorized per-day scores across the whole series, so we can slice the
     # last N days for history without recomputing EMAs per-day.
+    # 2-candle rule (see module docstring): compare each day's candle (H2/L2/C)
+    # against the prior day's candle (H1/L1). Bullish +1 / bearish -1 / else 0
+    # — unlike the six EMA rules, most days trigger neither pattern.
+    prev_high = high_series.shift(1)
+    prev_low  = low_series.shift(1)
+    two_candle_bullish = (high_series > prev_high) & (low_series > prev_low) & (close_series > prev_high)
+    two_candle_bearish = (low_series < prev_low) & (high_series < prev_high) & (close_series < prev_low)
+    two_candle_rule = np.select([two_candle_bullish, two_candle_bearish], [1, -1], default=0)
+
     rules_df = pd.DataFrame({
         "price_above_ema21":  np.where(close_series > ema21,  1, -1),
         "price_above_ema50":  np.where(close_series > ema50,  1, -1),
@@ -238,6 +250,7 @@ def compute_ema_allocation_for_index(key: str, history_days: int = 20) -> dict:
         "ema21_above_ema100": np.where(ema21 > ema100, 1, -1),
         "ema21_above_ema50":  np.where(ema21 > ema50,  1, -1),
         "ema50_above_ema100": np.where(ema50 > ema100, 1, -1),
+        "two_candle_rule":    two_candle_rule,
     }, index=close_series.index)
     daily_score = rules_df.sum(axis=1)
     daily_alloc = daily_score.apply(_score_to_allocation)
