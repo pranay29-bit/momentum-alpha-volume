@@ -2691,8 +2691,9 @@ _CHARTINK_STYLE = """
 # ─────────────────────────────────────────────────────────────────────────────
 #
 # Visualizes scanner.ema_allocation.compute_ema_allocation_all() output as a
-# table: CMP vs EMA21/50/100, the six ±1 scoring rules, total score (-6..+6),
-# bullish/neutral/bearish signal, and a suggested allocation %.
+# table: CMP vs EMA21/50/100, the six ±1 EMA scoring rules plus the 2-candle
+# rule, total score (-7..+7), bullish/neutral/bearish signal, and a suggested
+# allocation %.
 
 _EMA_ALLOC_RULE_LABELS = [
     ("price_above_ema21",  "CMP vs EMA21"),
@@ -2701,6 +2702,7 @@ _EMA_ALLOC_RULE_LABELS = [
     ("ema21_above_ema50",  "EMA21 vs EMA50"),
     ("ema21_above_ema100", "EMA21 vs EMA100"),
     ("ema50_above_ema100", "EMA50 vs EMA100"),
+    ("two_candle_rule",    "2-Candle Rule"),
 ]
 
 
@@ -2861,11 +2863,11 @@ def _ema_alloc_column(rows: list) -> str:
 def build_ema_allocation_table(results: dict) -> str:
     """
     Build a self-contained HTML fragment visualizing the EMA-Based Allocation
-    Model across the 12 tracked indices (Broad Market + Market Cap segments).
+    Model across the tracked indices (Broad Market + Market Cap segments).
     `results` is the dict returned by
     scanner.ema_allocation.compute_ema_allocation_all().
 
-    Laid out as two side-by-side columns of up to 6 indices each (splitting
+    Laid out as two side-by-side columns, split evenly (splitting
     on the dict's insertion order — i.e. INDEX_DEFINITIONS order — down the
     middle), rather than one long single-column list. Stacks back to one
     column on narrow/mobile screens. Rendered as flex/grid rows (not a
@@ -2893,8 +2895,8 @@ def build_ema_allocation_table(results: dict) -> str:
   </div>
 
   <div class="ema-alloc-legend">
-    Score range -6..+6 from six EMA21/50/100 pairwise rules · Allocation % thresholds are a
-    configurable default (see <code>SCORE_ALLOCATION_TABLE</code> in
+    Score range -7..+7 from six EMA21/50/100 pairwise rules plus the 2-candle rule ·
+    Allocation % thresholds are a configurable default (see <code>SCORE_ALLOCATION_TABLE</code> in
     <code>scanner/ema_allocation.py</code>), not part of the original slide.
   </div>
 </div>
