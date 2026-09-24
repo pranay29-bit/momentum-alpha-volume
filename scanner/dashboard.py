@@ -2691,9 +2691,10 @@ _CHARTINK_STYLE = """
 # ─────────────────────────────────────────────────────────────────────────────
 #
 # Visualizes scanner.ema_allocation.compute_ema_allocation_all() output as a
-# table: CMP vs EMA21/50/100, the six ±1 EMA scoring rules plus the 2-candle
-# rule, total score (-7..+7), bullish/neutral/bearish signal, and a suggested
-# allocation %.
+# table: CMP vs EMA21/50/100, the six ±1 EMA scoring rules, total score
+# (-6..+6), bullish/neutral/bearish signal, and a suggested allocation %.
+# The 2-Candle Rule is shown as its own separate badge per index — it is
+# NOT one of the six rules summed into the score.
 
 _EMA_ALLOC_RULE_LABELS = [
     ("price_above_ema21",  "CMP vs EMA21"),
@@ -2702,7 +2703,6 @@ _EMA_ALLOC_RULE_LABELS = [
     ("ema21_above_ema50",  "EMA21 vs EMA50"),
     ("ema21_above_ema100", "EMA21 vs EMA100"),
     ("ema50_above_ema100", "EMA50 vs EMA100"),
-    ("two_candle_rule",    "2-Candle Rule"),
 ]
 
 
@@ -2734,7 +2734,8 @@ def _ema_alloc_history_chart(history: list[dict]) -> str:
     def y_alloc(pct: float) -> float:
         return pad_t + plot_h * (1 - pct / 100)
 
-    # Score → y (-6..+6 domain, fixed by the model's own scoring range)
+    # Score → y (-6..+6 domain, fixed by the model's own scoring range —
+    # six ±1 EMA rules. The 2-candle rule is separate and not plotted here.)
     def y_score(score: float) -> float:
         return pad_t + plot_h * (1 - (score + 6) / 12)
 
@@ -2814,6 +2815,9 @@ def _ema_alloc_row(row: dict) -> str:
     signal = row["signal"]
     score_cls = {"bullish": "emerald", "bearish": "rose", "neutral": "slate"}.get(signal, "slate")
 
+    two_candle_signal = row.get("two_candle_signal") or "Neutral"
+    two_candle_cls = {"Bullish": "emerald", "Bearish": "rose", "Neutral": "slate"}.get(two_candle_signal, "slate")
+
     alloc = row["allocation_pct"]
     alloc_str = f"{alloc}%" if alloc is not None else "–"
 
@@ -2825,6 +2829,9 @@ def _ema_alloc_row(row: dict) -> str:
       </div>
       <div class="ema-col ema-col-score">
         <span class="chip {score_cls}">{score_str}</span>
+      </div>
+      <div class="ema-col ema-col-twocandle">
+        <span class="chip chip-outline {two_candle_cls}" title="2-Candle Rule — separate from the score above">{html.escape(two_candle_signal)}</span>
       </div>
       <div class="ema-col ema-col-alloc">
         <div class="ema-alloc-bar-wrap">
@@ -2847,6 +2854,7 @@ _EMA_ALLOC_HEAD = """
     <div class="ema-alloc-head">
       <div class="ema-col ema-col-name">Index</div>
       <div class="ema-col ema-col-score">Score</div>
+      <div class="ema-col ema-col-twocandle">2-Candle</div>
       <div class="ema-col ema-col-alloc">Allocation</div>
     </div>"""
 
@@ -2887,7 +2895,8 @@ def build_ema_allocation_table(results: dict) -> str:
     <div class="ema-eyebrow"><span class="ema-dot"></span>EMA-BASED ALLOCATION MODEL</div>
     <h2 class="ema-heading">Index Allocation Scorecard</h2>
     <p class="ema-sub">Trend-strength score (-6..+6) from CMP vs EMA21/50/100, mapped to a
-      suggested capital allocation %. Expand a row for a chart of the past 20 trading days.</p>
+      suggested capital allocation %. The 2-Candle Rule is shown separately alongside each
+      index — it does not add to the score. Expand a row for a chart of the past 20 trading days.</p>
   </div>
 
   <div class="ema-alloc-columns">
@@ -2895,9 +2904,10 @@ def build_ema_allocation_table(results: dict) -> str:
   </div>
 
   <div class="ema-alloc-legend">
-    Score range -7..+7 from six EMA21/50/100 pairwise rules plus the 2-candle rule ·
-    Allocation % thresholds are a configurable default (see <code>SCORE_ALLOCATION_TABLE</code> in
-    <code>scanner/ema_allocation.py</code>), not part of the original slide.
+    Score range -6..+6 from six EMA21/50/100 pairwise rules · 2-Candle Rule shown separately,
+    not included in the score · Allocation % thresholds are a configurable default (see
+    <code>SCORE_ALLOCATION_TABLE</code> in <code>scanner/ema_allocation.py</code>), not part of
+    the original slide.
   </div>
 </div>
 {_EMA_ALLOC_STYLE}
@@ -2936,9 +2946,10 @@ _EMA_ALLOC_STYLE = """
 .ema-row:hover{background:var(--indigo-lt);}
 
 .ema-col{box-sizing:border-box;}
-.ema-col-name{flex:1 1 52%;min-width:0;text-align:left;}
-.ema-col-score{flex:0 0 20%;text-align:center;}
-.ema-col-alloc{flex:0 0 28%;text-align:center;}
+.ema-col-name{flex:1 1 40%;min-width:0;text-align:left;}
+.ema-col-score{flex:0 0 16%;text-align:center;}
+.ema-col-twocandle{flex:0 0 20%;text-align:center;}
+.ema-col-alloc{flex:0 0 24%;text-align:center;}
 .ema-col-na{flex:1;text-align:center;color:var(--muted);font-style:italic;}
 
 .ema-name{font-weight:700;color:var(--text);font-size:.9rem;}
@@ -2950,6 +2961,9 @@ _EMA_ALLOC_STYLE = """
 .chip.emerald{background:var(--emerald-lt);color:var(--emerald);border:1px solid var(--emerald-mid);}
 .chip.rose{background:#fee2e2;color:#dc2626;border:1px solid #fecaca;}
 .chip.slate{background:var(--indigo-lt);color:var(--muted);border:1px solid var(--border);}
+/* Outline variant for the 2-Candle Rule badge — deliberately reads as a
+   separate, secondary signal rather than another score chip. */
+.chip.chip-outline{background:transparent;border-style:dashed;font-size:.7rem;padding:.25rem .55rem;}
 
 .ema-alloc-bar-wrap{width:100%;max-width:110px;height:6px;border-radius:999px;background:var(--indigo-lt);
                     overflow:hidden;margin:0 auto .3rem;}
@@ -2994,9 +3008,10 @@ _EMA_ALLOC_STYLE = """
 @media (max-width:768px){
   .ema-alloc-section{padding:0 1rem;}
   .ema-heading{font-size:1.1rem;}
-  .ema-col-name{flex-basis:44%;}
-  .ema-col-score{flex-basis:24%;}
-  .ema-col-alloc{flex-basis:32%;}
+  .ema-col-name{flex-basis:36%;}
+  .ema-col-score{flex-basis:18%;}
+  .ema-col-twocandle{flex-basis:22%;}
+  .ema-col-alloc{flex-basis:24%;}
 }
 </style>
 """
