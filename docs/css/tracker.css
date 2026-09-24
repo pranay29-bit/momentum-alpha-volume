@@ -125,16 +125,47 @@ table.history-table{width:100%;min-width:640px;border-collapse:collapse;
       background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
       overflow:hidden;}
 .history-table th{font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:.09em;
-    color:var(--subtle);padding:.75rem 1.1rem;text-align:left;
+    color:var(--subtle);padding:.75rem .85rem;text-align:left;
     background:var(--surface-2);border-bottom:1px solid var(--border);}
 .history-table th.sortable{cursor:pointer;user-select:none;white-space:nowrap;transition:color .15s;}
 .history-table th.sortable:hover{color:var(--indigo);}
 .history-table th.sortable.sorted{color:var(--indigo);}
 .history-table th.sortable .sort-arrow{display:inline-block;width:.7em;font-size:.85em;color:var(--indigo);}
-.history-table td{padding:.8rem 1.1rem;border-bottom:1px solid var(--border);font-size:.85rem;
+.history-table td{padding:.7rem .85rem;border-bottom:1px solid var(--border);font-size:.85rem;
     font-family:var(--mono);}
 .history-table tr:last-child td{border-bottom:none;}
 .history-table tr:hover td{background:var(--surface-2);}
+
+/* Book / Delete (or just Delete, on the Booked table) are the action columns
+   at the right edge. Rather than requiring a horizontal scroll to reach
+   them, pin them to the right of the scroll container so they stay visible
+   no matter how far the rest of the row has been scrolled — the row still
+   scrolls under them if there isn't room, but the action buttons themselves
+   never disappear off-screen. */
+.history-table th:last-child, .history-table td:last-child,
+.history-table th:nth-last-child(2), .history-table td:nth-last-child(2){
+  position:sticky;right:0;background:var(--surface);white-space:nowrap;
+}
+.history-table th:last-child, .history-table td:last-child{right:0;}
+.history-table th:nth-last-child(2), .history-table td:nth-last-child(2){right:52px;}
+.history-table th:last-child, .history-table th:nth-last-child(2){background:var(--surface-2);z-index:3;}
+.history-table td:last-child, .history-table td:nth-last-child(2){z-index:2;}
+/* Left-edge divider so the pinned columns read as separate from the
+   scrollable ones behind them, instead of blending in. */
+.history-table th:nth-last-child(2), .history-table td:nth-last-child(2){
+  border-left:1px solid var(--border);
+}
+/* A table with only one action column (Booked Positions: just Delete) has
+   no second-to-last action column to pin — nth-last-child(2) there is a
+   normal data column (Portfolio Impact) and must NOT be pinned. Scope the
+   two-column pin to tables that actually have a "Book" header by only
+   applying it when a sibling th has that exact text — done via a data
+   attribute set in the HTML instead of a CSS-only check (CSS can't match on
+   text content), see position-tracker.html's <thead>. */
+table.history-table:not([data-actions="2"]) th:nth-last-child(2),
+table.history-table:not([data-actions="2"]) td:nth-last-child(2){
+  position:static;right:auto;background:transparent;border-left:none;z-index:auto;
+}
 
 .deleteBtn{background:var(--red-lt);border:1px solid var(--red-mid);color:var(--red);
            padding:.35rem .7rem;border-radius:var(--radius-sm);cursor:pointer;font-size:.78rem;
