@@ -5,10 +5,9 @@ EMA-Based Allocation Model (per "Implanting the DNA of a Successful Trader",
 slide 47/48 — "EMA-Based Allocation Model" / "Rules for EMA Analysis").
 
 For each index, CMP is compared against EMA21 / EMA50 / EMA100, and the EMAs
-are compared against each other. Each comparison scores +1 or -1; combined
-with the 2-candle rule below, the seven scores are summed into a single
-trend-strength score in the range [-7, +7], which is then mapped onto a
-suggested allocation percentage.
+are compared against each other. Each comparison scores +1 or -1; the six
+scores are summed into a single trend-strength score in the range [-6, +6],
+which is then mapped onto a suggested allocation percentage.
 
 Scoring rules (from the slide):
     1. Price  > EMA21   → +1   else -1
@@ -17,20 +16,24 @@ Scoring rules (from the slide):
     4. EMA21  > EMA100  → +1   else -1
     5. EMA21  > EMA50   → +1   else -1
     6. EMA50  > EMA100  → +1   else -1
-    7. 2-candle rule (see below) → +1 / -1 / 0
 
 NOTE: the slide's bullet list has an apparent typo ("If EMA 50 > 50 EMA")
 for rule 6 — read here as EMA50 vs EMA100, matching the "three EMAs compared
 pairwise" structure described in the slide's own intro paragraph.
 
-2-candle rule (from whiteboard: "Sentiment / Sector / Stocks"), comparing the
-latest daily candle (candle 2: H2/L2/C) against the one before it (candle 1:
-H1/L1):
-    Bullish (+1): H2 > H1  AND  L2 > L1  AND  C  > H1
-    Bearish (-1): L2 < L1  AND  H2 < H1  AND  C  < L1
-    Neither pattern present → 0 (this rule, unlike the six EMA rules above,
-    is not forced to ±1 — most days satisfy neither the bullish nor the
-    bearish 2-candle pattern).
+2-Candle Rule — SEPARATE from the score above, not part of it
+---------------------------------------------------------------
+From the whiteboard ("Sentiment / Sector / Stocks"), comparing the latest
+daily candle (candle 2: H2/L2/C) against the one before it (candle 1: H1/L1):
+    Bullish: H2 > H1  AND  L2 > L1  AND  C  > H1
+    Bearish: L2 < L1  AND  H2 < H1  AND  C  < L1
+    Otherwise: Neutral (most days satisfy neither pattern)
+
+This is reported as its own "two_candle_signal" ("Bullish" / "Bearish" /
+"Neutral") alongside the score and allocation %, but does NOT add ±1 into
+the score and does NOT affect the -6..+6 range or the allocation % mapping.
+It's a separate read on price action, shown side by side with the EMA-based
+score rather than blended into it.
 
 The score → allocation % mapping is NOT specified on the slide itself (it
 only states "positive score = bullish, negative score = bearish"), so a
@@ -109,7 +112,9 @@ INDEX_DEFINITIONS: dict[str, dict] = {
 
 EMA_SPANS = {"EMA21": 21, "EMA50": 50, "EMA100": 100}
 
-# score (sum of six ±1 rules, range -6..+6) → suggested allocation %
+# score (sum of six ±1 EMA rules, range -6..+6) → suggested allocation %
+# The 2-candle rule is intentionally NOT part of this sum — see module
+# docstring. It's reported separately as two_candle_signal.
 # Adjust freely — this is a reasonable graduated default, not from the slide.
 SCORE_ALLOCATION_TABLE = [
     (6,  100),
@@ -215,6 +220,8 @@ def compute_ema_allocation_for_index(key: str, history_days: int = 20) -> dict:
         "score": None,
         "signal": "unavailable",
         "allocation_pct": None,
+        "two_candle_rule": None,
+        "two_candle_signal": "unavailable",
         "as_of": None,
         "history": [],
     }
@@ -250,10 +257,16 @@ def compute_ema_allocation_for_index(key: str, history_days: int = 20) -> dict:
         "ema21_above_ema100": np.where(ema21 > ema100, 1, -1),
         "ema21_above_ema50":  np.where(ema21 > ema50,  1, -1),
         "ema50_above_ema100": np.where(ema50 > ema100, 1, -1),
-        "two_candle_rule":    two_candle_rule,
     }, index=close_series.index)
     daily_score = rules_df.sum(axis=1)
     daily_alloc = daily_score.apply(_score_to_allocation)
+
+    # two_candle_rule stays OUT of rules_df / daily_score on purpose — it's
+    # reported as its own signal, not blended into the -6..+6 score.
+    two_candle_series = pd.Series(two_candle_rule, index=close_series.index)
+
+    def _two_candle_label(v: int) -> str:
+        return "Bullish" if v > 0 else "Bearish" if v < 0 else "Neutral"
 
     price   = float(close_series.iloc[-1])
     e21     = float(ema21.iloc[-1])
@@ -263,6 +276,8 @@ def compute_ema_allocation_for_index(key: str, history_days: int = 20) -> dict:
 
     rules = {col: int(rules_df[col].iloc[-1]) for col in rules_df.columns}
     score = int(daily_score.iloc[-1])
+    two_candle_value = int(two_candle_series.iloc[-1])
+    two_candle_signal = _two_candle_label(two_candle_value)
 
     if score > 0:
         signal = "bullish"
@@ -276,6 +291,8 @@ def compute_ema_allocation_for_index(key: str, history_days: int = 20) -> dict:
             "date": idx.strftime("%Y-%m-%d") if hasattr(idx, "strftime") else str(idx),
             "score": int(daily_score.loc[idx]),
             "allocation_pct": int(daily_alloc.loc[idx]),
+            "two_candle_rule": int(two_candle_series.loc[idx]),
+            "two_candle_signal": _two_candle_label(int(two_candle_series.loc[idx])),
         }
         for idx in close_series.index[-history_days:]
     ]
@@ -290,6 +307,9 @@ def compute_ema_allocation_for_index(key: str, history_days: int = 20) -> dict:
         "score": score,
         "signal": signal,
         "allocation_pct": _score_to_allocation(score),
+        # Separate from score/allocation above — see module docstring.
+        "two_candle_rule": two_candle_value,
+        "two_candle_signal": two_candle_signal,
         "as_of": as_of.strftime("%Y-%m-%d") if hasattr(as_of, "strftime") else str(as_of),
         "history": history,
     })
