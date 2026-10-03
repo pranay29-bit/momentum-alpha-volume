@@ -860,10 +860,6 @@ def _update_index(
 
 {nnh_html}
 
-{hub_html}
-
-{tools_html}
-
 {chartink_html}
 
 {ema_alloc_html}
