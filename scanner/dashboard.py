@@ -2818,9 +2818,6 @@ def _ema_alloc_row(row: dict) -> str:
     two_candle_signal = row.get("two_candle_signal") or "Neutral"
     two_candle_cls = {"Bullish": "emerald", "Bearish": "rose", "Neutral": "slate"}.get(two_candle_signal, "slate")
 
-    alloc = row["allocation_pct"]
-    alloc_str = f"{alloc}%" if alloc is not None else "–"
-
     main_row = f"""
     <div class="ema-row">
       <div class="ema-col ema-col-name">
@@ -2832,12 +2829,6 @@ def _ema_alloc_row(row: dict) -> str:
       </div>
       <div class="ema-col ema-col-twocandle">
         <span class="chip chip-outline {two_candle_cls}" title="2-Candle Rule — separate from the score above">{html.escape(two_candle_signal)}</span>
-      </div>
-      <div class="ema-col ema-col-alloc">
-        <div class="ema-alloc-bar-wrap">
-          <div class="ema-alloc-bar" style="width:{alloc if alloc is not None else 0}%"></div>
-        </div>
-        <div class="ema-alloc-pct">{alloc_str}</div>
       </div>
     </div>"""
 
@@ -2855,7 +2846,6 @@ _EMA_ALLOC_HEAD = """
       <div class="ema-col ema-col-name">Index</div>
       <div class="ema-col ema-col-score">Score</div>
       <div class="ema-col ema-col-twocandle">2-Candle</div>
-      <div class="ema-col ema-col-alloc">Allocation</div>
     </div>"""
 
 
@@ -2947,9 +2937,8 @@ _EMA_ALLOC_STYLE = """
 
 .ema-col{box-sizing:border-box;}
 .ema-col-name{flex:1 1 40%;min-width:0;text-align:left;}
-.ema-col-score{flex:0 0 16%;text-align:center;}
-.ema-col-twocandle{flex:0 0 20%;text-align:center;}
-.ema-col-alloc{flex:0 0 24%;text-align:center;}
+.ema-col-score{flex:0 0 24%;text-align:center;}
+.ema-col-twocandle{flex:0 0 28%;text-align:center;}
 .ema-col-na{flex:1;text-align:center;color:var(--muted);font-style:italic;}
 
 .ema-name{font-weight:700;color:var(--text);font-size:.9rem;}
@@ -3009,9 +2998,8 @@ _EMA_ALLOC_STYLE = """
   .ema-alloc-section{padding:0 1rem;}
   .ema-heading{font-size:1.1rem;}
   .ema-col-name{flex-basis:36%;}
-  .ema-col-score{flex-basis:18%;}
-  .ema-col-twocandle{flex-basis:22%;}
-  .ema-col-alloc{flex-basis:24%;}
+  .ema-col-score{flex-basis:26%;}
+  .ema-col-twocandle{flex-basis:30%;}
 }
 </style>
 """
