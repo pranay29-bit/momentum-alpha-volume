@@ -264,13 +264,6 @@ def build_html(stats: dict) -> str:
     }.get(stats["bias"], "var(--blue-lt)")
 
     chart_data = _json.dumps(stats.get("chart", []))
-    table_rows = "".join(
-        f"<tr><td>{r['date']}</td>"
-        f"<td style='color:var(--emerald)'>{r['new_highs']}</td>"
-        f"<td style='color:var(--red)'>{r['new_lows']}</td>"
-        f"<td style='color:{'var(--emerald)' if r['net']>=0 else 'var(--red)'}'>{r['net']:+d}</td></tr>"
-        for r in reversed(stats.get("chart", [])[-20:])
-    )
 
     return f"""
 <div class="sentiment-section">
@@ -306,28 +299,6 @@ def build_html(stats: dict) -> str:
     <div class="sentiment-legend" style="margin-top:.5rem;">
       Green/red background = sticky 3-day-confirmed bullish/bearish bias &middot;
       bars = daily Net New Highs &middot; amber line = {SMA_WINDOW}-day SMA
-    </div>
-  </div>
-
-  <div class="sentiment-card" style="max-width:640px;">
-    <div class="sentiment-card-header">
-      <button onclick="toggleMonth(this)" aria-expanded="false"
-        style="background:none;border:none;cursor:pointer;padding:0;font:inherit;color:var(--text);font-weight:600;">
-        📋 New Highs / New Lows table (last 20 sessions) ▾
-      </button>
-    </div>
-    <div class="month-body">
-      <table style="width:100%;font-size:.82rem;border-collapse:collapse;">
-        <thead>
-          <tr style="text-align:left;border-bottom:1px solid var(--border);">
-            <th style="padding:.35rem .5rem;">Date</th>
-            <th style="padding:.35rem .5rem;">New Highs</th>
-            <th style="padding:.35rem .5rem;">New Lows</th>
-            <th style="padding:.35rem .5rem;">Net</th>
-          </tr>
-        </thead>
-        <tbody>{table_rows}</tbody>
-      </table>
     </div>
   </div>
 </div>
