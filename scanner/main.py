@@ -162,6 +162,10 @@ def run() -> None:
 
     # ── 8. Volume Action ──────────────────────────────────────────────────────
     volume_action = df[df["volume_signal"] == "ppv"].copy()
+    # The full-universe df has no price_band column (only `passing` is enriched
+    # with NSE data), so the Volume dashboard's Band column rendered "—" for
+    # every row. Pull the band from data/market_cap_cache.csv instead.
+    volume_action = overlay_price_band_from_cache(volume_action)
     volume_action_path = out_dir / f"volume_action_{today_str}.csv"
     volume_action.to_csv(volume_action_path, index=False)
 
@@ -842,6 +846,28 @@ def _update_index(
     .ema-pill{{font-size:.68rem;padding:.26rem .65rem;}}
     .hub-grid{{grid-template-columns:1fr;}}
   }}
+
+/* ── Smooth page transitions ──
+   Cross-page fade (View Transitions API, Chrome/Edge 126+, Safari 18.2+).
+   The sticky nav is pinned so only the page content fades. */
+@view-transition {{ navigation: auto; }}
+html {{ scroll-behavior: smooth; }}
+.site-nav {{ view-transition-name: site-nav; }}
+::view-transition-old(site-nav) {{ display: none; }}
+::view-transition-new(site-nav) {{ animation: none; }}
+::view-transition-old(root) {{ animation: maFadeOut .16s ease both; }}
+::view-transition-new(root) {{ animation: maFadeIn .26s ease .04s both; }}
+@keyframes maFadeIn {{ from {{ opacity: 0; transform: translateY(6px); }} to {{ opacity: 1; transform: none; }} }}
+@keyframes maFadeOut {{ from {{ opacity: 1; }} to {{ opacity: 0; }} }}
+@keyframes maBodyIn {{ from {{ opacity: 0; }} to {{ opacity: 1; }} }}
+@supports not (view-transition-name: none) {{
+  body {{ animation: maBodyIn .28s ease both; }}
+}}
+@media (prefers-reduced-motion: reduce) {{
+  html {{ scroll-behavior: auto; }}
+  ::view-transition-group(*), ::view-transition-old(*), ::view-transition-new(*) {{ animation: none !important; }}
+  body {{ animation: none !important; }}
+}}
   </style>
 </head>
 <body>
@@ -888,6 +914,18 @@ function toggleMonth(btn) {{
 
     index_path.write_text(html, encoding="utf-8")
     logger.info("Index page updated → %s", index_path)
+
+    # Tell the static pages (watchlist / position size / position tracker) which
+    # dated folder holds the newest dashboards, so their nav links stay current.
+    if dated_dirs:
+        js_dir = docs_root / "js"
+        js_dir.mkdir(parents=True, exist_ok=True)
+        (js_dir / "latest.js").write_text(
+            "/* Auto-updated by scanner/main.py (_update_index) on every scan.\n"
+            "   Tells the static pages which dated folder holds the newest dashboards. */\n"
+            f'window.MA_LATEST = "{today_date_display}";\n',
+            encoding="utf-8",
+        )
 
 
 def _build_sentiment_html(sentiment: dict) -> str:
