@@ -236,7 +236,28 @@
     .ema-pill{font-size:.68rem;padding:.26rem .65rem;}
     .hub-grid{grid-template-columns:1fr;}
   }
-  </style>
+  /* ── Smooth page transitions ──
+   Cross-page fade (View Transitions API, Chrome/Edge 126+, Safari 18.2+).
+   The sticky nav is pinned so only the page content fades. */
+@view-transition { navigation: auto; }
+html { scroll-behavior: smooth; }
+.site-nav { view-transition-name: site-nav; }
+::view-transition-old(site-nav) { display: none; }
+::view-transition-new(site-nav) { animation: none; }
+::view-transition-old(root) { animation: maFadeOut .16s ease both; }
+::view-transition-new(root) { animation: maFadeIn .26s ease .04s both; }
+@keyframes maFadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+@keyframes maFadeOut { from { opacity: 1; } to { opacity: 0; } }
+@keyframes maBodyIn { from { opacity: 0; } to { opacity: 1; } }
+@supports not (view-transition-name: none) {
+  body { animation: maBodyIn .28s ease both; }
+}
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  ::view-transition-group(*), ::view-transition-old(*), ::view-transition-new(*) { animation: none !important; }
+  body { animation: none !important; }
+}
+</style>
 </head>
 <body>
 <div class="topbar"></div>
