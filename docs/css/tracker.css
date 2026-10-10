@@ -89,7 +89,9 @@ input:focus{border-color:var(--indigo);box-shadow:0 0 0 3px var(--indigo-lt);}
 /* ── Buttons — identical spec to homepage & all dashboards ── */
 .site-nav{display:flex;flex-wrap:wrap;gap:.35rem;padding:.65rem 2.5rem;
           background:color-mix(in srgb, var(--surface) 92%, transparent);border-bottom:1px solid var(--border);
-          box-shadow:var(--shadow-sm);}
+          box-shadow:var(--shadow-sm);
+          position:sticky;top:0;z-index:100;
+          backdrop-filter:blur(10px) saturate(160%);-webkit-backdrop-filter:blur(10px) saturate(160%);}
 .btn-link{display:inline-flex;align-items:center;gap:.4rem;
           padding:.34rem .85rem;border-radius:7px;border:1px solid transparent;
           background:transparent;color:var(--muted);
@@ -410,3 +412,33 @@ select:focus{border-color:var(--indigo);box-shadow:0 0 0 3px var(--indigo-lt);}
 .breadth-verdict .tag.bullish{background:var(--emerald-lt);color:var(--emerald);border:1px solid var(--emerald-mid);}
 .breadth-verdict .tag.bearish{background:var(--red-lt);color:var(--red);border:1px solid var(--red-mid);}
 .breadth-verdict .tag.mixed{background:var(--surface-2);color:var(--subtle);border:1px solid var(--border);}
+
+/* ── Extra nav colours so the shared nav matches the home page & dashboards ── */
+.btn-link.indigo{color:var(--indigo);background:var(--indigo-lt);border-color:var(--indigo-mid);}
+.btn-link.rose{color:#e11d48;}
+.btn-link.rose:hover{color:#e11d48;background:#fff1f2;border-color:#fecdd3;}
+.btn-link.gold{color:#9a7500;}
+.btn-link.gold:hover{color:#9a7500;background:#fff8e1;border-color:#f5d76e;}
+.btn-link.gold.is-active{color:#9a7500;background:#fff8e1;border-color:#f5d76e;}
+.btn-link.rose.is-active{color:#e11d48;background:#fff1f2;border-color:#fecdd3;}
+
+/* ── Smooth page transitions ──
+   Cross-page fade (View Transitions API, Chrome/Edge 126+, Safari 18.2+).
+   The sticky nav is pinned in place so only the page content fades. */
+@view-transition{navigation:auto;}
+.site-nav{view-transition-name:site-nav;}
+::view-transition-old(site-nav){display:none;}
+::view-transition-new(site-nav){animation:none;}
+::view-transition-old(root){animation:maFadeOut .16s ease both;}
+::view-transition-new(root){animation:maFadeIn .26s ease .04s both;}
+@keyframes maFadeIn{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:none;}}
+@keyframes maFadeOut{from{opacity:1;}to{opacity:0;}}
+/* Browsers without cross-page transitions: simple fade-in on load */
+@keyframes maBodyIn{from{opacity:0;}to{opacity:1;}}
+@supports not (view-transition-name:none){
+  body{animation:maBodyIn .28s ease both;}
+}
+@media (prefers-reduced-motion: reduce){
+  ::view-transition-group(*),::view-transition-old(*),::view-transition-new(*){animation:none !important;}
+  body{animation:none !important;}
+}
