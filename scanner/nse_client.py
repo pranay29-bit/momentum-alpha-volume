@@ -488,15 +488,27 @@ def overlay_price_band_from_cache(df: pd.DataFrame) -> pd.DataFrame:
     they already had (e.g. from the live fetch, or "—" if that was empty
     too).
     """
-    if df is None or df.empty or "price_band" not in df.columns:
+    if df is None or df.empty:
         return df
+
+    out = df.copy()
+    # DataFrames that never went through enrich_with_market_caps() (e.g. the
+    # Volume Action list, which is cut straight from the full-universe scan)
+    # have no price_band column at all — create it so the overlay below can
+    # fill it, instead of the dashboard rendering "—" for every row.
+    if "price_band" not in out.columns:
+        out["price_band"] = _PRICE_BAND_EMPTY
 
     cache = _load_cache()
     if cache.empty:
-        return df
+        return out
 
-    band_lookup = cache.set_index("symbol")["price_band"]
-    out = df.copy()
+    band_lookup = (
+        cache.dropna(subset=["price_band"])
+             .drop_duplicates(subset="symbol", keep="last")
+             .set_index("symbol")["price_band"]
+             .astype(str)
+    )
     overlay = out["symbol"].map(band_lookup)
     out["price_band"] = overlay.fillna(out["price_band"])
     return out
