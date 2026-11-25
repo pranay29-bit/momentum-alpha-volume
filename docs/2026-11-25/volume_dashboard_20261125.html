@@ -1,0 +1,3456 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Alpha Momentum — Volume Action — 25 Nov 2026</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+:root { --ACCENT1:var(--blue); --ACCENT2:var(--indigo); }
+
+:root {
+  /* Surfaces */
+  --bg:         #ffffff;
+  --surface:    #ffffff;
+  --surface-2:  #fbfbfe;
+  --surface2:   #fbfbfe;
+  --surface3:   #f1f3f9;
+  --border:     #e5e8f0;
+  --border-2:   #d4d9e8;
+  --border2:    #d4d9e8;
+
+  /* Text */
+  --text:       #0d1426;
+  --muted:      #5b6178;
+  --subtle:     #9499b3;
+
+  /* Brand accents */
+  --navy:       #0f1b3d;
+  --navy-2:     #16234a;
+  --navy-lt:    #eef1f8;
+  --navy-mid:   #c9d0e3;
+  --indigo:     #4f46e5;
+  --indigo-lt:  #eef0fd;
+  --indigo-mid: #c7d2fe;
+  --emerald:    #059669;
+  --emerald-lt: #ecfdf5;
+  --emerald-mid:#a7f3d0;
+  --blue:       #2563eb;
+  --blue-lt:    #eff6ff;
+  --blue-mid:   #bfdbfe;
+  --amber:      #b45309;
+  --amber-lt:   #fffbeb;
+  --amber-mid:  #fde68a;
+  --red:        #dc2626;
+  --red-lt:     #fef2f2;
+  --red-mid:    #fca5a5;
+  --violet:     #7c3aed;
+  --violet-lt:  #f5f3ff;
+  --violet-mid: #ddd6fe;
+  --rose:       #e11d48;
+  --rose-lt:    #fff1f2;
+  --rose-mid:   #fecdd3;
+  --slate:      #475569;
+  --slate-lt:   #f1f5f9;
+  --slate-mid:  #cbd5e1;
+
+  /* NEW badge */
+  --new-bg:     #fdf4ff;
+  --new-border: #d946ef;
+  --new-text:   #a21caf;
+  --new-row:    #fdf4ff;
+
+  /* Type — identical stack used site-wide (homepage, all dashboards, tools) */
+  --sans:  'Outfit', system-ui, -apple-system, sans-serif;
+  --mono:  'DM Mono', 'SF Mono', 'Courier New', monospace;
+
+  /* Radii */
+  --r:   8px;
+  --rl:  12px;
+  --radius:    12px;
+  --radius-sm: 8px;
+  --shadow-sm: 0 1px 2px rgba(15,23,42,.04);
+  --shadow-md: 0 4px 16px -4px rgba(15,23,42,.08), 0 1px 3px rgba(15,23,42,.04);
+  --rxl: 16px;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 14px; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--sans);
+  line-height: 1.6;
+  min-height: 100vh;
+}
+a { color: inherit; text-decoration: none; }
+
+/* ── Topbar ── */
+.topbar {
+  height: 3px;
+  background: linear-gradient(90deg, var(--ACCENT1) 0%, var(--ACCENT2) 100%);
+}
+
+/* ── Header ── */
+header {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 1.6rem 2.5rem;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+.hdr-left { display: flex; flex-direction: column; gap: .2rem; }
+.brand {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  margin-bottom: .25rem;
+}
+.brand-dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+}
+.brand-name {
+  font-family: var(--mono);
+  font-size: .65rem;
+  font-weight: 500;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+header h1 {
+  font-size: clamp(1.35rem, 2.5vw, 1.9rem);
+  font-weight: 700;
+  letter-spacing: -.03em;
+  line-height: 1.1;
+  color: var(--text);
+}
+.hdr-sub {
+  font-size: .8rem;
+  color: var(--muted);
+  margin-top: .15rem;
+}
+.badge-row { display: flex; gap: .45rem; margin-top: .5rem; flex-wrap: wrap; }
+
+/* ── Shared cross-page nav bar (identical component on every page) ── */
+.site-nav {
+  display: flex; flex-wrap: wrap; gap: .5rem; align-items: center;
+  padding: .75rem 2.5rem;
+  background: color-mix(in srgb, var(--surface-2) 88%, transparent);
+  backdrop-filter: blur(10px) saturate(160%);
+  -webkit-backdrop-filter: blur(10px) saturate(160%);
+  border-bottom: 1px solid var(--border);
+  position: sticky; top: 0; z-index: 100;
+  box-shadow: 0 6px 18px -10px rgba(15,23,42,.18);
+}
+.btn-link {
+  display: inline-flex; align-items: center; gap: .35rem;
+  padding: .32rem .9rem; border-radius: 999px;
+  font-family: var(--mono); font-size: .72rem; font-weight: 600;
+  background: var(--indigo-lt); border: 1px solid var(--indigo-mid); color: var(--indigo);
+  text-decoration: none; transition: background .14s, box-shadow .14s, transform .14s; letter-spacing: .03em;
+}
+.btn-link:hover { transform: translateY(-1px); box-shadow: 0 3px 8px -3px rgba(15,23,42,.18); }
+.btn-link:hover { background: #dde2fb; }
+.btn-link.green   { background: var(--emerald-lt); border-color: var(--emerald-mid); color: var(--emerald); }
+.btn-link.green:hover   { background: #d7f8ea; }
+.btn-link.blue    { background: var(--blue-lt);    border-color: var(--blue-mid);    color: var(--blue); }
+.btn-link.blue:hover    { background: #dee9fd; }
+.btn-link.amber   { background: var(--amber-lt);   border-color: var(--amber-mid);   color: var(--amber); }
+.btn-link.amber:hover   { background: #fef3c7; }
+.btn-link.violet  { background: var(--violet-lt);  border-color: var(--violet-mid);  color: var(--violet); }
+.btn-link.violet:hover  { background: #ede7fd; }
+.btn-link.navy    { background: var(--navy-lt, #eef1f8); border-color: var(--navy-mid, #c9d0e3); color: var(--navy); }
+.btn-link.navy:hover    { background: #e2e6f2; }
+.btn-link.red     { background: var(--red-lt);     border-color: var(--red-mid);     color: var(--red); }
+.btn-link.red:hover     { background: #fee2e2; }
+.btn-link.rose    { background: var(--rose-lt);    border-color: var(--rose-mid);    color: var(--rose); }
+.btn-link.rose:hover    { background: #ffe4e6; }
+.btn-link.slate   { background: var(--slate-lt);   border-color: var(--slate-mid);   color: var(--slate); }
+.btn-link.slate:hover   { background: #e2e8f0; }
+.btn-link.gold    { background: #fff8e1; border-color: #f5d76e; color: #9a7500; }
+.btn-link.gold:hover    { background: #fef0c2; }
+.btn-link.is-active { box-shadow: 0 0 0 1px currentColor inset; font-weight: 700; }
+.hdr-badge {
+  font-size: .64rem;
+  font-weight: 600;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  border-radius: 999px;
+  padding: .22rem .75rem;
+  border: 1px solid;
+}
+.date-pill {
+  font-family: var(--mono);
+  font-size: .72rem;
+  font-weight: 500;
+  padding: .4rem 1.1rem;
+  border-radius: 999px;
+  border: 1px solid;
+  white-space: nowrap;
+  letter-spacing: .04em;
+  align-self: flex-start;
+  margin-top: .25rem;
+}
+
+/* ── CSV bar ── */
+.csv-bar {
+  display: flex;
+  align-items: center;
+  gap: .6rem;
+  padding: .6rem 2.5rem;
+  background: var(--surface2);
+  border-bottom: 1px solid var(--border);
+  flex-wrap: wrap;
+}
+.csv-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: .35rem .95rem;
+  font-family: var(--mono);
+  font-size: .7rem;
+  font-weight: 500;
+  border-radius: var(--r);
+  border: 1px solid;
+  cursor: pointer;
+  transition: background .14s;
+  letter-spacing: .03em;
+}
+.csv-primary {
+  background: var(--emerald-lt);
+  border-color: var(--emerald-mid);
+  color: var(--emerald);
+}
+.csv-primary:hover { background: #d1fae5; }
+.csv-secondary {
+  background: var(--blue-lt);
+  border-color: var(--blue-mid);
+  color: var(--blue);
+}
+.csv-secondary:hover { background: #dbeafe; }
+.csv-label {
+  font-family: var(--mono);
+  font-size: .67rem;
+  color: var(--subtle);
+  margin-left: auto;
+}
+
+/* ── KPI strip ── */
+.kpi-strip {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  border-bottom: 1px solid var(--border);
+}
+.kpi {
+  background: var(--surface);
+  padding: 1.1rem 1.6rem;
+  border-right: 1px solid var(--border);
+  position: relative;
+}
+.kpi:last-child { border-right: none; }
+.kpi::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  border-radius: 0 0 2px 2px;
+  background: var(--accent);
+}
+.kpi-lbl {
+  font-size: .62rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .11em;
+  color: var(--muted);
+  margin-bottom: .35rem;
+}
+.kpi-val {
+  font-size: clamp(1.1rem, 2vw, 1.65rem);
+  font-weight: 700;
+  letter-spacing: -.02em;
+  line-height: 1;
+  color: var(--accent);
+}
+.kpi-hint {
+  font-size: .67rem;
+  color: var(--subtle);
+  margin-top: .25rem;
+}
+
+/* ── Charts area ── */
+.charts-area {
+  padding: 1.1rem 2.5rem;
+  display: grid;
+  gap: .85rem;
+}
+.chart-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--rl);
+  padding: 1.1rem 1.3rem .9rem;
+}
+.chart-lbl {
+  font-size: .62rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .11em;
+  color: var(--muted);
+  margin-bottom: .8rem;
+}
+.chart-wrap { position: relative; height: 220px; }
+
+/* ── Table section ── */
+.table-sec { padding: 0 2.5rem 3rem; }
+.tbl-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: .9rem 0 .7rem;
+  flex-wrap: wrap;
+  gap: .6rem;
+}
+.tbl-title {
+  font-size: .62rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .12em;
+  color: var(--muted);
+}
+.tbl-count { color: var(--ACCENT1); margin-left: .4rem; }
+.controls { display: flex; align-items: center; gap: .85rem; flex-wrap: wrap; }
+.search {
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-radius: var(--r);
+  color: var(--text);
+  font-family: var(--sans);
+  font-size: .82rem;
+  padding: .38rem .9rem;
+  outline: none;
+  width: 210px;
+  transition: border-color .16s, box-shadow .16s;
+}
+.search::placeholder { color: var(--subtle); }
+.search:focus {
+  border-color: var(--ACCENT1);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--ACCENT1) 12%, transparent);
+}
+.legend-row { display: flex; gap: .9rem; align-items: center; flex-wrap: wrap; }
+.leg { display: flex; align-items: center; gap: .3rem; font-size: .68rem; color: var(--muted); }
+.leg-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+
+/* ── Table ── */
+.tbl-outer {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--rl);
+  /* Constrain height so the horizontal scrollbar sits right below the
+     visible rows instead of at the very bottom of a (potentially very
+     long) table — no need to scroll the whole page to reach it. */
+  max-height: 72vh;
+  overflow: auto;
+}
+table { width: 100%; border-collapse: collapse; font-size: .82rem; white-space: nowrap; }
+thead tr {
+  background: var(--surface2);
+  border-bottom: 1px solid var(--border);
+  position: sticky; top: 0; z-index: 2;
+}
+th {
+  font-size: .62rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .1em;
+  color: var(--muted);
+  padding: .68rem 1rem;
+  text-align: left;
+  cursor: pointer;
+  user-select: none;
+  transition: background .12s;
+  white-space: nowrap;
+}
+th:hover { background: var(--surface3); }
+th.r { text-align: right; } th.c { text-align: center; }
+th .si { margin-left: .25rem; opacity: .3; font-style: normal; font-size: .65rem; }
+th.sort-asc  .si::after { content: '▲'; opacity: 1; color: var(--ACCENT1); }
+th.sort-desc .si::after { content: '▼'; opacity: 1; color: var(--ACCENT1); }
+th:not(.sort-asc):not(.sort-desc) .si::after { content: '⇅'; }
+.srow { border-bottom: 1px solid var(--border); transition: background .1s; }
+.srow:last-child { border-bottom: none; }
+.srow:hover { background: var(--bg); }
+td { padding: .65rem 1rem; vertical-align: middle; }
+td.r { text-align: right; } td.c { text-align: center; }
+
+/* ── NEW-stock highlight row ── */
+.srow.is-new { background: var(--new-row); }
+.srow.is-new:hover { background: #fae8ff; }
+
+/* ── Watchlist star toggle ── */
+.star-th { width: 2rem; padding-left: .9rem !important; padding-right: 0 !important; }
+.star-td { width: 2rem; text-align: center; padding-left: .9rem !important; padding-right: 0 !important; }
+.wl-star {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1.05rem;
+  line-height: 1;
+  padding: 0;
+  color: var(--subtle);
+  transition: color .12s, transform .12s;
+}
+.wl-star:hover { color: #d4a017; transform: scale(1.15); }
+.wl-star.is-active { color: #f5b800; }
+
+/* ── Watchlist picker popover (which list to add this stock to?) ── */
+.wl-picker {
+  position: absolute;
+  z-index: 9999;
+  width: 240px;
+  background: #fff;
+  border: 1px solid var(--border, #e5e7eb);
+  border-radius: 12px;
+  box-shadow: 0 12px 32px rgba(15, 23, 42, .16), 0 2px 8px rgba(15, 23, 42, .08);
+  padding: .65rem;
+  font-family: var(--sans, "Outfit", sans-serif);
+  animation: wlPickerIn .12s ease-out;
+}
+@keyframes wlPickerIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.wl-picker-title {
+  font-size: .72rem;
+  font-weight: 600;
+  color: var(--ink, #1f2937);
+  padding: .15rem .3rem .5rem;
+  border-bottom: 1px solid var(--border, #eef0f3);
+  margin-bottom: .4rem;
+}
+.wl-picker-sym {
+  font-family: var(--mono, monospace);
+  color: #f5b800;
+  background: #fff8e1;
+  border-radius: 4px;
+  padding: 0 .3rem;
+}
+.wl-picker-list { max-height: 220px; overflow-y: auto; display: flex; flex-direction: column; gap: .1rem; }
+.wl-picker-empty { font-size: .72rem; color: var(--subtle, #8892a0); padding: .4rem .3rem; }
+.wl-picker-row {
+  display: flex;
+  align-items: center;
+  gap: .55rem;
+  padding: .42rem .4rem;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: .78rem;
+  color: var(--ink, #1f2937);
+  transition: background .1s;
+}
+.wl-picker-row:hover { background: #f6f7fb; }
+.wl-picker-row.wl-picker-busy { opacity: .5; pointer-events: none; }
+.wl-picker-row input[type="checkbox"] {
+  width: 15px; height: 15px; accent-color: #f5b800; cursor: pointer; flex: none;
+}
+.wl-picker-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.wl-picker-new {
+  display: flex;
+  gap: .35rem;
+  margin-top: .55rem;
+  padding-top: .5rem;
+  border-top: 1px solid var(--border, #eef0f3);
+}
+.wl-picker-input {
+  flex: 1;
+  min-width: 0;
+  font-size: .74rem;
+  padding: .38rem .55rem;
+  border: 1px solid var(--border, #dfe3e8);
+  border-radius: 7px;
+  font-family: inherit;
+}
+.wl-picker-input:focus { outline: none; border-color: #f5b800; }
+.wl-picker-create {
+  font-size: .72rem;
+  font-weight: 600;
+  color: #1f2937;
+  background: #ffe38f;
+  border: 1px solid #f2c94c;
+  border-radius: 7px;
+  padding: .38rem .6rem;
+  cursor: pointer;
+  transition: filter .1s;
+  flex: none;
+}
+.wl-picker-create:hover { filter: brightness(.96); }
+.wl-picker-create:disabled { opacity: .5; cursor: default; }
+@media (max-width: 640px) {
+  .wl-picker { width: min(280px, calc(100vw - 24px)); }
+}
+
+/* ── Symbol tags ── */
+.sym-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: .35rem;
+  font-family: var(--mono);
+  font-weight: 500;
+  font-size: .72rem;
+  padding: .2rem .6rem;
+  border-radius: 6px;
+  letter-spacing: .05em;
+  border: 1px solid;
+  transition: filter .12s;
+}
+.sym-tag:hover { filter: brightness(.93); }
+.sym-new-star {
+  font-size: .55rem;
+  background: var(--new-bg);
+  border: 1px solid var(--new-border);
+  color: var(--new-text);
+  border-radius: 999px;
+  padding: .1rem .38rem;
+  font-weight: 700;
+  letter-spacing: .04em;
+  white-space: nowrap;
+}
+
+/* ── Value pills ── */
+.pill {
+  display: inline-block;
+  font-family: var(--mono);
+  font-size: .71rem;
+  font-weight: 500;
+  padding: .18rem .55rem;
+  border-radius: 999px;
+  border: 1px solid transparent;
+}
+.pill-green  { background: var(--emerald-lt); border-color: var(--emerald-mid); color: var(--emerald); }
+.pill-red    { background: var(--red-lt);     border-color: #fca5a5;            color: var(--red); }
+.pill-rose   { background: var(--rose-lt);    border-color: var(--rose-mid);    color: var(--rose); }
+.pill-slate  { background: var(--slate-lt);   border-color: var(--slate-mid);   color: var(--slate); }
+.pill-amber  { background: var(--amber-lt);   border-color: var(--amber-mid);   color: var(--amber); }
+.pill-indigo { background: var(--indigo-lt);  border-color: var(--indigo-mid);  color: var(--indigo); }
+.pill-blue   { background: var(--blue-lt);    border-color: var(--blue-mid);    color: var(--blue); }
+.pill-muted  { background: var(--surface2);   border-color: var(--border2);     color: var(--muted); }
+.pill-violet { background: var(--violet-lt);  border-color: var(--violet-mid);  color: var(--violet); }
+
+/* ── Volume bar ── */
+.vol-wrap { display: flex; align-items: center; gap: .5rem; min-width: 130px; }
+.vol-bg   { flex: 1; height: 4px; background: var(--surface3); border-radius: 99px; overflow: hidden; }
+.vol-fill { height: 100%; border-radius: 99px; }
+.vol-pct  { font-family: var(--mono); font-size: .7rem; font-weight: 600; min-width: 42px; text-align: right; }
+
+/* ── IB badge ── */
+.ib-badge {
+  display: inline-block;
+  font-family: var(--mono);
+  font-size: .58rem;
+  font-weight: 600;
+  background: var(--amber-lt);
+  border: 1px solid var(--amber-mid);
+  color: var(--amber);
+  padding: .1rem .4rem;
+  border-radius: 4px;
+  margin-left: .3rem;
+  letter-spacing: .04em;
+  vertical-align: middle;
+}
+
+/* ── No-data row ── */
+.no-data {
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--muted);
+  font-size: .82rem;
+}
+
+/* ── Info callout ── */
+.callout {
+  padding: .6rem 2.5rem;
+  font-size: .78rem;
+  color: var(--muted);
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+}
+
+/* ── Footer ── */
+footer {
+  text-align: center;
+  padding: 1rem;
+  font-size: .68rem;
+  color: var(--subtle);
+  border-top: 1px solid var(--border);
+  background: var(--surface);
+  font-family: var(--mono);
+  letter-spacing: .04em;
+}
+
+/* ── Horizontal scroll wrapper for tables on small screens ── */
+.tbl-outer { -webkit-overflow-scrolling: touch; }
+table { min-width: 640px; }
+
+/* ── Mobile responsiveness ── */
+@media (max-width: 768px) {
+  html { font-size: 13px; }
+
+  header {
+    padding: 1.1rem 1.1rem;
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .site-nav { padding: .65rem 1.1rem; }
+  .date-pill { align-self: flex-start; margin-top: .6rem; }
+
+  .csv-bar { padding: .55rem 1.1rem; }
+  .csv-label { margin-left: 0; width: 100%; }
+
+  .charts-area { padding: .9rem 1.1rem; grid-template-columns: 1fr !important; }
+  .chart-wrap { height: 180px; }
+
+  .table-sec { padding: 0 1.1rem 2rem; }
+  .callout { padding: .6rem 1.1rem; }
+
+  .tbl-head { flex-direction: column; align-items: stretch; }
+  .controls { width: 100%; }
+  .search { width: 100%; }
+  .legend-row { width: 100%; }
+
+  .kpi-strip { grid-template-columns: repeat(2, 1fr); }
+  .kpi { padding: .85rem 1rem; border-bottom: 1px solid var(--border); }
+
+  th, td { padding: .55rem .7rem; }
+}
+
+@media (max-width: 480px) {
+  .kpi-strip { grid-template-columns: 1fr 1fr; }
+  header h1 { font-size: 1.25rem; }
+  .hdr-sub { font-size: .74rem; }
+  .badge-row { gap: .3rem; }
+  .hdr-badge { font-size: .6rem; padding: .18rem .6rem; }
+}
+
+/* ── Smooth page transitions ──
+   Cross-page fade (View Transitions API, Chrome/Edge 126+, Safari 18.2+).
+   The sticky nav is pinned so only the page content fades. */
+@view-transition { navigation: auto; }
+html { scroll-behavior: smooth; }
+.site-nav { view-transition-name: site-nav; }
+::view-transition-old(site-nav) { display: none; }
+::view-transition-new(site-nav) { animation: none; }
+::view-transition-old(root) { animation: maFadeOut .16s ease both; }
+::view-transition-new(root) { animation: maFadeIn .26s ease .04s both; }
+@keyframes maFadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+@keyframes maFadeOut { from { opacity: 1; } to { opacity: 0; } }
+@keyframes maBodyIn { from { opacity: 0; } to { opacity: 1; } }
+@supports not (view-transition-name: none) {
+  body { animation: maBodyIn .28s ease both; }
+}
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  ::view-transition-group(*), ::view-transition-old(*), ::view-transition-new(*) { animation: none !important; }
+  body { animation: none !important; }
+}
+
+</style>
+<script type="module" src="../js/watchlist-star.js"></script>
+</head>
+<body>
+<div class="topbar"></div>
+
+<nav class="site-nav">
+  <a href="../index.html" class="btn-link navy">🏠 Home</a>
+  <a href="dashboard_20261125.html" class="btn-link indigo">📊 Momentum</a><a href="elite_dashboard_20261125.html" class="btn-link green">⚡ Elite</a><a href="volume_dashboard_20261125.html" class="btn-link blue is-active">🔵 Volume</a><a href="rocket_dashboard_20261125.html" class="btn-link amber">🚀 Rocket</a><a href="newrshigh_dashboard_20261125.html" class="btn-link rose">🔥 New RS High</a><a href="stage4_dashboard_20261125.html" class="btn-link red">📉 Stage 4</a><a href="sme_momentum_dashboard_20261125.html" class="btn-link violet">🏷️ SME Momentum</a><a href="sme_elite_dashboard_20261125.html" class="btn-link violet">🏷️ SME Elite</a><a href="../watchlist.html" class="btn-link gold">⭐ Watchlist</a>
+  <a href="../position-size.html" class="btn-link violet">📐 Position Size</a>
+  <a href="../position-tracker.html" class="btn-link navy">📈 Position Tracker</a>
+</nav>
+
+<div class="csv-bar">
+  <a class="csv-btn csv-primary" href="javascript:void(0)" onclick="downloadTVList()">⬇ Download TradingView List</a>
+  <a class="csv-btn csv-secondary" id="tvCopyBtn" href="javascript:void(0)" onclick="copyTVList()">⧉ Copy TradingView List</a>
+  <input type="hidden" id="tvFileName" value="tradingview_volume_action_20261125.txt">
+  <span class="csv-label">Format: SYMBOL, comma-separated — paste directly into a TradingView watchlist</span>
+</div>
+<header>
+  <div class="hdr-left">
+    <div class="brand">
+      <div class="brand-dot" style="background:var(--blue)"></div>
+      <span class="brand-name">Alpha Momentum · Volume Action</span>
+    </div>
+    <h1>Pocket Pivot / Blue Volume</h1>
+    <p class="hdr-sub">Institutional accumulation signals · NSE India · 25 Nov 2026</p>
+    <div class="badge-row">
+      <span class="hdr-badge" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)">✓ Blue Volume Pivot</span>
+      <a href='#newStocksSection' onclick='scrollToNewStocks(event)' class='hdr-badge' style='cursor:pointer;text-decoration:none;background:var(--new-bg);border-color:var(--new-border);color:var(--new-text)'>✦ 62 New Stocks &rarr;</a>
+    </div>
+  </div>
+  <div class="date-pill" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)">25 Nov 2026</div>
+</header>
+
+<div class="kpi-strip">
+  <div class="kpi" style="--accent:var(--blue)">
+    <div class="kpi-lbl">Volume Signals</div>
+    <div class="kpi-val">128</div>
+    <div class="kpi-hint">blue volume / pocket pivot</div>
+  </div>
+  <div class="kpi" style="--accent:var(--amber)">
+    <div class="kpi-lbl">Bull Snort</div>
+    <div class="kpi-val">21</div>
+    <div class="kpi-hint">snort confirmed signals</div>
+  </div>
+  <div class="kpi" style="--accent:var(--indigo)">
+    <div class="kpi-lbl">Avg Relative Volume</div>
+    <div class="kpi-val">447.5%</div>
+    <div class="kpi-hint">vs. average volume</div>
+  </div>
+  <a href='#newStocksSection' onclick='scrollToNewStocks(event)' class='kpi' style='--accent:var(--new-text);cursor:pointer;text-decoration:none;display:block'><div class='kpi-lbl'>New Appearances</div><div class='kpi-val'>62</div><div class='kpi-hint'>first time in 10 days</div></a>
+</div>
+
+<div class="callout">
+  <strong style="color:var(--blue)">Pocket Pivot / Blue Volume:</strong>
+  Up-day volume exceeding the highest down-day volume of the last 10 sessions, signaling
+  institutional accumulation. <strong style="color:var(--amber)">🔥 Bull Snort</strong> stocks are listed first —
+  these show an additional sharp volume/price confirmation on top of the base pivot signal.
+</div>
+
+<div class="table-sec">
+  <div class="tbl-head">
+    <div>
+      <span class="tbl-title">Volume Action Detail</span>
+      <span class="tbl-count tbl-title">[128]</span>
+    </div>
+    <div class="controls">
+      <div class="legend-row">
+        <div class="leg"><div class="leg-dot" style="background:var(--amber)"></div>🔥 Bull Snort</div>
+        <div class="leg"><div class="leg-dot" style="background:var(--new-border)"></div>✦ New (10-day)</div>
+      </div>
+      <input class="search" id="searchInput" type="text"
+             placeholder="Search symbol…" oninput="filterRows()"/>
+    </div>
+  </div>
+  <div class="tbl-outer">
+    <table id="mainTable">
+      <thead><tr>
+        <th class="star-th" title="Watchlist"></th>
+        <th data-col="sym"    data-type="str">Symbol<i class="si"></i></th>
+        <th class="c" data-col="band" data-type="str" title="Circuit price band — the max % a stock can move from previous close">Band<i class="si"></i></th>
+        <th class="r" data-col="close"  data-type="num">Close ₹<i class="si"></i></th>
+        <th class="r" data-col="relvol" data-type="num">Rel Volume<i class="si"></i></th>
+        <th class="c">Signal</th>
+        <th class="c" data-col="snort"  data-type="num">Bull Snort<i class="si"></i></th>
+        <th class="r" data-col="rs"     data-type="num">RS %ile<i class="si"></i></th>
+      </tr></thead>
+      <tbody id="tableBody">
+        <tr class="srow"
+          data-sym="THOMASCOOK" data-band="20" data-close="149.6" data-relvol="3050.17"
+          data-snort="1" data-rs="54.7">
+          <td class="star-td"><button type="button" class="wl-star" onclick="toggleStar(this)" title="Add to Watchlist">☆</button></td>
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3ATHOMASCOOK" target="_blank" rel="noopener">THOMASCOOK</a>
+          </td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem" title="Circuit price band">20</td>
+          <td class="r" style="font-family:var(--mono)">₹149.60</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:100.0%;background:var(--emerald)"></div></div>
+              <span class="vol-pct" style="color:var(--emerald)">3050.2%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-amber">🔥 Snort</span></td>
+          <td class="r"><span class="pill pill-amber">54.7</span></td>
+        </tr>
+        <tr class="srow is-new"
+          data-sym="JWL" data-band="—" data-close="222.46" data-relvol="1805.44"
+          data-snort="1" data-rs="25.5">
+          <td class="star-td"><button type="button" class="wl-star" onclick="toggleStar(this)" title="Add to Watchlist">☆</button></td>
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3AJWL" target="_blank" rel="noopener">JWL <span class="sym-new-star">✦ NEW</span></a>
+          </td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem" title="Circuit price band">—</td>
+          <td class="r" style="font-family:var(--mono)">₹222.46</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:100.0%;background:var(--emerald)"></div></div>
+              <span class="vol-pct" style="color:var(--emerald)">1805.4%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-amber">🔥 Snort</span></td>
+          <td class="r"><span class="pill pill-amber">25.5</span></td>
+        </tr>
+        <tr class="srow is-new"
+          data-sym="SONAL" data-band="—" data-close="null" data-relvol="1784.71"
+          data-snort="1" data-rs="null">
+          <td class="star-td"><button type="button" class="wl-star" onclick="toggleStar(this)" title="Add to Watchlist">☆</button></td>
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3ASONAL" target="_blank" rel="noopener">SONAL <span class="sym-new-star">✦ NEW</span></a>
+          </td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem" title="Circuit price band">—</td>
+          <td class="r" style="font-family:var(--mono)">N/A</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:100.0%;background:var(--emerald)"></div></div>
+              <span class="vol-pct" style="color:var(--emerald)">1784.7%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-amber">🔥 Snort</span></td>
+          <td class="r"><span class="pill pill-amber">N/A</span></td>
+        </tr>
+        <tr class="srow is-new"
+          data-sym="HUBTOWN" data-band="—" data-close="194.2" data-relvol="1533.94"
+          data-snort="1" data-rs="10.29">
+          <td class="star-td"><button type="button" class="wl-star" onclick="toggleStar(this)" title="Add to Watchlist">☆</button></td>
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3AHUBTOWN" target="_blank" rel="noopener">HUBTOWN <span class="sym-new-star">✦ NEW</span></a>
+          </td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem" title="Circuit price band">—</td>
+          <td class="r" style="font-family:var(--mono)">₹194.20</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:100.0%;background:var(--emerald)"></div></div>
+              <span class="vol-pct" style="color:var(--emerald)">1533.9%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-amber">🔥 Snort</span></td>
+          <td class="r"><span class="pill pill-amber">10.3</span></td>
+        </tr>
+        <tr class="srow is-new"
+          data-sym="FISCHER" data-band="—" data-close="23.31" data-relvol="1479.75"
+          data-snort="1" data-rs="5.37">
+          <td class="star-td"><button type="button" class="wl-star" onclick="toggleStar(this)" title="Add to Watchlist">☆</button></td>
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3AFISCHER" target="_blank" rel="noopener">FISCHER <span class="sym-new-star">✦ NEW</span></a>
+          </td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem" title="Circuit price band">—</td>
+          <td class="r" style="font-family:var(--mono)">₹23.31</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:100.0%;background:var(--emerald)"></div></div>
+              <span class="vol-pct" style="color:var(--emerald)">1479.7%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-amber">🔥 Snort</span></td>
+          <td class="r"><span class="pill pill-amber">5.4</span></td>
+        </tr>
+        <tr class="srow is-new"
+          data-sym="ARIHANT" data-band="—" data-close="null" data-relvol="1465.86"
+          data-snort="1" data-rs="null">
+          <td class="star-td"><button type="button" class="wl-star" onclick="toggleStar(this)" title="Add to Watchlist">☆</button></td>
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3AARIHANT" target="_blank" rel="noopener">ARIHANT <span class="sym-new-star">✦ NEW</span></a>
+          </td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem" title="Circuit price band">—</td>
+          <td class="r" style="font-family:var(--mono)">N/A</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:100.0%;background:var(--emerald)"></div></div>
+              <span class="vol-pct" style="color:var(--emerald)">1465.9%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-amber">🔥 Snort</span></td>
+          <td class="r"><span class="pill pill-amber">N/A</span></td>
+        </tr>
+        <tr class="srow"
+          data-sym="VERTOZ" data-band="—" data-close="43.59" data-relvol="1464.3"
+          data-snort="1" data-rs="12.53">
+          <td class="star-td"><button type="button" class="wl-star" onclick="toggleStar(this)" title="Add to Watchlist">☆</button></td>
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3AVERTOZ" target="_blank" rel="noopener">VERTOZ</a>
+          </td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem" title="Circuit price band">—</td>
+          <td class="r" style="font-family:var(--mono)">₹43.59</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:100.0%;background:var(--emerald)"></div></div>
+              <span class="vol-pct" style="color:var(--emerald)">1464.3%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-amber">🔥 Snort</span></td>
+          <td class="r"><span class="pill pill-amber">12.5</span></td>
+        </tr>
+        <tr class="srow"
+          data-sym="GREAVESCOT" data-band="20" data-close="309.44" data-relvol="895.19"
+          data-snort="1" data-rs="88.42">
+          <td class="star-td"><button type="button" class="wl-star" onclick="toggleStar(this)" title="Add to Watchlist">☆</button></td>
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3AGREAVESCOT" target="_blank" rel="noopener">GREAVESCOT</a>
+          </td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem" title="Circuit price band">20</td>
+          <td class="r" style="font-family:var(--mono)">₹309.44</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:100.0%;background:var(--emerald)"></div></div>
+              <span class="vol-pct" style="color:var(--emerald)">895.2%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-amber">🔥 Snort</span></td>
+          <td class="r"><span class="pill pill-amber">88.4</span></td>
+        </tr>
+        <tr class="srow"
+          data-sym="KOPRAN" data-band="—" data-close="289.52" data-relvol="889.06"
+          data-snort="1" data-rs="97.15">
+          <td class="star-td"><button type="button" class="wl-star" onclick="toggleStar(this)" title="Add to Watchlist">☆</button></td>
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3AKOPRAN" target="_blank" rel="noopener">KOPRAN</a>
+          </td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem" title="Circuit price band">—</td>
+          <td class="r" style="font-family:var(--mono)">₹289.52</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:100.0%;background:var(--emerald)"></div></div>
+              <span class="vol-pct" style="color:var(--emerald)">889.1%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-amber">🔥 Snort</span></td>
+          <td class="r"><span class="pill pill-amber">97.1</span></td>
+        </tr>
+        <tr class="srow is-new"
+          data-sym="BAJAJHCARE" data-band="—" data-close="344.7" data-relvol="874.26"
+          data-snort="1" data-rs="34.73">
+          <td class="star-td"><button type="button" class="wl-star" onclick="toggleStar(this)" title="Add to Watchlist">☆</button></td>
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3ABAJAJHCARE" target="_blank" rel="noopener">BAJAJHCARE <span class="sym-new-star">✦ NEW</span></a>
+          </td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem" title="Circuit price band">—</td>
+          <td class="r" style="font-family:var(--mono)">₹344.70</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:100.0%;background:var(--emerald)"></div></div>
+              <span class="vol-pct" style="color:var(--emerald)">874.3%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-amber">🔥 Snort</span></td>
+          <td class="r"><span class="pill pill-amber">34.7</span></td>
+        </tr>
+        <tr class="srow"
+          data-sym="DABUR" data-band="—" data-close="430.0" data-relvol="746.13"
+          data-snort="1" data-rs="41.28">
+          <td class="star-td"><button type="button" class="wl-star" onclick="toggleStar(this)" title="Add to Watchlist">☆</button></td>
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3ADABUR" target="_blank" rel="noopener">DABUR</a>
+          </td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem" title="Circuit price band">—</td>
+          <td class="r" style="font-family:var(--mono)">₹430.00</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:100.0%;background:var(--emerald)"></div></div>
+              <span class="vol-pct" style="color:var(--emerald)">746.1%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-amber">🔥 Snort</span></td>
+          <td class="r"><span class="pill pill-amber">41.3</span></td>
+        </tr>
+        <tr class="srow"
+          data-sym="ARIS" data-band="20" data-close="190.3" data-relvol="721.03"
+          data-snort="1" data-rs="77.13">
+          <td class="star-td"><button type="button" class="wl-star" onclick="toggleStar(this)" title="Add to Watchlist">☆</button></td>
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3AARIS" target="_blank" rel="noopener">ARIS</a>
+          </td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem" title="Circuit price band">20</td>
+          <td class="r" style="font-family:var(--mono)">₹190.30</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:100.0%;background:var(--emerald)"></div></div>
+              <span class="vol-pct" style="color:var(--emerald)">721.0%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-amber">🔥 Snort</span></td>
+          <td class="r"><span class="pill pill-amber">77.1</span></td>
+        </tr>
+        <tr class="srow"
+          data-sym="HMAAGRO" data-band="20" data-close="43.35" data-relvol="668.0"
+          data-snort="1" data-rs="84.62">
+          <td class="star-td"><button type="button" class="wl-star" onclick="toggleStar(this)" title="Add to Watchlist">☆</button></td>
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3AHMAAGRO" target="_blank" rel="noopener">HMAAGRO</a>
+          </td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem" title="Circuit price band">20</td>
+          <td class="r" style="font-family:var(--mono)">₹43.35</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:100.0%;background:var(--emerald)"></div></div>
+              <span class="vol-pct" style="color:var(--emerald)">668.0%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-amber">🔥 Snort</span></td>
+          <td class="r"><span class="pill pill-amber">84.6</span></td>
+        </tr>
+        <tr class="srow is-new"
+          data-sym="HALDYNGL" data-band="—" data-close="null" data-relvol="655.77"
+          data-snort="1" data-rs="null">
+          <td class="star-td"><button type="button" class="wl-star" onclick="toggleStar(this)" title="Add to Watchlist">☆</button></td>
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3AHALDYNGL" target="_blank" rel="noopener">HALDYNGL <span class="sym-new-star">✦ NEW</span></a>
+          </td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem" title="Circuit price band">—</td>
+          <td class="r" style="font-family:var(--mono)">N/A</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:100.0%;background:var(--emerald)"></div></div>
+              <span class="vol-pct" style="color:var(--emerald)">655.8%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-amber">🔥 Snort</span></td>
+          <td class="r"><span class="pill pill-amber">N/A</span></td>
+        </tr>
+        <tr class="srow"
+          data-sym="VIJAYA" data-band="—" data-close="1627.7" data-relvol="472.53"
+          data-snort="1" data-rs="91.05">
+          <td class="star-td"><button type="button" class="wl-star" onclick="toggleStar(this)" title="Add to Watchlist">☆</button></td>
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3AVIJAYA" target="_blank" rel="noopener">VIJAYA</a>
+          </td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem" title="Circuit price band">—</td>
+          <td class="r" style="font-family:var(--mono)">₹1,627.70</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:100.0%;background:var(--emerald)"></div></div>
+              <span class="vol-pct" style="color:var(--emerald)">472.5%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-amber">🔥 Snort</span></td>
+          <td class="r"><span class="pill pill-amber">91.1</span></td>
+        </tr>
+        <tr class="srow is-new"
+          data-sym="DEVYANI" data-band="—" data-close="125.57" data-relvol="432.15"
+          data-snort="1" data-rs="41.72">
+          <td class="star-td"><button type="button" class="wl-star" onclick="toggleStar(this)" title="Add to Watchlist">☆</button></td>
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3ADEVYANI" target="_blank" rel="noopener">DEVYANI <span class="sym-new-star">✦ NEW</span></a>
+          </td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem" title="Circuit price band">—</td>
+          <td class="r" style="font-family:var(--mono)">₹125.57</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:100.0%;background:var(--emerald)"></div></div>
+              <span class="vol-pct" style="color:var(--emerald)">432.1%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-amber">🔥 Snort</span></td>
+          <td class="r"><span class="pill pill-amber">41.7</span></td>
+        </tr>
+        <tr class="srow is-new"
+          data-sym="CANTABIL" data-band="—" data-close="252.45" data-relvol="326.6"
+          data-snort="1" data-rs="58.84">
+          <td class="star-td"><button type="button" class="wl-star" onclick="toggleStar(this)" title="Add to Watchlist">☆</button></td>
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3ACANTABIL" target="_blank" rel="noopener">CANTABIL <span class="sym-new-star">✦ NEW</span></a>
+          </td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem" title="Circuit price band">—</td>
+          <td class="r" style="font-family:var(--mono)">₹252.45</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:100.0%;background:var(--emerald)"></div></div>
+              <span class="vol-pct" style="color:var(--emerald)">326.6%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-amber">🔥 Snort</span></td>
+          <td class="r"><span class="pill pill-amber">58.8</span></td>
+        </tr>
+        <tr class="srow is-new"
+          data-sym="HINDUNILVR" data-band="No Band" data-close="2141.8" data-relvol="325.22"
+          data-snort="1" data-rs="49.66">
+          <td class="star-td"><button type="button" class="wl-star" onclick="toggleStar(this)" title="Add to Watchlist">☆</button></td>
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3AHINDUNILVR" target="_blank" rel="noopener">HINDUNILVR <span class="sym-new-star">✦ NEW</span></a>
+          </td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem" title="Circuit price band">No Band</td>
+          <td class="r" style="font-family:var(--mono)">₹2,141.80</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:100.0%;background:var(--emerald)"></div></div>
+              <span class="vol-pct" style="color:var(--emerald)">325.2%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-amber">🔥 Snort</span></td>
+          <td class="r"><span class="pill pill-amber">49.7</span></td>
+        </tr>
+        <tr class="srow"
+          data-sym="SWARAJ" data-band="5" data-close="360.6" data-relvol="304.95"
+          data-snort="1" data-rs="90.44">
+          <td class="star-td"><button type="button" class="wl-star" onclick="toggleStar(this)" title="Add to Watchlist">☆</button></td>
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3ASWARAJ" target="_blank" rel="noopener">SWARAJ</a>
+          </td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem" title="Circuit price band">5</td>
+          <td class="r" style="font-family:var(--mono)">₹360.60</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:100.0%;background:var(--emerald)"></div></div>
+              <span class="vol-pct" style="color:var(--emerald)">304.9%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-amber">🔥 Snort</span></td>
+          <td class="r"><span class="pill pill-amber">90.4</span></td>
+        </tr>
+        <tr class="srow is-new"
+          data-sym="ALPHAGEO" data-band="—" data-close="228.72" data-relvol="303.24"
+          data-snort="1" data-rs="56.32">
+          <td class="star-td"><button type="button" class="wl-star" onclick="toggleStar(this)" title="Add to Watchlist">☆</button></td>
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3AALPHAGEO" target="_blank" rel="noopener">ALPHAGEO <span class="sym-new-star">✦ NEW</span></a>
+          </td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem" title="Circuit price band">—</td>
+          <td class="r" style="font-family:var(--mono)">₹228.72</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:100.0%;background:var(--emerald)"></div></div>
+              <span class="vol-pct" style="color:var(--emerald)">303.2%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-amber">🔥 Snort</span></td>
+          <td class="r"><span class="pill pill-amber">56.3</span></td>
+        </tr>
+        <tr class="srow"
+          data-sym="SAFARI" data-band="—" data-close="1537.8" data-relvol="301.59"
+          data-snort="1" data-rs="18.62">
+          <td class="star-td"><button type="button" class="wl-star" onclick="toggleStar(this)" title="Add to Watchlist">☆</button></td>
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3ASAFARI" target="_blank" rel="noopener">SAFARI</a>
+          </td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem" title="Circuit price band">—</td>
+          <td class="r" style="font-family:var(--mono)">₹1,537.80</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:100.0%;background:var(--emerald)"></div></div>
+              <span class="vol-pct" style="color:var(--emerald)">301.6%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-amber">🔥 Snort</span></td>
+          <td class="r"><span class="pill pill-amber">18.6</span></td>
+        </tr>
+        <tr class="srow is-new"
+          data-sym="MCLOUD" data-band="—" data-close="24.41" data-relvol="2361.59"
+          data-snort="0" data-rs="1.85">
+          <td class="star-td"><button type="button" class="wl-star" onclick="toggleStar(this)" title="Add to Watchlist">☆</button></td>
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3AMCLOUD" target="_blank" rel="noopener">MCLOUD <span class="sym-new-star">✦ NEW</span></a>
+          </td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem" title="Circuit price band">—</td>
+          <td class="r" style="font-family:var(--mono)">₹24.41</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:100.0%;background:var(--emerald)"></div></div>
+              <span class="vol-pct" style="color:var(--emerald)">2361.6%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-muted">—</span></td>
+          <td class="r"><span class="pill pill-amber">1.8</span></td>
+        </tr>
+        <tr class="srow"
+          data-sym="MHRIL" data-band="—" data-close="196.16" data-relvol="1768.17"
+          data-snort="0" data-rs="10.35">
+          <td class="star-td"><button type="button" class="wl-star" onclick="toggleStar(this)" title="Add to Watchlist">☆</button></td>
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3AMHRIL" target="_blank" rel="noopener">MHRIL</a>
+          </td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem" title="Circuit price band">—</td>
+          <td class="r" style="font-family:var(--mono)">₹196.16</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:100.0%;background:var(--emerald)"></div></div>
+              <span class="vol-pct" style="color:var(--emerald)">1768.2%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-muted">—</span></td>
+          <td class="r"><span class="pill pill-amber">10.3</span></td>
+        </tr>
+        <tr class="srow"
+          data-sym="JLHL" data-band="20" data-close="307.75" data-relvol="1702.58"
+          data-snort="0" data-rs="67.67">
+          <td class="star-td"><button type="button" class="wl-star" onclick="toggleStar(this)" title="Add to Watchlist">☆</button></td>
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3AJLHL" target="_blank" rel="noopener">JLHL</a>
+          </td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem" title="Circuit price band">20</td>
+          <td class="r" style="font-family:var(--mono)">₹307.75</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:100.0%;background:var(--emerald)"></div></div>
+              <span class="vol-pct" style="color:var(--emerald)">1702.6%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-muted">—</span></td>
+          <td class="r"><span class="pill pill-amber">67.7</span></td>
+        </tr>
+        <tr class="srow is-new"
+          data-sym="NTCIND" data-band="—" data-close="130.15" data-relvol="1558.53"
+          data-snort="0" data-rs="27.52">
+          <td class="star-td"><button type="button" class="wl-star" onclick="toggleStar(this)" title="Add to Watchlist">☆</button></td>
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3ANTCIND" target="_blank" rel="noopener">NTCIND <span class="sym-new-star">✦ NEW</span></a>
+          </td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem" title="Circuit price band">—</td>
+          <td class="r" style="font-family:var(--mono)">₹130.15</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:100.0%;background:var(--emerald)"></div></div>
+              <span class="vol-pct" style="color:var(--emerald)">1558.5%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-muted">—</span></td>
+          <td class="r"><span class="pill pill-amber">27.5</span></td>
+        </tr>
+        <tr class="srow"
+          data-sym="SHALPAINTS" data-band="5" data-close="107.61" data-relvol="1365.31"
+          data-snort="0" data-rs="90.72">
+          <td class="star-td"><button type="button" class="wl-star" onclick="toggleStar(this)" title="Add to Watchlist">☆</button></td>
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3ASHALPAINTS" target="_blank" rel="noopener">SHALPAINTS</a>
+          </td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem" title="Circuit price band">5</td>
+          <td class="r" style="font-family:var(--mono)">₹107.61</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:100.0%;background:var(--emerald)"></div></div>
+              <span class="vol-pct" style="color:var(--emerald)">1365.3%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-muted">—</span></td>
+          <td class="r"><span class="pill pill-amber">90.7</span></td>
+        </tr>
+        <tr class="srow is-new"
+          data-sym="ADFFOODS" data-band="—" data-close="218.49" data-relvol="1342.95"
+          data-snort="0" data-rs="63.14">
+          <td class="star-td"><button type="button" class="wl-star" onclick="toggleStar(this)" title="Add to Watchlist">☆</button></td>
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3AADFFOODS" target="_blank" rel="noopener">ADFFOODS <span class="sym-new-star">✦ NEW</span></a>
+          </td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem" title="Circuit price band">—</td>
+          <td class="r" style="font-family:var(--mono)">₹218.49</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:100.0%;background:var(--emerald)"></div></div>
+              <span class="vol-pct" style="color:var(--emerald)">1342.9%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-muted">—</span></td>
+          <td class="r"><span class="pill pill-amber">63.1</span></td>
+        </tr>
+        <tr class="srow"
+          data-sym="BRIGADE" data-band="—" data-close="589.7" data-relvol="1196.18"
+          data-snort="0" data-rs="42.51">
+          <td class="star-td"><button type="button" class="wl-star" onclick="toggleStar(this)" title="Add to Watchlist">☆</button></td>
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3ABRIGADE" target="_blank" rel="noopener">BRIGADE</a>
+          </td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem" title="Circuit price band">—</td>
+          <td class="r" style="font-family:var(--mono)">₹589.70</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:100.0%;background:var(--emerald)"></div></div>
+              <span class="vol-pct" style="color:var(--emerald)">1196.2%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-muted">—</span></td>
+          <td class="r"><span class="pill pill-amber">42.5</span></td>
+        </tr>
+        <tr class="srow is-new"
+          data-sym="COHANCE" data-band="—" data-close="489.55" data-relvol="1189.7"
+          data-snort="0" data-rs="38.14">
+          <td class="star-td"><button type="button" class="wl-star" onclick="toggleStar(this)" title="Add to Watchlist">☆</button></td>
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3ACOHANCE" target="_blank" rel="noopener">COHANCE <span class="sym-new-star">✦ NEW</span></a>
+          </td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem" title="Circuit price band">—</td>
+          <td class="r" style="font-family:var(--mono)">₹489.55</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:100.0%;background:var(--emerald)"></div></div>
+              <span class="vol-pct" style="color:var(--emerald)">1189.7%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-muted">—</span></td>
+          <td class="r"><span class="pill pill-amber">38.1</span></td>
+        </tr>
+        <tr class="srow is-new"
+          data-sym="KALAMANDIR" data-band="20" data-close="98.65" data-relvol="1015.41"
+          data-snort="0" data-rs="8.89">
+          <td class="star-td"><button type="button" class="wl-star" onclick="toggleStar(this)" title="Add to Watchlist">☆</button></td>
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3AKALAMANDIR" target="_blank" rel="noopener">KALAMANDIR <span class="sym-new-star">✦ NEW</span></a>
+          </td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem" title="Circuit price band">20</td>
+          <td class="r" style="font-family:var(--mono)">₹98.65</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:100.0%;background:var(--emerald)"></div></div>
+              <span class="vol-pct" style="color:var(--emerald)">1015.4%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-muted">—</span></td>
+          <td class="r"><span class="pill pill-amber">8.9</span></td>
+        </tr>
+        <tr class="srow"
+          data-sym="ABFRL" data-band="—" data-close="39.88" data-relvol="832.82"
+          data-snort="0" data-rs="6.38">
+          <td class="star-td"><button type="button" class="wl-star" onclick="toggleStar(this)" title="Add to Watchlist">☆</button></td>
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3AABFRL" target="_blank" rel="noopener">ABFRL</a>
+          </td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem" title="Circuit price band">—</td>
+          <td class="r" style="font-family:var(--mono)">₹39.88</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:100.0%;background:var(--emerald)"></div></div>
+              <span class="vol-pct" style="color:var(--emerald)">832.8%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-muted">—</span></td>
+          <td class="r"><span class="pill pill-amber">6.4</span></td>
+        </tr>
+        <tr class="srow is-new"
+          data-sym="NECCLTD" data-band="20" data-close="25.78" data-relvol="726.66"
+          data-snort="0" data-rs="79.64">
+          <td class="star-td"><button type="button" class="wl-star" onclick="toggleStar(this)" title="Add to Watchlist">☆</button></td>
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3ANECCLTD" target="_blank" rel="noopener">NECCLTD <span class="sym-new-star">✦ NEW</span></a>
+          </td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem" title="Circuit price band">20</td>
+          <td class="r" style="font-family:var(--mono)">₹25.78</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:100.0%;background:var(--emerald)"></div></div>
+              <span class="vol-pct" style="color:var(--emerald)">726.7%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-muted">—</span></td>
+          <td class="r"><span class="pill pill-amber">79.6</span></td>
+        </tr>
+        <tr class="srow is-new"
+          data-sym="BCPL" data-band="—" data-close="null" data-relvol="693.66"
+          data-snort="0" data-rs="null">
+          <td class="star-td"><button type="button" class="wl-star" onclick="toggleStar(this)" title="Add to Watchlist">☆</button></td>
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3ABCPL" target="_blank" rel="noopener">BCPL <span class="sym-new-star">✦ NEW</span></a>
+          </td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem" title="Circuit price band">—</td>
+          <td class="r" style="font-family:var(--mono)">N/A</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:100.0%;background:var(--emerald)"></div></div>
+              <span class="vol-pct" style="color:var(--emerald)">693.7%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-muted">—</span></td>
+          <td class="r"><span class="pill pill-amber">N/A</span></td>
+        </tr>
+        <tr class="srow is-new"
+          data-sym="MEDPLUS" data-band="—" data-close="605.2" data-relvol="666.29"
+          data-snort="0" data-rs="31.43">
+          <td class="star-td"><button type="button" class="wl-star" onclick="toggleStar(this)" title="Add to Watchlist">☆</button></td>
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3AMEDPLUS" target="_blank" rel="noopener">MEDPLUS <span class="sym-new-star">✦ NEW</span></a>
+          </td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem" title="Circuit price band">—</td>
+          <td class="r" style="font-family:var(--mono)">₹605.20</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:100.0%;background:var(--emerald)"></div></div>
+              <span class="vol-pct" style="color:var(--emerald)">666.3%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-muted">—</span></td>
+          <td class="r"><span class="pill pill-amber">31.4</span></td>
+        </tr>
+        <tr class="srow"
+          data-sym="XTGLOBAL" data-band="—" data-close="29.27" data-relvol="588.65"
+          data-snort="0" data-rs="30.03">
+          <td class="star-td"><button type="button" class="wl-star" onclick="toggleStar(this)" title="Add to Watchlist">☆</button></td>
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3AXTGLOBAL" target="_blank" rel="noopener">XTGLOBAL</a>
+          </td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem" title="Circuit price band">—</td>
+          <td class="r" style="font-family:var(--mono)">₹29.27</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:100.0%;background:var(--emerald)"></div></div>
+              <span class="vol-pct" style="color:var(--emerald)">588.6%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-muted">—</span></td>
+          <td class="r"><span class="pill pill-amber">30.0</span></td>
+        </tr>
+        <tr class="srow is-new"
+          data-sym="FRONTSP" data-band="—" data-close="null" data-relvol="545.89"
+          data-snort="0" data-rs="null">
+          <td class="star-td"><button type="button" class="wl-star" onclick="toggleStar(this)" title="Add to Watchlist">☆</button></td>
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3AFRONTSP" target="_blank" rel="noopener">FRONTSP <span class="sym-new-star">✦ NEW</span></a>
+          </td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem" title="Circuit price band">—</td>
+          <td class="r" style="font-family:var(--mono)">N/A</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:100.0%;background:var(--emerald)"></div></div>
+              <span class="vol-pct" style="color:var(--emerald)">545.9%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-muted">—</span></td>
+          <td class="r"><span class="pill pill-amber">N/A</span></td>
+        </tr>
+        <tr class="srow is-new"
+          data-sym="PRECAM" data-band="—" data-close="101.65" data-relvol="540.63"
+          data-snort="0" data-rs="7.55">
+          <td class="star-td"><button type="button" class="wl-star" onclick="toggleStar(this)" title="Add to Watchlist">☆</button></td>
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3APRECAM" target="_blank" rel="noopener">PRECAM <span class="sym-new-star">✦ NEW</span></a>
+          </td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem" title="Circuit price band">—</td>
+          <td class="r" style="font-family:var(--mono)">₹101.65</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:100.0%;background:var(--emerald)"></div></div>
+              <span class="vol-pct" style="color:var(--emerald)">540.6%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-muted">—</span></td>
+          <td class="r"><span class="pill pill-amber">7.6</span></td>
+        </tr>
+        <tr class="srow is-new"
+          data-sym="CEATLTD" data-band="20" data-close="3579.4" data-relvol="505.85"
+          data-snort="0" data-rs="52.52">
+          <td class="star-td"><button type="button" class="wl-star" onclick="toggleStar(this)" title="Add to Watchlist">☆</button></td>
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3ACEATLTD" target="_blank" rel="noopener">CEATLTD <span class="sym-new-star">✦ NEW</span></a>
+          </td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem" title="Circuit price band">20</td>
+          <td class="r" style="font-family:var(--mono)">₹3,579.40</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:100.0%;background:var(--emerald)"></div></div>
+              <span class="vol-pct" style="color:var(--emerald)">505.9%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-muted">—</span></td>
+          <td class="r"><span class="pill pill-amber">52.5</span></td>
+        </tr>
+        <tr class="srow is-new"
+          data-sym="CREDITACC" data-band="—" data-close="1019.8" data-relvol="505.15"
+          data-snort="0" data-rs="31.26">
+          <td class="star-td"><button type="button" class="wl-star" onclick="toggleStar(this)" title="Add to Watchlist">☆</button></td>
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3ACREDITACC" target="_blank" rel="noopener">CREDITACC <span class="sym-new-star">✦ NEW</span></a>
+          </td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem" title="Circuit price band">—</td>
+          <td class="r" style="font-family:var(--mono)">₹1,019.80</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:100.0%;background:var(--emerald)"></div></div>
+              <span class="vol-pct" style="color:var(--emerald)">505.1%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-muted">—</span></td>
+          <td class="r"><span class="pill pill-amber">31.3</span></td>
+        </tr>
+        <tr class="srow is-new"
+          data-sym="BAJAJFINSV" data-band="No Band" data-close="1925.0" data-relvol="464.88"
+          data-snort="0" data-rs="53.13">
+          <td class="star-td"><button type="button" class="wl-star" onclick="toggleStar(this)" title="Add to Watchlist">☆</button></td>
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3ABAJAJFINSV" target="_blank" rel="noopener">BAJAJFINSV <span class="sym-new-star">✦ NEW</span></a>
+          </td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem" title="Circuit price band">No Band</td>
+          <td class="r" style="font-family:var(--mono)">₹1,925.00</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:100.0%;background:var(--emerald)"></div></div>
+              <span class="vol-pct" style="color:var(--emerald)">464.9%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-muted">—</span></td>
+          <td class="r"><span class="pill pill-amber">53.1</span></td>
+        </tr>
+        <tr class="srow is-new"
+          data-sym="ORIRAIL" data-band="—" data-close="null" data-relvol="413.36"
+          data-snort="0" data-rs="null">
+          <td class="star-td"><button type="button" class="wl-star" onclick="toggleStar(this)" title="Add to Watchlist">☆</button></td>
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3AORIRAIL" target="_blank" rel="noopener">ORIRAIL <span class="sym-new-star">✦ NEW</span></a>
+          </td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem" title="Circuit price band">—</td>
+          <td class="r" style="font-family:var(--mono)">N/A</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:100.0%;background:var(--emerald)"></div></div>
+              <span class="vol-pct" style="color:var(--emerald)">413.4%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-muted">—</span></td>
+          <td class="r"><span class="pill pill-amber">N/A</span></td>
+        </tr>
+        <tr class="srow is-new"
+          data-sym="IMPAL" data-band="—" data-close="1024.8" data-relvol="411.76"
+          data-snort="0" data-rs="62.25">
+          <td class="star-td"><button type="button" class="wl-star" onclick="toggleStar(this)" title="Add to Watchlist">☆</button></td>
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3AIMPAL" target="_blank" rel="noopener">IMPAL <span class="sym-new-star">✦ NEW</span></a>
+          </td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem" title="Circuit price band">—</td>
+          <td class="r" style="font-family:var(--mono)">₹1,024.80</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:100.0%;background:var(--emerald)"></div></div>
+              <span class="vol-pct" style="color:var(--emerald)">411.8%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-muted">—</span></td>
+          <td class="r"><span class="pill pill-amber">62.2</span></td>
+        </tr>
+        <tr class="srow is-new"
+          data-sym="SHALBY" data-band="—" data-close="126.96" data-relvol="407.11"
+          data-snort="0" data-rs="8.67">
+          <td class="star-td"><button type="button" class="wl-star" onclick="toggleStar(this)" title="Add to Watchlist">☆</button></td>
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3ASHALBY" target="_blank" rel="noopener">SHALBY <span class="sym-new-star">✦ NEW</span></a>
+          </td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem" title="Circuit price band">—</td>
+          <td class="r" style="font-family:var(--mono)">₹126.96</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:100.0%;background:var(--emerald)"></div></div>
+              <span class="vol-pct" style="color:var(--emerald)">407.1%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-muted">—</span></td>
+          <td class="r"><span class="pill pill-amber">8.7</span></td>
+        </tr>
+        <tr class="srow"
+          data-sym="ARHAM" data-band="—" data-close="209.87" data-relvol="404.92"
+          data-snort="0" data-rs="88.65">
+          <td class="star-td"><button type="button" class="wl-star" onclick="toggleStar(this)" title="Add to Watchlist">☆</button></td>
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3AARHAM" target="_blank" rel="noopener">ARHAM</a>
+          </td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem" title="Circuit price band">—</td>
+          <td class="r" style="font-family:var(--mono)">₹209.87</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:100.0%;background:var(--emerald)"></div></div>
+              <span class="vol-pct" style="color:var(--emerald)">404.9%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-muted">—</span></td>
+          <td class="r"><span class="pill pill-amber">88.6</span></td>
+        </tr>
+        <tr class="srow"
+          data-sym="NDGL" data-band="—" data-close="2604.2" data-relvol="397.78"
+          data-snort="0" data-rs="24.11">
+          <td class="star-td"><button type="button" class="wl-star" onclick="toggleStar(this)" title="Add to Watchlist">☆</button></td>
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3ANDGL" target="_blank" rel="noopener">NDGL</a>
+          </td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem" title="Circuit price band">—</td>
+          <td class="r" style="font-family:var(--mono)">₹2,604.20</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:100.0%;background:var(--emerald)"></div></div>
+              <span class="vol-pct" style="color:var(--emerald)">397.8%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-muted">—</span></td>
+          <td class="r"><span class="pill pill-amber">24.1</span></td>
+        </tr>
+        <tr class="srow"
+          data-sym="MLKFOOD" data-band="—" data-close="null" data-relvol="352.61"
+          data-snort="0" data-rs="null">
+          <td class="star-td"><button type="button" class="wl-star" onclick="toggleStar(this)" title="Add to Watchlist">☆</button></td>
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3AMLKFOOD" target="_blank" rel="noopener">MLKFOOD</a>
+          </td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem" title="Circuit price band">—</td>
+          <td class="r" style="font-family:var(--mono)">N/A</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:100.0%;background:var(--emerald)"></div></div>
+              <span class="vol-pct" style="color:var(--emerald)">352.6%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-muted">—</span></td>
+          <td class="r"><span class="pill pill-amber">N/A</span></td>
+        </tr>
+        <tr class="srow is-new"
+          data-sym="YUKEN" data-band="—" data-close="1007.6" data-relvol="317.16"
+          data-snort="0" data-rs="69.74">
+          <td class="star-td"><button type="button" class="wl-star" onclick="toggleStar(this)" title="Add to Watchlist">☆</button></td>
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3AYUKEN" target="_blank" rel="noopener">YUKEN <span class="sym-new-star">✦ NEW</span></a>
+          </td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem" title="Circuit price band">—</td>
+          <td class="r" style="font-family:var(--mono)">₹1,007.60</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:100.0%;background:var(--emerald)"></div></div>
+              <span class="vol-pct" style="color:var(--emerald)">317.2%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-muted">—</span></td>
+          <td class="r"><span class="pill pill-amber">69.7</span></td>
+        </tr>
+        <tr class="srow"
+          data-sym="CHALET" data-band="—" data-close="875.05" data-relvol="296.36"
+          data-snort="0" data-rs="59.68">
+          <td class="star-td"><button type="button" class="wl-star" onclick="toggleStar(this)" title="Add to Watchlist">☆</button></td>
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3ACHALET" target="_blank" rel="noopener">CHALET</a>
+          </td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem" title="Circuit price band">—</td>
+          <td class="r" style="font-family:var(--mono)">₹875.05</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:100.0%;background:var(--emerald)"></div></div>
+              <span class="vol-pct" style="color:var(--emerald)">296.4%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-muted">—</span></td>
+          <td class="r"><span class="pill pill-amber">59.7</span></td>
+        </tr>
+        <tr class="srow is-new"
+          data-sym="CANHLIFE" data-band="—" data-close="132.96" data-relvol="294.74"
+          data-snort="0" data-rs="71.14">
+          <td class="star-td"><button type="button" class="wl-star" onclick="toggleStar(this)" title="Add to Watchlist">☆</button></td>
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3ACANHLIFE" target="_blank" rel="noopener">CANHLIFE <span class="sym-new-star">✦ NEW</span></a>
+          </td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem" title="Circuit price band">—</td>
+          <td class="r" style="font-family:var(--mono)">₹132.96</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:100.0%;background:var(--emerald)"></div></div>
+              <span class="vol-pct" style="color:var(--emerald)">294.7%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-muted">—</span></td>
+          <td class="r"><span class="pill pill-amber">71.1</span></td>
+        </tr>
+        <tr class="srow is-new"
+          data-sym="J&KBANK" data-band="—" data-close="155.32" data-relvol="276.53"
+          data-snort="0" data-rs="87.53">
+          <td class="star-td"><button type="button" class="wl-star" onclick="toggleStar(this)" title="Add to Watchlist">☆</button></td>
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3AJ&KBANK" target="_blank" rel="noopener">J&KBANK <span class="sym-new-star">✦ NEW</span></a>
+          </td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem" title="Circuit price band">—</td>
+          <td class="r" style="font-family:var(--mono)">₹155.32</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:100.0%;background:var(--emerald)"></div></div>
+              <span class="vol-pct" style="color:var(--emerald)">276.5%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-muted">—</span></td>
+          <td class="r"><span class="pill pill-amber">87.5</span></td>
+        </tr>
+        <tr class="srow"
+          data-sym="HMVL" data-band="5" data-close="99.79" data-relvol="276.4"
+          data-snort="0" data-rs="82.89">
+          <td class="star-td"><button type="button" class="wl-star" onclick="toggleStar(this)" title="Add to Watchlist">☆</button></td>
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3AHMVL" target="_blank" rel="noopener">HMVL</a>
+          </td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem" title="Circuit price band">5</td>
+          <td class="r" style="font-family:var(--mono)">₹99.79</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:100.0%;background:var(--emerald)"></div></div>
+              <span class="vol-pct" style="color:var(--emerald)">276.4%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-muted">—</span></td>
+          <td class="r"><span class="pill pill-amber">82.9</span></td>
+        </tr>
+        <tr class="srow"
+          data-sym="PARTYCRUS" data-band="—" data-close="89.95" data-relvol="276.16"
+          data-snort="0" data-rs="79.08">
+          <td class="star-td"><button type="button" class="wl-star" onclick="toggleStar(this)" title="Add to Watchlist">☆</button></td>
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3APARTYCRUS" target="_blank" rel="noopener">PARTYCRUS</a>
+          </td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem" title="Circuit price band">—</td>
+          <td class="r" style="font-family:var(--mono)">₹89.95</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:100.0%;background:var(--emerald)"></div></div>
+              <span class="vol-pct" style="color:var(--emerald)">276.2%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-muted">—</span></td>
+          <td class="r"><span class="pill pill-amber">79.1</span></td>
+        </tr>
+        <tr class="srow"
+          data-sym="SWSOLAR" data-band="—" data-close="168.48" data-relvol="269.65"
+          data-snort="0" data-rs="26.23">
+          <td class="star-td"><button type="button" class="wl-star" onclick="toggleStar(this)" title="Add to Watchlist">☆</button></td>
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3ASWSOLAR" target="_blank" rel="noopener">SWSOLAR</a>
+          </td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem" title="Circuit price band">—</td>
+          <td class="r" style="font-family:var(--mono)">₹168.48</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:100.0%;background:var(--emerald)"></div></div>
+              <span class="vol-pct" style="color:var(--emerald)">269.6%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-muted">—</span></td>
+          <td class="r"><span class="pill pill-amber">26.2</span></td>
+        </tr>
+        <tr class="srow"
+          data-sym="ITCHOTELS" data-band="20" data-close="186.5" data-relvol="268.94"
+          data-snort="0" data-rs="49.27">
+          <td class="star-td"><button type="button" class="wl-star" onclick="toggleStar(this)" title="Add to Watchlist">☆</button></td>
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3AITCHOTELS" target="_blank" rel="noopener">ITCHOTELS</a>
+          </td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem" title="Circuit price band">20</td>
+          <td class="r" style="font-family:var(--mono)">₹186.50</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:100.0%;background:var(--emerald)"></div></div>
+              <span class="vol-pct" style="color:var(--emerald)">268.9%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-muted">—</span></td>
+          <td class="r"><span class="pill pill-amber">49.3</span></td>
+        </tr>
+        <tr class="srow is-new"
+          data-sym="LTF" data-band="—" data-close="283.95" data-relvol="267.99"
+          data-snort="0" data-rs="56.6">
+          <td class="star-td"><button type="button" class="wl-star" onclick="toggleStar(this)" title="Add to Watchlist">☆</button></td>
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3ALTF" target="_blank" rel="noopener">LTF <span class="sym-new-star">✦ NEW</span></a>
+          </td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem" title="Circuit price band">—</td>
+          <td class="r" style="font-family:var(--mono)">₹283.95</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:100.0%;background:var(--emerald)"></div></div>
+              <span class="vol-pct" style="color:var(--emerald)">268.0%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-muted">—</span></td>
+          <td class="r"><span class="pill pill-amber">56.6</span></td>
+        </tr>
+        <tr class="srow is-new"
+          data-sym="TITAGARH" data-band="—" data-close="745.0" data-relvol="267.71"
+          data-snort="0" data-rs="43.12">
+          <td class="star-td"><button type="button" class="wl-star" onclick="toggleStar(this)" title="Add to Watchlist">☆</button></td>
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3ATITAGARH" target="_blank" rel="noopener">TITAGARH <span class="sym-new-star">✦ NEW</span></a>
+          </td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem" title="Circuit price band">—</td>
+          <td class="r" style="font-family:var(--mono)">₹745.00</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:100.0%;background:var(--emerald)"></div></div>
+              <span class="vol-pct" style="color:var(--emerald)">267.7%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-muted">—</span></td>
+          <td class="r"><span class="pill pill-amber">43.1</span></td>
+        </tr>
+        <tr class="srow"
+          data-sym="DOMS" data-band="—" data-close="2217.3" data-relvol="260.65"
+          data-snort="0" data-rs="44.85">
+          <td class="star-td"><button type="button" class="wl-star" onclick="toggleStar(this)" title="Add to Watchlist">☆</button></td>
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3ADOMS" target="_blank" rel="noopener">DOMS</a>
+          </td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem" title="Circuit price band">—</td>
+          <td class="r" style="font-family:var(--mono)">₹2,217.30</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:100.0%;background:var(--emerald)"></div></div>
+              <span class="vol-pct" style="color:var(--emerald)">260.6%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-muted">—</span></td>
+          <td class="r"><span class="pill pill-amber">44.9</span></td>
+        </tr>
+        <tr class="srow is-new"
+          data-sym="SAPPHIRE" data-band="—" data-close="203.66" data-relvol="255.84"
+          data-snort="0" data-rs="32.33">
+          <td class="star-td"><button type="button" class="wl-star" onclick="toggleStar(this)" title="Add to Watchlist">☆</button></td>
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3ASAPPHIRE" target="_blank" rel="noopener">SAPPHIRE <span class="sym-new-star">✦ NEW</span></a>
+          </td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem" title="Circuit price band">—</td>
+          <td class="r" style="font-family:var(--mono)">₹203.66</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:100.0%;background:var(--emerald)"></div></div>
+              <span class="vol-pct" style="color:var(--emerald)">255.8%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-muted">—</span></td>
+          <td class="r"><span class="pill pill-amber">32.3</span></td>
+        </tr>
+        <tr class="srow is-new"
+          data-sym="OMINFRAL" data-band="—" data-close="63.11" data-relvol="252.11"
+          data-snort="0" data-rs="8.95">
+          <td class="star-td"><button type="button" class="wl-star" onclick="toggleStar(this)" title="Add to Watchlist">☆</button></td>
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3AOMINFRAL" target="_blank" rel="noopener">OMINFRAL <span class="sym-new-star">✦ NEW</span></a>
+          </td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem" title="Circuit price band">—</td>
+          <td class="r" style="font-family:var(--mono)">₹63.11</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:100.0%;background:var(--emerald)"></div></div>
+              <span class="vol-pct" style="color:var(--emerald)">252.1%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-muted">—</span></td>
+          <td class="r"><span class="pill pill-amber">8.9</span></td>
+        </tr>
+        <tr class="srow"
+          data-sym="NH" data-band="20" data-close="2003.7" data-relvol="251.57"
+          data-snort="0" data-rs="63.42">
+          <td class="star-td"><button type="button" class="wl-star" onclick="toggleStar(this)" title="Add to Watchlist">☆</button></td>
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3ANH" target="_blank" rel="noopener">NH</a>
+          </td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem" title="Circuit price band">20</td>
+          <td class="r" style="font-family:var(--mono)">₹2,003.70</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:100.0%;background:var(--emerald)"></div></div>
+              <span class="vol-pct" style="color:var(--emerald)">251.6%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-muted">—</span></td>
+          <td class="r"><span class="pill pill-amber">63.4</span></td>
+        </tr>
+        <tr class="srow"
+          data-sym="LGEINDIA" data-band="—" data-close="1818.4" data-relvol="251.46"
+          data-snort="0" data-rs="71.42">
+          <td class="star-td"><button type="button" class="wl-star" onclick="toggleStar(this)" title="Add to Watchlist">☆</button></td>
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3ALGEINDIA" target="_blank" rel="noopener">LGEINDIA</a>
+          </td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem" title="Circuit price band">—</td>
+          <td class="r" style="font-family:var(--mono)">₹1,818.40</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:100.0%;background:var(--emerald)"></div></div>
+              <span class="vol-pct" style="color:var(--emerald)">251.5%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-muted">—</span></td>
+          <td class="r"><span class="pill pill-amber">71.4</span></td>
+        </tr>
+        <tr class="srow"
+          data-sym="ABINFRA" data-band="—" data-close="13.7" data-relvol="251.2"
+          data-snort="0" data-rs="23.15">
+          <td class="star-td"><button type="button" class="wl-star" onclick="toggleStar(this)" title="Add to Watchlist">☆</button></td>
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3AABINFRA" target="_blank" rel="noopener">ABINFRA</a>
+          </td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem" title="Circuit price band">—</td>
+          <td class="r" style="font-family:var(--mono)">₹13.70</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:100.0%;background:var(--emerald)"></div></div>
+              <span class="vol-pct" style="color:var(--emerald)">251.2%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-muted">—</span></td>
+          <td class="r"><span class="pill pill-amber">23.2</span></td>
+        </tr>
+        <tr class="srow is-new"
+          data-sym="BORORENEW" data-band="—" data-close="370.5" data-relvol="237.5"
+          data-snort="0" data-rs="10.01">
+          <td class="star-td"><button type="button" class="wl-star" onclick="toggleStar(this)" title="Add to Watchlist">☆</button></td>
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3ABORORENEW" target="_blank" rel="noopener">BORORENEW <span class="sym-new-star">✦ NEW</span></a>
+          </td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem" title="Circuit price band">—</td>
+          <td class="r" style="font-family:var(--mono)">₹370.50</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:100.0%;background:var(--emerald)"></div></div>
+              <span class="vol-pct" style="color:var(--emerald)">237.5%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-muted">—</span></td>
+          <td class="r"><span class="pill pill-amber">10.0</span></td>
+        </tr>
+        <tr class="srow is-new"
+          data-sym="GSPCROP" data-band="—" data-close="null" data-relvol="232.85"
+          data-snort="0" data-rs="null">
+          <td class="star-td"><button type="button" class="wl-star" onclick="toggleStar(this)" title="Add to Watchlist">☆</button></td>
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3AGSPCROP" target="_blank" rel="noopener">GSPCROP <span class="sym-new-star">✦ NEW</span></a>
+          </td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem" title="Circuit price band">—</td>
+          <td class="r" style="font-family:var(--mono)">N/A</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:100.0%;background:var(--emerald)"></div></div>
+              <span class="vol-pct" style="color:var(--emerald)">232.9%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-muted">—</span></td>
+          <td class="r"><span class="pill pill-amber">N/A</span></td>
+        </tr>
+        <tr class="srow"
+          data-sym="MFSL" data-band="—" data-close="1444.0" data-relvol="229.27"
+          data-snort="0" data-rs="43.46">
+          <td class="star-td"><button type="button" class="wl-star" onclick="toggleStar(this)" title="Add to Watchlist">☆</button></td>
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3AMFSL" target="_blank" rel="noopener">MFSL</a>
+          </td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem" title="Circuit price band">—</td>
+          <td class="r" style="font-family:var(--mono)">₹1,444.00</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:100.0%;background:var(--emerald)"></div></div>
+              <span class="vol-pct" style="color:var(--emerald)">229.3%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-muted">—</span></td>
+          <td class="r"><span class="pill pill-amber">43.5</span></td>
+        </tr>
+        <tr class="srow is-new"
+          data-sym="MEGASTAR" data-band="20" data-close="299.65" data-relvol="228.21"
+          data-snort="0" data-rs="73.15">
+          <td class="star-td"><button type="button" class="wl-star" onclick="toggleStar(this)" title="Add to Watchlist">☆</button></td>
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3AMEGASTAR" target="_blank" rel="noopener">MEGASTAR <span class="sym-new-star">✦ NEW</span></a>
+          </td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem" title="Circuit price band">20</td>
+          <td class="r" style="font-family:var(--mono)">₹299.65</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:100.0%;background:var(--emerald)"></div></div>
+              <span class="vol-pct" style="color:var(--emerald)">228.2%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-muted">—</span></td>
+          <td class="r"><span class="pill pill-amber">73.2</span></td>
+        </tr>
+        <tr class="srow"
+          data-sym="HDFCLIFE" data-band="No Band" data-close="601.3" data-relvol="227.54"
+          data-snort="0" data-rs="34.56">
+          <td class="star-td"><button type="button" class="wl-star" onclick="toggleStar(this)" title="Add to Watchlist">☆</button></td>
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3AHDFCLIFE" target="_blank" rel="noopener">HDFCLIFE</a>
+          </td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem" title="Circuit price band">No Band</td>
+          <td class="r" style="font-family:var(--mono)">₹601.30</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:100.0%;background:var(--emerald)"></div></div>
+              <span class="vol-pct" style="color:var(--emerald)">227.5%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-muted">—</span></td>
+          <td class="r"><span class="pill pill-amber">34.6</span></td>
+        </tr>
+        <tr class="srow is-new"
+          data-sym="BRITANNIA" data-band="—" data-close="5076.2" data-relvol="225.36"
+          data-snort="0" data-rs="46.48">
+          <td class="star-td"><button type="button" class="wl-star" onclick="toggleStar(this)" title="Add to Watchlist">☆</button></td>
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3ABRITANNIA" target="_blank" rel="noopener">BRITANNIA <span class="sym-new-star">✦ NEW</span></a>
+          </td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem" title="Circuit price band">—</td>
+          <td class="r" style="font-family:var(--mono)">₹5,076.20</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:100.0%;background:var(--emerald)"></div></div>
+              <span class="vol-pct" style="color:var(--emerald)">225.4%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-muted">—</span></td>
+          <td class="r"><span class="pill pill-amber">46.5</span></td>
+        </tr>
+        <tr class="srow is-new"
+          data-sym="UNICHEMLAB" data-band="—" data-close="504.1" data-relvol="224.84"
+          data-snort="0" data-rs="66.0">
+          <td class="star-td"><button type="button" class="wl-star" onclick="toggleStar(this)" title="Add to Watchlist">☆</button></td>
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3AUNICHEMLAB" target="_blank" rel="noopener">UNICHEMLAB <span class="sym-new-star">✦ NEW</span></a>
+          </td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem" title="Circuit price band">—</td>
+          <td class="r" style="font-family:var(--mono)">₹504.10</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:100.0%;background:var(--emerald)"></div></div>
+              <span class="vol-pct" style="color:var(--emerald)">224.8%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-muted">—</span></td>
+          <td class="r"><span class="pill pill-amber">66.0</span></td>
+        </tr>
+        <tr class="srow"
+          data-sym="ASIANHOTNR" data-band="—" data-close="315.15" data-relvol="217.99"
+          data-snort="0" data-rs="52.68">
+          <td class="star-td"><button type="button" class="wl-star" onclick="toggleStar(this)" title="Add to Watchlist">☆</button></td>
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3AASIANHOTNR" target="_blank" rel="noopener">ASIANHOTNR</a>
+          </td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem" title="Circuit price band">—</td>
+          <td class="r" style="font-family:var(--mono)">₹315.15</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:100.0%;background:var(--emerald)"></div></div>
+              <span class="vol-pct" style="color:var(--emerald)">218.0%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-muted">—</span></td>
+          <td class="r"><span class="pill pill-amber">52.7</span></td>
+        </tr>
+        <tr class="srow"
+          data-sym="INDGN" data-band="20" data-close="653.55" data-relvol="214.83"
+          data-snort="0" data-rs="81.82">
+          <td class="star-td"><button type="button" class="wl-star" onclick="toggleStar(this)" title="Add to Watchlist">☆</button></td>
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3AINDGN" target="_blank" rel="noopener">INDGN</a>
+          </td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem" title="Circuit price band">20</td>
+          <td class="r" style="font-family:var(--mono)">₹653.55</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:100.0%;background:var(--emerald)"></div></div>
+              <span class="vol-pct" style="color:var(--emerald)">214.8%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-muted">—</span></td>
+          <td class="r"><span class="pill pill-amber">81.8</span></td>
+        </tr>
+        <tr class="srow is-new"
+          data-sym="TATACONSUM" data-band="No Band" data-close="1185.8" data-relvol="212.09"
+          data-snort="0" data-rs="64.09">
+          <td class="star-td"><button type="button" class="wl-star" onclick="toggleStar(this)" title="Add to Watchlist">☆</button></td>
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3ATATACONSUM" target="_blank" rel="noopener">TATACONSUM <span class="sym-new-star">✦ NEW</span></a>
+          </td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem" title="Circuit price band">No Band</td>
+          <td class="r" style="font-family:var(--mono)">₹1,185.80</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:100.0%;background:var(--emerald)"></div></div>
+              <span class="vol-pct" style="color:var(--emerald)">212.1%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-muted">—</span></td>
+          <td class="r"><span class="pill pill-amber">64.1</span></td>
+        </tr>
+        <tr class="srow is-new"
+          data-sym="ABSLAMC" data-band="—" data-close="958.7" data-relvol="209.72"
+          data-snort="0" data-rs="83.84">
+          <td class="star-td"><button type="button" class="wl-star" onclick="toggleStar(this)" title="Add to Watchlist">☆</button></td>
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3AABSLAMC" target="_blank" rel="noopener">ABSLAMC <span class="sym-new-star">✦ NEW</span></a>
+          </td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem" title="Circuit price band">—</td>
+          <td class="r" style="font-family:var(--mono)">₹958.70</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:100.0%;background:var(--emerald)"></div></div>
+              <span class="vol-pct" style="color:var(--emerald)">209.7%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-muted">—</span></td>
+          <td class="r"><span class="pill pill-amber">83.8</span></td>
+        </tr>
+        <tr class="srow"
+          data-sym="GHCLTEXTIL" data-band="20" data-close="146.21" data-relvol="207.72"
+          data-snort="0" data-rs="95.69">
+          <td class="star-td"><button type="button" class="wl-star" onclick="toggleStar(this)" title="Add to Watchlist">☆</button></td>
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3AGHCLTEXTIL" target="_blank" rel="noopener">GHCLTEXTIL</a>
+          </td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem" title="Circuit price band">20</td>
+          <td class="r" style="font-family:var(--mono)">₹146.21</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:100.0%;background:var(--emerald)"></div></div>
+              <span class="vol-pct" style="color:var(--emerald)">207.7%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-muted">—</span></td>
+          <td class="r"><span class="pill pill-amber">95.7</span></td>
+        </tr>
+        <tr class="srow is-new"
+          data-sym="SAATVIKGL" data-band="—" data-close="371.95" data-relvol="207.14"
+          data-snort="0" data-rs="36.3">
+          <td class="star-td"><button type="button" class="wl-star" onclick="toggleStar(this)" title="Add to Watchlist">☆</button></td>
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3ASAATVIKGL" target="_blank" rel="noopener">SAATVIKGL <span class="sym-new-star">✦ NEW</span></a>
+          </td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem" title="Circuit price band">—</td>
+          <td class="r" style="font-family:var(--mono)">₹371.95</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:100.0%;background:var(--emerald)"></div></div>
+              <span class="vol-pct" style="color:var(--emerald)">207.1%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-muted">—</span></td>
+          <td class="r"><span class="pill pill-amber">36.3</span></td>
+        </tr>
+        <tr class="srow"
+          data-sym="OLIL" data-band="—" data-close="377.9" data-relvol="201.59"
+          data-snort="0" data-rs="74.72">
+          <td class="star-td"><button type="button" class="wl-star" onclick="toggleStar(this)" title="Add to Watchlist">☆</button></td>
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3AOLIL" target="_blank" rel="noopener">OLIL</a>
+          </td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem" title="Circuit price band">—</td>
+          <td class="r" style="font-family:var(--mono)">₹377.90</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:100.0%;background:var(--emerald)"></div></div>
+              <span class="vol-pct" style="color:var(--emerald)">201.6%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-muted">—</span></td>
+          <td class="r"><span class="pill pill-amber">74.7</span></td>
+        </tr>
+        <tr class="srow is-new"
+          data-sym="VASCONEQ" data-band="—" data-close="31.21" data-relvol="200.07"
+          data-snort="0" data-rs="9.06">
+          <td class="star-td"><button type="button" class="wl-star" onclick="toggleStar(this)" title="Add to Watchlist">☆</button></td>
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3AVASCONEQ" target="_blank" rel="noopener">VASCONEQ <span class="sym-new-star">✦ NEW</span></a>
+          </td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem" title="Circuit price band">—</td>
+          <td class="r" style="font-family:var(--mono)">₹31.21</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:100.0%;background:var(--emerald)"></div></div>
+              <span class="vol-pct" style="color:var(--emerald)">200.1%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-muted">—</span></td>
+          <td class="r"><span class="pill pill-amber">9.1</span></td>
+        </tr>
+        <tr class="srow"
+          data-sym="ITC" data-band="No Band" data-close="309.25" data-relvol="198.79"
+          data-snort="0" data-rs="35.51">
+          <td class="star-td"><button type="button" class="wl-star" onclick="toggleStar(this)" title="Add to Watchlist">☆</button></td>
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3AITC" target="_blank" rel="noopener">ITC</a>
+          </td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem" title="Circuit price band">No Band</td>
+          <td class="r" style="font-family:var(--mono)">₹309.25</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:100.0%;background:var(--emerald)"></div></div>
+              <span class="vol-pct" style="color:var(--emerald)">198.8%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-muted">—</span></td>
+          <td class="r"><span class="pill pill-amber">35.5</span></td>
+        </tr>
+        <tr class="srow is-new"
+          data-sym="TEXRAIL" data-band="—" data-close="112.58" data-relvol="198.74"
+          data-snort="0" data-rs="42.11">
+          <td class="star-td"><button type="button" class="wl-star" onclick="toggleStar(this)" title="Add to Watchlist">☆</button></td>
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3ATEXRAIL" target="_blank" rel="noopener">TEXRAIL <span class="sym-new-star">✦ NEW</span></a>
+          </td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem" title="Circuit price band">—</td>
+          <td class="r" style="font-family:var(--mono)">₹112.58</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:100.0%;background:var(--emerald)"></div></div>
+              <span class="vol-pct" style="color:var(--emerald)">198.7%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-muted">—</span></td>
+          <td class="r"><span class="pill pill-amber">42.1</span></td>
+        </tr>
+        <tr class="srow is-new"
+          data-sym="BCONCEPTS" data-band="—" data-close="127.04" data-relvol="198.06"
+          data-snort="0" data-rs="1.57">
+          <td class="star-td"><button type="button" class="wl-star" onclick="toggleStar(this)" title="Add to Watchlist">☆</button></td>
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3ABCONCEPTS" target="_blank" rel="noopener">BCONCEPTS <span class="sym-new-star">✦ NEW</span></a>
+          </td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem" title="Circuit price band">—</td>
+          <td class="r" style="font-family:var(--mono)">₹127.04</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:100.0%;background:var(--emerald)"></div></div>
+              <span class="vol-pct" style="color:var(--emerald)">198.1%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-muted">—</span></td>
+          <td class="r"><span class="pill pill-amber">1.6</span></td>
+        </tr>
+        <tr class="srow"
+          data-sym="POLICYBZR" data-band="—" data-close="1123.8" data-relvol="197.94"
+          data-snort="0" data-rs="12.86">
+          <td class="star-td"><button type="button" class="wl-star" onclick="toggleStar(this)" title="Add to Watchlist">☆</button></td>
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3APOLICYBZR" target="_blank" rel="noopener">POLICYBZR</a>
+          </td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem" title="Circuit price band">—</td>
+          <td class="r" style="font-family:var(--mono)">₹1,123.80</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:100.0%;background:var(--emerald)"></div></div>
+              <span class="vol-pct" style="color:var(--emerald)">197.9%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-muted">—</span></td>
+          <td class="r"><span class="pill pill-amber">12.9</span></td>
+        </tr>
+        <tr class="srow"
+          data-sym="HALDER" data-band="—" data-close="null" data-relvol="196.73"
+          data-snort="0" data-rs="null">
+          <td class="star-td"><button type="button" class="wl-star" onclick="toggleStar(this)" title="Add to Watchlist">☆</button></td>
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3AHALDER" target="_blank" rel="noopener">HALDER</a>
+          </td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem" title="Circuit price band">—</td>
+          <td class="r" style="font-family:var(--mono)">N/A</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:100.0%;background:var(--emerald)"></div></div>
+              <span class="vol-pct" style="color:var(--emerald)">196.7%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-muted">—</span></td>
+          <td class="r"><span class="pill pill-amber">N/A</span></td>
+        </tr>
+        <tr class="srow"
+          data-sym="KOVAI" data-band="—" data-close="null" data-relvol="195.78"
+          data-snort="0" data-rs="null">
+          <td class="star-td"><button type="button" class="wl-star" onclick="toggleStar(this)" title="Add to Watchlist">☆</button></td>
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3AKOVAI" target="_blank" rel="noopener">KOVAI</a>
+          </td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem" title="Circuit price band">—</td>
+          <td class="r" style="font-family:var(--mono)">N/A</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:100.0%;background:var(--emerald)"></div></div>
+              <span class="vol-pct" style="color:var(--emerald)">195.8%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-muted">—</span></td>
+          <td class="r"><span class="pill pill-amber">N/A</span></td>
+        </tr>
+        <tr class="srow is-new"
+          data-sym="SUNDROP" data-band="—" data-close="620.6" data-relvol="195.19"
+          data-snort="0" data-rs="37.14">
+          <td class="star-td"><button type="button" class="wl-star" onclick="toggleStar(this)" title="Add to Watchlist">☆</button></td>
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3ASUNDROP" target="_blank" rel="noopener">SUNDROP <span class="sym-new-star">✦ NEW</span></a>
+          </td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem" title="Circuit price band">—</td>
+          <td class="r" style="font-family:var(--mono)">₹620.60</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:100.0%;background:var(--emerald)"></div></div>
+              <span class="vol-pct" style="color:var(--emerald)">195.2%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-muted">—</span></td>
+          <td class="r"><span class="pill pill-amber">37.1</span></td>
+        </tr>
+        <tr class="srow"
+          data-sym="HEROMOTOCO" data-band="No Band" data-close="5751.5" data-relvol="193.14"
+          data-snort="0" data-rs="62.98">
+          <td class="star-td"><button type="button" class="wl-star" onclick="toggleStar(this)" title="Add to Watchlist">☆</button></td>
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3AHEROMOTOCO" target="_blank" rel="noopener">HEROMOTOCO</a>
+          </td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem" title="Circuit price band">No Band</td>
+          <td class="r" style="font-family:var(--mono)">₹5,751.50</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:100.0%;background:var(--emerald)"></div></div>
+              <span class="vol-pct" style="color:var(--emerald)">193.1%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-muted">—</span></td>
+          <td class="r"><span class="pill pill-amber">63.0</span></td>
+        </tr>
+        <tr class="srow"
+          data-sym="INFINIUM" data-band="—" data-close="310.85" data-relvol="192.31"
+          data-snort="0" data-rs="79.47">
+          <td class="star-td"><button type="button" class="wl-star" onclick="toggleStar(this)" title="Add to Watchlist">☆</button></td>
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3AINFINIUM" target="_blank" rel="noopener">INFINIUM</a>
+          </td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem" title="Circuit price band">—</td>
+          <td class="r" style="font-family:var(--mono)">₹310.85</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:100.0%;background:var(--emerald)"></div></div>
+              <span class="vol-pct" style="color:var(--emerald)">192.3%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-muted">—</span></td>
+          <td class="r"><span class="pill pill-amber">79.5</span></td>
+        </tr>
+        <tr class="srow is-new"
+          data-sym="SARDAEN" data-band="—" data-close="476.75" data-relvol="185.92"
+          data-snort="0" data-rs="53.19">
+          <td class="star-td"><button type="button" class="wl-star" onclick="toggleStar(this)" title="Add to Watchlist">☆</button></td>
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3ASARDAEN" target="_blank" rel="noopener">SARDAEN <span class="sym-new-star">✦ NEW</span></a>
+          </td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem" title="Circuit price band">—</td>
+          <td class="r" style="font-family:var(--mono)">₹476.75</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:100.0%;background:var(--emerald)"></div></div>
+              <span class="vol-pct" style="color:var(--emerald)">185.9%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-muted">—</span></td>
+          <td class="r"><span class="pill pill-amber">53.2</span></td>
+        </tr>
+        <tr class="srow"
+          data-sym="NUVOCO" data-band="20" data-close="363.35" data-relvol="184.61"
+          data-snort="0" data-rs="59.62">
+          <td class="star-td"><button type="button" class="wl-star" onclick="toggleStar(this)" title="Add to Watchlist">☆</button></td>
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3ANUVOCO" target="_blank" rel="noopener">NUVOCO</a>
+          </td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem" title="Circuit price band">20</td>
+          <td class="r" style="font-family:var(--mono)">₹363.35</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:100.0%;background:var(--emerald)"></div></div>
+              <span class="vol-pct" style="color:var(--emerald)">184.6%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-muted">—</span></td>
+          <td class="r"><span class="pill pill-amber">59.6</span></td>
+        </tr>
+        <tr class="srow is-new"
+          data-sym="TRENT" data-band="No Band" data-close="3319.6" data-relvol="179.02"
+          data-snort="0" data-rs="29.92">
+          <td class="star-td"><button type="button" class="wl-star" onclick="toggleStar(this)" title="Add to Watchlist">☆</button></td>
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3ATRENT" target="_blank" rel="noopener">TRENT <span class="sym-new-star">✦ NEW</span></a>
+          </td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem" title="Circuit price band">No Band</td>
+          <td class="r" style="font-family:var(--mono)">₹3,319.60</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:100.0%;background:var(--emerald)"></div></div>
+              <span class="vol-pct" style="color:var(--emerald)">179.0%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-muted">—</span></td>
+          <td class="r"><span class="pill pill-amber">29.9</span></td>
+        </tr>
+        <tr class="srow"
+          data-sym="ENTERO" data-band="20" data-close="1898.0" data-relvol="173.42"
+          data-snort="0" data-rs="92.84">
+          <td class="star-td"><button type="button" class="wl-star" onclick="toggleStar(this)" title="Add to Watchlist">☆</button></td>
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3AENTERO" target="_blank" rel="noopener">ENTERO</a>
+          </td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem" title="Circuit price band">20</td>
+          <td class="r" style="font-family:var(--mono)">₹1,898.00</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:100.0%;background:var(--emerald)"></div></div>
+              <span class="vol-pct" style="color:var(--emerald)">173.4%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-muted">—</span></td>
+          <td class="r"><span class="pill pill-amber">92.8</span></td>
+        </tr>
+        <tr class="srow"
+          data-sym="COOLCAPS" data-band="—" data-close="23.8" data-relvol="171.22"
+          data-snort="0" data-rs="0.67">
+          <td class="star-td"><button type="button" class="wl-star" onclick="toggleStar(this)" title="Add to Watchlist">☆</button></td>
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3ACOOLCAPS" target="_blank" rel="noopener">COOLCAPS</a>
+          </td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem" title="Circuit price band">—</td>
+          <td class="r" style="font-family:var(--mono)">₹23.80</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:100.0%;background:var(--emerald)"></div></div>
+              <span class="vol-pct" style="color:var(--emerald)">171.2%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-muted">—</span></td>
+          <td class="r"><span class="pill pill-amber">0.7</span></td>
+        </tr>
+        <tr class="srow is-new"
+          data-sym="COLPAL" data-band="—" data-close="1825.0" data-relvol="167.75"
+          data-snort="0" data-rs="43.57">
+          <td class="star-td"><button type="button" class="wl-star" onclick="toggleStar(this)" title="Add to Watchlist">☆</button></td>
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3ACOLPAL" target="_blank" rel="noopener">COLPAL <span class="sym-new-star">✦ NEW</span></a>
+          </td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem" title="Circuit price band">—</td>
+          <td class="r" style="font-family:var(--mono)">₹1,825.00</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:100.0%;background:var(--emerald)"></div></div>
+              <span class="vol-pct" style="color:var(--emerald)">167.7%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-muted">—</span></td>
+          <td class="r"><span class="pill pill-amber">43.6</span></td>
+        </tr>
+        <tr class="srow is-new"
+          data-sym="KANSAINER" data-band="20" data-close="202.49" data-relvol="167.05"
+          data-snort="0" data-rs="39.26">
+          <td class="star-td"><button type="button" class="wl-star" onclick="toggleStar(this)" title="Add to Watchlist">☆</button></td>
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3AKANSAINER" target="_blank" rel="noopener">KANSAINER <span class="sym-new-star">✦ NEW</span></a>
+          </td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem" title="Circuit price band">20</td>
+          <td class="r" style="font-family:var(--mono)">₹202.49</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:100.0%;background:var(--emerald)"></div></div>
+              <span class="vol-pct" style="color:var(--emerald)">167.1%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-muted">—</span></td>
+          <td class="r"><span class="pill pill-amber">39.3</span></td>
+        </tr>
+        <tr class="srow"
+          data-sym="WEL" data-band="—" data-close="87.15" data-relvol="161.5"
+          data-snort="0" data-rs="5.59">
+          <td class="star-td"><button type="button" class="wl-star" onclick="toggleStar(this)" title="Add to Watchlist">☆</button></td>
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3AWEL" target="_blank" rel="noopener">WEL</a>
+          </td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem" title="Circuit price band">—</td>
+          <td class="r" style="font-family:var(--mono)">₹87.15</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:100.0%;background:var(--emerald)"></div></div>
+              <span class="vol-pct" style="color:var(--emerald)">161.5%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-muted">—</span></td>
+          <td class="r"><span class="pill pill-amber">5.6</span></td>
+        </tr>
+        <tr class="srow"
+          data-sym="PDSL" data-band="20" data-close="418.95" data-relvol="152.66"
+          data-snort="0" data-rs="70.47">
+          <td class="star-td"><button type="button" class="wl-star" onclick="toggleStar(this)" title="Add to Watchlist">☆</button></td>
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3APDSL" target="_blank" rel="noopener">PDSL</a>
+          </td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem" title="Circuit price band">20</td>
+          <td class="r" style="font-family:var(--mono)">₹418.95</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:100.0%;background:var(--emerald)"></div></div>
+              <span class="vol-pct" style="color:var(--emerald)">152.7%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-muted">—</span></td>
+          <td class="r"><span class="pill pill-amber">70.5</span></td>
+        </tr>
+        <tr class="srow is-new"
+          data-sym="NEWGEN" data-band="—" data-close="413.65" data-relvol="149.01"
+          data-snort="0" data-rs="3.58">
+          <td class="star-td"><button type="button" class="wl-star" onclick="toggleStar(this)" title="Add to Watchlist">☆</button></td>
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3ANEWGEN" target="_blank" rel="noopener">NEWGEN <span class="sym-new-star">✦ NEW</span></a>
+          </td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem" title="Circuit price band">—</td>
+          <td class="r" style="font-family:var(--mono)">₹413.65</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:99.34150294881586%;background:var(--emerald)"></div></div>
+              <span class="vol-pct" style="color:var(--emerald)">149.0%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-muted">—</span></td>
+          <td class="r"><span class="pill pill-amber">3.6</span></td>
+        </tr>
+        <tr class="srow"
+          data-sym="SYNCOMF" data-band="—" data-close="23.59" data-relvol="144.81"
+          data-snort="0" data-rs="87.42">
+          <td class="star-td"><button type="button" class="wl-star" onclick="toggleStar(this)" title="Add to Watchlist">☆</button></td>
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3ASYNCOMF" target="_blank" rel="noopener">SYNCOMF</a>
+          </td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem" title="Circuit price band">—</td>
+          <td class="r" style="font-family:var(--mono)">₹23.59</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:96.54198901546775%;background:var(--emerald)"></div></div>
+              <span class="vol-pct" style="color:var(--emerald)">144.8%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-muted">—</span></td>
+          <td class="r"><span class="pill pill-amber">87.4</span></td>
+        </tr>
+        <tr class="srow is-new"
+          data-sym="MPHASIS" data-band="—" data-close="2532.9" data-relvol="140.32"
+          data-snort="0" data-rs="57.1">
+          <td class="star-td"><button type="button" class="wl-star" onclick="toggleStar(this)" title="Add to Watchlist">☆</button></td>
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3AMPHASIS" target="_blank" rel="noopener">MPHASIS <span class="sym-new-star">✦ NEW</span></a>
+          </td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem" title="Circuit price band">—</td>
+          <td class="r" style="font-family:var(--mono)">₹2,532.90</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:93.54568894110834%;background:var(--emerald)"></div></div>
+              <span class="vol-pct" style="color:var(--emerald)">140.3%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-muted">—</span></td>
+          <td class="r"><span class="pill pill-amber">57.1</span></td>
+        </tr>
+        <tr class="srow"
+          data-sym="MILKYMIST" data-band="—" data-close="null" data-relvol="134.27"
+          data-snort="0" data-rs="null">
+          <td class="star-td"><button type="button" class="wl-star" onclick="toggleStar(this)" title="Add to Watchlist">☆</button></td>
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3AMILKYMIST" target="_blank" rel="noopener">MILKYMIST</a>
+          </td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem" title="Circuit price band">—</td>
+          <td class="r" style="font-family:var(--mono)">N/A</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:89.51594816108296%;background:var(--emerald)"></div></div>
+              <span class="vol-pct" style="color:var(--emerald)">134.3%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-muted">—</span></td>
+          <td class="r"><span class="pill pill-amber">N/A</span></td>
+        </tr>
+        <tr class="srow is-new"
+          data-sym="ISGEC" data-band="20" data-close="1021.85" data-relvol="129.64"
+          data-snort="0" data-rs="75.06">
+          <td class="star-td"><button type="button" class="wl-star" onclick="toggleStar(this)" title="Add to Watchlist">☆</button></td>
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3AISGEC" target="_blank" rel="noopener">ISGEC <span class="sym-new-star">✦ NEW</span></a>
+          </td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem" title="Circuit price band">20</td>
+          <td class="r" style="font-family:var(--mono)">₹1,021.85</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:86.42923404267336%;background:var(--emerald)"></div></div>
+              <span class="vol-pct" style="color:var(--emerald)">129.6%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-muted">—</span></td>
+          <td class="r"><span class="pill pill-amber">75.1</span></td>
+        </tr>
+        <tr class="srow"
+          data-sym="UNITDSPR" data-band="No Band" data-close="1514.3" data-relvol="127.84"
+          data-snort="0" data-rs="67.17">
+          <td class="star-td"><button type="button" class="wl-star" onclick="toggleStar(this)" title="Add to Watchlist">☆</button></td>
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3AUNITDSPR" target="_blank" rel="noopener">UNITDSPR</a>
+          </td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem" title="Circuit price band">No Band</td>
+          <td class="r" style="font-family:var(--mono)">₹1,514.30</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:85.22796871831116%;background:var(--emerald)"></div></div>
+              <span class="vol-pct" style="color:var(--emerald)">127.8%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-muted">—</span></td>
+          <td class="r"><span class="pill pill-amber">67.2</span></td>
+        </tr>
+        <tr class="srow is-new"
+          data-sym="POLYMED" data-band="—" data-close="1636.8" data-relvol="127.8"
+          data-snort="0" data-rs="44.02">
+          <td class="star-td"><button type="button" class="wl-star" onclick="toggleStar(this)" title="Add to Watchlist">☆</button></td>
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3APOLYMED" target="_blank" rel="noopener">POLYMED <span class="sym-new-star">✦ NEW</span></a>
+          </td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem" title="Circuit price band">—</td>
+          <td class="r" style="font-family:var(--mono)">₹1,636.80</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:85.19998760727454%;background:var(--emerald)"></div></div>
+              <span class="vol-pct" style="color:var(--emerald)">127.8%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-muted">—</span></td>
+          <td class="r"><span class="pill pill-amber">44.0</span></td>
+        </tr>
+        <tr class="srow"
+          data-sym="ARFIN" data-band="—" data-close="94.93" data-relvol="127.4"
+          data-snort="0" data-rs="92.23">
+          <td class="star-td"><button type="button" class="wl-star" onclick="toggleStar(this)" title="Add to Watchlist">☆</button></td>
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3AARFIN" target="_blank" rel="noopener">ARFIN</a>
+          </td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem" title="Circuit price band">—</td>
+          <td class="r" style="font-family:var(--mono)">₹94.93</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:84.93000282534801%;background:var(--emerald)"></div></div>
+              <span class="vol-pct" style="color:var(--emerald)">127.4%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-muted">—</span></td>
+          <td class="r"><span class="pill pill-amber">92.2</span></td>
+        </tr>
+        <tr class="srow"
+          data-sym="THOMASCOTT" data-band="—" data-close="289.7" data-relvol="124.9"
+          data-snort="0" data-rs="28.36">
+          <td class="star-td"><button type="button" class="wl-star" onclick="toggleStar(this)" title="Add to Watchlist">☆</button></td>
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3ATHOMASCOTT" target="_blank" rel="noopener">THOMASCOTT</a>
+          </td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem" title="Circuit price band">—</td>
+          <td class="r" style="font-family:var(--mono)">₹289.70</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:83.26634056081997%;background:var(--emerald)"></div></div>
+              <span class="vol-pct" style="color:var(--emerald)">124.9%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-muted">—</span></td>
+          <td class="r"><span class="pill pill-amber">28.4</span></td>
+        </tr>
+        <tr class="srow"
+          data-sym="ETERNAL" data-band="No Band" data-close="371.7" data-relvol="122.47"
+          data-snort="0" data-rs="77.63">
+          <td class="star-td"><button type="button" class="wl-star" onclick="toggleStar(this)" title="Add to Watchlist">☆</button></td>
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3AETERNAL" target="_blank" rel="noopener">ETERNAL</a>
+          </td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem" title="Circuit price band">No Band</td>
+          <td class="r" style="font-family:var(--mono)">₹371.70</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:81.64360809054179%;background:var(--emerald)"></div></div>
+              <span class="vol-pct" style="color:var(--emerald)">122.5%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-muted">—</span></td>
+          <td class="r"><span class="pill pill-amber">77.6</span></td>
+        </tr>
+        <tr class="srow"
+          data-sym="BAJFINANCE" data-band="No Band" data-close="1131.35" data-relvol="119.92"
+          data-snort="0" data-rs="71.81">
+          <td class="star-td"><button type="button" class="wl-star" onclick="toggleStar(this)" title="Add to Watchlist">☆</button></td>
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3ABAJFINANCE" target="_blank" rel="noopener">BAJFINANCE</a>
+          </td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem" title="Circuit price band">No Band</td>
+          <td class="r" style="font-family:var(--mono)">₹1,131.35</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:79.9466807121822%;background:var(--emerald)"></div></div>
+              <span class="vol-pct" style="color:var(--emerald)">119.9%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-muted">—</span></td>
+          <td class="r"><span class="pill pill-amber">71.8</span></td>
+        </tr>
+        <tr class="srow is-new"
+          data-sym="DRREDDY" data-band="No Band" data-close="1398.0" data-relvol="119.42"
+          data-snort="0" data-rs="72.6">
+          <td class="star-td"><button type="button" class="wl-star" onclick="toggleStar(this)" title="Add to Watchlist">☆</button></td>
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3ADRREDDY" target="_blank" rel="noopener">DRREDDY <span class="sym-new-star">✦ NEW</span></a>
+          </td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem" title="Circuit price band">No Band</td>
+          <td class="r" style="font-family:var(--mono)">₹1,398.00</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:79.61212555430372%;background:var(--emerald)"></div></div>
+              <span class="vol-pct" style="color:var(--emerald)">119.4%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-muted">—</span></td>
+          <td class="r"><span class="pill pill-amber">72.6</span></td>
+        </tr>
+        <tr class="srow"
+          data-sym="BIKAJI" data-band="—" data-close="526.05" data-relvol="117.25"
+          data-snort="0" data-rs="25.56">
+          <td class="star-td"><button type="button" class="wl-star" onclick="toggleStar(this)" title="Add to Watchlist">☆</button></td>
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3ABIKAJI" target="_blank" rel="noopener">BIKAJI</a>
+          </td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem" title="Circuit price band">—</td>
+          <td class="r" style="font-family:var(--mono)">₹526.05</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:78.16544329504835%;background:var(--emerald)"></div></div>
+              <span class="vol-pct" style="color:var(--emerald)">117.2%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-muted">—</span></td>
+          <td class="r"><span class="pill pill-amber">25.6</span></td>
+        </tr>
+        <tr class="srow"
+          data-sym="OBEROIRLTY" data-band="—" data-close="1868.5" data-relvol="114.48"
+          data-snort="0" data-rs="69.63">
+          <td class="star-td"><button type="button" class="wl-star" onclick="toggleStar(this)" title="Add to Watchlist">☆</button></td>
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3AOBEROIRLTY" target="_blank" rel="noopener">OBEROIRLTY</a>
+          </td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem" title="Circuit price band">—</td>
+          <td class="r" style="font-family:var(--mono)">₹1,868.50</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:76.31952987372239%;background:var(--emerald)"></div></div>
+              <span class="vol-pct" style="color:var(--emerald)">114.5%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-muted">—</span></td>
+          <td class="r"><span class="pill pill-amber">69.6</span></td>
+        </tr>
+        <tr class="srow"
+          data-sym="REGAAL" data-band="20" data-close="100.68" data-relvol="113.62"
+          data-snort="0" data-rs="73.1">
+          <td class="star-td"><button type="button" class="wl-star" onclick="toggleStar(this)" title="Add to Watchlist">☆</button></td>
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3AREGAAL" target="_blank" rel="noopener">REGAAL</a>
+          </td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem" title="Circuit price band">20</td>
+          <td class="r" style="font-family:var(--mono)">₹100.68</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:75.74559062422156%;background:var(--emerald)"></div></div>
+              <span class="vol-pct" style="color:var(--emerald)">113.6%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-muted">—</span></td>
+          <td class="r"><span class="pill pill-amber">73.1</span></td>
+        </tr>
+        <tr class="srow is-new"
+          data-sym="TATACAP" data-band="10" data-close="351.6" data-relvol="112.55"
+          data-snort="0" data-rs="69.57">
+          <td class="star-td"><button type="button" class="wl-star" onclick="toggleStar(this)" title="Add to Watchlist">☆</button></td>
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3ATATACAP" target="_blank" rel="noopener">TATACAP <span class="sym-new-star">✦ NEW</span></a>
+          </td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem" title="Circuit price band">10</td>
+          <td class="r" style="font-family:var(--mono)">₹351.60</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:75.03058151422545%;background:var(--emerald)"></div></div>
+              <span class="vol-pct" style="color:var(--emerald)">112.5%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-muted">—</span></td>
+          <td class="r"><span class="pill pill-amber">69.6</span></td>
+        </tr>
+        <tr class="srow"
+          data-sym="TCS" data-band="No Band" data-close="2517.3" data-relvol="111.42"
+          data-snort="0" data-rs="42.28">
+          <td class="star-td"><button type="button" class="wl-star" onclick="toggleStar(this)" title="Add to Watchlist">☆</button></td>
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3ATCS" target="_blank" rel="noopener">TCS</a>
+          </td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem" title="Circuit price band">No Band</td>
+          <td class="r" style="font-family:var(--mono)">₹2,517.30</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:74.28069213670835%;background:var(--emerald)"></div></div>
+              <span class="vol-pct" style="color:var(--emerald)">111.4%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-muted">—</span></td>
+          <td class="r"><span class="pill pill-amber">42.3</span></td>
+        </tr>
+        <tr class="srow"
+          data-sym="MASTERTR" data-band="—" data-close="87.98" data-relvol="111.42"
+          data-snort="0" data-rs="41.16">
+          <td class="star-td"><button type="button" class="wl-star" onclick="toggleStar(this)" title="Add to Watchlist">☆</button></td>
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3AMASTERTR" target="_blank" rel="noopener">MASTERTR</a>
+          </td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem" title="Circuit price band">—</td>
+          <td class="r" style="font-family:var(--mono)">₹87.98</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:74.27942436452643%;background:var(--emerald)"></div></div>
+              <span class="vol-pct" style="color:var(--emerald)">111.4%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-muted">—</span></td>
+          <td class="r"><span class="pill pill-amber">41.2</span></td>
+        </tr>
+        <tr class="srow"
+          data-sym="M&M" data-band="No Band" data-close="3509.5" data-relvol="107.88"
+          data-snort="0" data-rs="55.82">
+          <td class="star-td"><button type="button" class="wl-star" onclick="toggleStar(this)" title="Add to Watchlist">☆</button></td>
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3AM&M" target="_blank" rel="noopener">M&M</a>
+          </td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem" title="Circuit price band">No Band</td>
+          <td class="r" style="font-family:var(--mono)">₹3,509.50</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:71.9188382939533%;background:var(--emerald)"></div></div>
+              <span class="vol-pct" style="color:var(--emerald)">107.9%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-muted">—</span></td>
+          <td class="r"><span class="pill pill-amber">55.8</span></td>
+        </tr>
+        <tr class="srow"
+          data-sym="ACE" data-band="20" data-close="1190.35" data-relvol="106.2"
+          data-snort="0" data-rs="78.69">
+          <td class="star-td"><button type="button" class="wl-star" onclick="toggleStar(this)" title="Add to Watchlist">☆</button></td>
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3AACE" target="_blank" rel="noopener">ACE</a>
+          </td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem" title="Circuit price band">20</td>
+          <td class="r" style="font-family:var(--mono)">₹1,190.35</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:70.79821877219703%;background:var(--emerald)"></div></div>
+              <span class="vol-pct" style="color:var(--emerald)">106.2%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-muted">—</span></td>
+          <td class="r"><span class="pill pill-amber">78.7</span></td>
+        </tr>
+        <tr class="srow"
+          data-sym="PROSTARM" data-band="—" data-close="131.44" data-relvol="105.15"
+          data-snort="0" data-rs="42.34">
+          <td class="star-td"><button type="button" class="wl-star" onclick="toggleStar(this)" title="Add to Watchlist">☆</button></td>
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3APROSTARM" target="_blank" rel="noopener">PROSTARM</a>
+          </td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem" title="Circuit price band">—</td>
+          <td class="r" style="font-family:var(--mono)">₹131.44</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:70.09805669380586%;background:var(--emerald)"></div></div>
+              <span class="vol-pct" style="color:var(--emerald)">105.1%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-muted">—</span></td>
+          <td class="r"><span class="pill pill-amber">42.3</span></td>
+        </tr>
+        <tr class="srow is-new"
+          data-sym="CAMPUS" data-band="—" data-close="193.48" data-relvol="103.68"
+          data-snort="0" data-rs="24.16">
+          <td class="star-td"><button type="button" class="wl-star" onclick="toggleStar(this)" title="Add to Watchlist">☆</button></td>
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3ACAMPUS" target="_blank" rel="noopener">CAMPUS <span class="sym-new-star">✦ NEW</span></a>
+          </td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem" title="Circuit price band">—</td>
+          <td class="r" style="font-family:var(--mono)">₹193.48</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:69.1171725388176%;background:var(--emerald)"></div></div>
+              <span class="vol-pct" style="color:var(--emerald)">103.7%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-muted">—</span></td>
+          <td class="r"><span class="pill pill-amber">24.2</span></td>
+        </tr>
+        <tr class="srow is-new"
+          data-sym="RTNINDIA" data-band="—" data-close="25.16" data-relvol="103.25"
+          data-snort="0" data-rs="7.77">
+          <td class="star-td"><button type="button" class="wl-star" onclick="toggleStar(this)" title="Add to Watchlist">☆</button></td>
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3ARTNINDIA" target="_blank" rel="noopener">RTNINDIA <span class="sym-new-star">✦ NEW</span></a>
+          </td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem" title="Circuit price band">—</td>
+          <td class="r" style="font-family:var(--mono)">₹25.16</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:68.83183145384861%;background:var(--emerald)"></div></div>
+              <span class="vol-pct" style="color:var(--emerald)">103.2%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-muted">—</span></td>
+          <td class="r"><span class="pill pill-amber">7.8</span></td>
+        </tr>
+        <tr class="srow is-new"
+          data-sym="JIOFIN" data-band="—" data-close="222.85" data-relvol="100.02"
+          data-snort="0" data-rs="25.45">
+          <td class="star-td"><button type="button" class="wl-star" onclick="toggleStar(this)" title="Add to Watchlist">☆</button></td>
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3AJIOFIN" target="_blank" rel="noopener">JIOFIN <span class="sym-new-star">✦ NEW</span></a>
+          </td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem" title="Circuit price band">—</td>
+          <td class="r" style="font-family:var(--mono)">₹222.85</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:66.68227710806995%;background:var(--emerald)"></div></div>
+              <span class="vol-pct" style="color:var(--emerald)">100.0%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-muted">—</span></td>
+          <td class="r"><span class="pill pill-amber">25.4</span></td>
+        </tr>
+        <tr class="srow"
+          data-sym="EMAMILTD" data-band="20" data-close="427.55" data-relvol="89.85"
+          data-snort="0" data-rs="41.22">
+          <td class="star-td"><button type="button" class="wl-star" onclick="toggleStar(this)" title="Add to Watchlist">☆</button></td>
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3AEMAMILTD" target="_blank" rel="noopener">EMAMILTD</a>
+          </td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem" title="Circuit price band">20</td>
+          <td class="r" style="font-family:var(--mono)">₹427.55</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:59.90200434448014%;background:var(--amber)"></div></div>
+              <span class="vol-pct" style="color:var(--amber)">89.9%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-muted">—</span></td>
+          <td class="r"><span class="pill pill-amber">41.2</span></td>
+        </tr>
+        <tr class="srow is-new"
+          data-sym="ADOR" data-band="—" data-close="1398.9" data-relvol="83.59"
+          data-snort="0" data-rs="82.16">
+          <td class="star-td"><button type="button" class="wl-star" onclick="toggleStar(this)" title="Add to Watchlist">☆</button></td>
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3AADOR" target="_blank" rel="noopener">ADOR <span class="sym-new-star">✦ NEW</span></a>
+          </td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem" title="Circuit price band">—</td>
+          <td class="r" style="font-family:var(--mono)">₹1,398.90</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:55.72715424385005%;background:var(--amber)"></div></div>
+              <span class="vol-pct" style="color:var(--amber)">83.6%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-muted">—</span></td>
+          <td class="r"><span class="pill pill-amber">82.2</span></td>
+        </tr>
+        <tr class="srow"
+          data-sym="RACLGEAR" data-band="—" data-close="1595.4" data-relvol="81.03"
+          data-snort="0" data-rs="87.98">
+          <td class="star-td"><button type="button" class="wl-star" onclick="toggleStar(this)" title="Add to Watchlist">☆</button></td>
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3ARACLGEAR" target="_blank" rel="noopener">RACLGEAR</a>
+          </td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem" title="Circuit price band">—</td>
+          <td class="r" style="font-family:var(--mono)">₹1,595.40</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:54.022529437752965%;background:var(--amber)"></div></div>
+              <span class="vol-pct" style="color:var(--amber)">81.0%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-muted">—</span></td>
+          <td class="r"><span class="pill pill-amber">88.0</span></td>
+        </tr>
+        <tr class="srow is-new"
+          data-sym="IXIGO" data-band="20" data-close="175.95" data-relvol="80.89"
+          data-snort="0" data-rs="17.17">
+          <td class="star-td"><button type="button" class="wl-star" onclick="toggleStar(this)" title="Add to Watchlist">☆</button></td>
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3AIXIGO" target="_blank" rel="noopener">IXIGO <span class="sym-new-star">✦ NEW</span></a>
+          </td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem" title="Circuit price band">20</td>
+          <td class="r" style="font-family:var(--mono)">₹175.95</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:53.92926086815142%;background:var(--amber)"></div></div>
+              <span class="vol-pct" style="color:var(--amber)">80.9%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-muted">—</span></td>
+          <td class="r"><span class="pill pill-amber">17.2</span></td>
+        </tr>
+        <tr class="srow"
+          data-sym="BBOX" data-band="20" data-close="857.3" data-relvol="77.8"
+          data-snort="0" data-rs="92.0">
+          <td class="star-td"><button type="button" class="wl-star" onclick="toggleStar(this)" title="Add to Watchlist">☆</button></td>
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3ABBOX" target="_blank" rel="noopener">BBOX</a>
+          </td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem" title="Circuit price band">20</td>
+          <td class="r" style="font-family:var(--mono)">₹857.30</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:51.86701780837537%;background:var(--amber)"></div></div>
+              <span class="vol-pct" style="color:var(--amber)">77.8%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-muted">—</span></td>
+          <td class="r"><span class="pill pill-amber">92.0</span></td>
+        </tr>
+        <tr class="srow"
+          data-sym="ACMESOLAR" data-band="—" data-close="416.7" data-relvol="62.5"
+          data-snort="0" data-rs="93.18">
+          <td class="star-td"><button type="button" class="wl-star" onclick="toggleStar(this)" title="Add to Watchlist">☆</button></td>
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3AACMESOLAR" target="_blank" rel="noopener">ACMESOLAR</a>
+          </td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem" title="Circuit price band">—</td>
+          <td class="r" style="font-family:var(--mono)">₹416.70</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:41.66606836745234%;background:var(--amber)"></div></div>
+              <span class="vol-pct" style="color:var(--amber)">62.5%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-muted">—</span></td>
+          <td class="r"><span class="pill pill-amber">93.2</span></td>
+        </tr>
+        <tr class="srow"
+          data-sym="RATNAVEER" data-band="20" data-close="404.55" data-relvol="62.39"
+          data-snort="0" data-rs="98.88">
+          <td class="star-td"><button type="button" class="wl-star" onclick="toggleStar(this)" title="Add to Watchlist">☆</button></td>
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3ARATNAVEER" target="_blank" rel="noopener">RATNAVEER</a>
+          </td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem" title="Circuit price band">20</td>
+          <td class="r" style="font-family:var(--mono)">₹404.55</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:41.594861009510325%;background:var(--amber)"></div></div>
+              <span class="vol-pct" style="color:var(--amber)">62.4%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-muted">—</span></td>
+          <td class="r"><span class="pill pill-amber">98.9</span></td>
+        </tr>
+        <tr class="srow"
+          data-sym="SHREEKARNI" data-band="20" data-close="518.0" data-relvol="43.58"
+          data-snort="0" data-rs="60.91">
+          <td class="star-td"><button type="button" class="wl-star" onclick="toggleStar(this)" title="Add to Watchlist">☆</button></td>
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3ASHREEKARNI" target="_blank" rel="noopener">SHREEKARNI</a>
+          </td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem" title="Circuit price band">20</td>
+          <td class="r" style="font-family:var(--mono)">₹518.00</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:29.052876234747238%;background:var(--blue)"></div></div>
+              <span class="vol-pct" style="color:var(--blue)">43.6%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-muted">—</span></td>
+          <td class="r"><span class="pill pill-amber">60.9</span></td>
+        </tr>
+        <tr class="srow is-new"
+          data-sym="SWASTIKAIN" data-band="—" data-close="null" data-relvol="null"
+          data-snort="0" data-rs="null">
+          <td class="star-td"><button type="button" class="wl-star" onclick="toggleStar(this)" title="Add to Watchlist">☆</button></td>
+          <td>
+            <a class="sym-tag" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)"
+               href="https://www.tradingview.com/chart/?symbol=NSE%3ASWASTIKAIN" target="_blank" rel="noopener">SWASTIKAIN <span class="sym-new-star">✦ NEW</span></a>
+          </td>
+          <td class="c" style="font-family:var(--mono);color:var(--muted);font-size:.74rem" title="Circuit price band">—</td>
+          <td class="r" style="font-family:var(--mono)">N/A</td>
+          <td>
+            <div class="vol-wrap">
+              <div class="vol-bg"><div class="vol-fill" style="width:100.0%;background:var(--blue)"></div></div>
+              <span class="vol-pct" style="color:var(--blue)">nan%</span>
+            </div>
+          </td>
+          <td class="c"><span class="pill pill-blue">Blue PPV</span></td>
+          <td class="c"><span class="pill pill-muted">—</span></td>
+          <td class="r"><span class="pill pill-amber">N/A</span></td>
+        </tr></tbody>
+    </table>
+  </div>
+</div>
+
+
+<div class="table-sec" id="newStocksSection" style="padding-top:1.1rem;">
+  <div class="tbl-head">
+    <div>
+      <span class="tbl-title">✦ New Stocks <span style="color:var(--new-text)">(Last 10 Days)</span></span>
+      <span class="tbl-count tbl-title">[<span id="newStocksCount">0</span>]</span>
+    </div>
+  </div>
+  <div class="tbl-outer">
+    <table id="newStocksTable">
+      <thead id="newStocksHead"></thead>
+      <tbody id="newStocksBody"></tbody>
+    </table>
+  </div>
+</div>
+
+
+<footer>Data: NSE India &amp; Yahoo Finance · Generated 25 Nov 2026 · For informational purposes only · Not financial advice</footer>
+
+<script>
+
+function filterRows() {
+  const q = document.getElementById('searchInput').value.toLowerCase();
+  document.querySelectorAll('#tableBody .srow').forEach(r => {
+    const sym    = (r.dataset.sym    || '').toLowerCase();
+    const indgrp = (r.dataset.indgrp || '').toLowerCase();
+    const ind    = (r.dataset.ind    || '').toLowerCase();
+    r.style.display = (sym.includes(q)||indgrp.includes(q)||ind.includes(q)) ? '' : 'none';
+  });
+}
+
+
+let sortCol = null, sortAsc = true;
+document.querySelectorAll('#mainTable thead th').forEach(th => {
+  th.addEventListener('click', () => {
+    const col  = th.dataset.col;
+    const type = th.dataset.type;
+    if (!col) return;
+    sortAsc = (sortCol === col) ? !sortAsc : true;
+    sortCol = col;
+    document.querySelectorAll('#mainTable thead th')
+      .forEach(h => h.classList.remove('sort-asc','sort-desc'));
+    th.classList.add(sortAsc ? 'sort-asc' : 'sort-desc');
+    const tbody = document.getElementById('tableBody');
+    Array.from(tbody.querySelectorAll('.srow'))
+      .sort((a, b) => {
+        let av = a.dataset[col], bv = b.dataset[col];
+        if (type === 'num') {
+          av = parseFloat(av); bv = parseFloat(bv);
+          if (isNaN(av)) av = -Infinity;
+          if (isNaN(bv)) bv = -Infinity;
+          return sortAsc ? av - bv : bv - av;
+        }
+        return sortAsc ? av.localeCompare(bv) : bv.localeCompare(av);
+      })
+      .forEach(r => tbody.appendChild(r));
+  });
+});
+
+
+(function() {
+  var mainTable  = document.getElementById('mainTable');
+  var newSection = document.getElementById('newStocksSection');
+  var newHead    = document.getElementById('newStocksHead');
+  var newBody    = document.getElementById('newStocksBody');
+  var newCount   = document.getElementById('newStocksCount');
+  if (!mainTable || !newSection || !newHead || !newBody) return;
+
+  var headRow = mainTable.querySelector('thead tr');
+  var newRows = Array.prototype.slice.call(mainTable.querySelectorAll('tbody tr.is-new'));
+
+  if (!headRow || newRows.length === 0) {
+    newSection.style.display = 'none';
+    return;
+  }
+
+  newHead.innerHTML = headRow.outerHTML;
+  newRows.forEach(function(row) {
+    newBody.appendChild(row.cloneNode(true));
+  });
+  if (newCount) newCount.textContent = newRows.length;
+})();
+
+function scrollToNewStocks(e) {
+  if (e) e.preventDefault();
+  var el = document.getElementById('newStocksSection');
+  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+
+function _tvSymbolList() {
+  return Array.from(document.querySelectorAll('#tableBody .srow'))
+    .filter(r => r.style.display !== 'none')
+    .map(r => (r.dataset.sym || '').toUpperCase())
+    .filter(s => s !== '');
+}
+
+function downloadTVList() {
+  const syms = _tvSymbolList();
+  if (!syms.length) { alert('No symbols to export.'); return; }
+  const blob = new Blob([syms.join(',')], { type: 'text/plain' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href = url;
+  a.download = (document.getElementById('tvFileName') || {}).value
+               || 'tradingview_watchlist.txt';
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
+function copyTVList() {
+  const syms = _tvSymbolList();
+  if (!syms.length) { alert('No symbols to copy.'); return; }
+  const text = syms.join(',');
+  const btn  = document.getElementById('tvCopyBtn');
+  const done = () => {
+    if (!btn) return;
+    const orig = btn.dataset.origLabel || btn.textContent;
+    btn.dataset.origLabel = orig;
+    btn.textContent = '✓ Copied!';
+    setTimeout(() => { btn.textContent = orig; }, 1600);
+  };
+  if (navigator.clipboard && window.isSecureContext) {
+    navigator.clipboard.writeText(text).then(done).catch(() => _tvFallbackCopy(text, done));
+  } else {
+    _tvFallbackCopy(text, done);
+  }
+}
+
+function _tvFallbackCopy(text, done) {
+  const ta = document.createElement('textarea');
+  ta.value = text;
+  ta.style.position = 'fixed';
+  ta.style.opacity = '0';
+  document.body.appendChild(ta);
+  ta.focus();
+  ta.select();
+  try { document.execCommand('copy'); done(); } catch (e) { alert('Copy failed — please copy manually.'); }
+  ta.remove();
+}
+
+</script>
+</body></html>
